@@ -17,6 +17,18 @@ type Component interface {
 	componentType() ComponentType
 }
 
+// DiffKind describes a component change type.
+type DiffKind string
+
+const (
+	DiffAttached DiffKind = "attached"
+	DiffDetached DiffKind = "detached"
+	DiffUpdated  DiffKind = "updated"
+)
+
+// DiffHook is called when a component is attached, detached, or updated on an entity.
+type DiffHook func(id EntityID, ct ComponentType, kind DiffKind, old, new Component)
+
 // World is the ECS registry — entities, components, and systems.
 // Thread-safe via RWMutex (read-heavy workload).
 type World struct {
@@ -24,6 +36,7 @@ type World struct {
 	nextID     EntityID
 	components map[EntityID]map[ComponentType]Component
 	alive      map[EntityID]bool
+	diffHooks  []DiffHook
 }
 
 // NewWorld creates an empty ECS world.
@@ -32,6 +45,14 @@ func NewWorld() *World {
 		components: make(map[EntityID]map[ComponentType]Component),
 		alive:      make(map[EntityID]bool),
 	}
+}
+
+// OnDiff registers a hook that is called when a component is attached,
+// detached, or updated on any entity. Hooks are called outside the write lock.
+func (w *World) OnDiff(hook DiffHook) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	w.diffHooks = append(w.diffHooks, hook)
 }
 
 // Spawn creates a new entity (just an ID, no data).
@@ -80,14 +101,39 @@ func (w *World) All() []EntityID {
 
 // Attach adds a component to an entity. Replaces if already present.
 // Panics if the entity does not exist.
+// Diff hooks are called outside the write lock.
 func Attach[T Component](w *World, id EntityID, c T) {
+	ct := c.componentType()
+
+	var (
+		old   Component
+		kind  DiffKind
+		hooks []DiffHook
+	)
+
 	w.mu.Lock()
-	defer w.mu.Unlock()
 	bag, ok := w.components[id]
 	if !ok {
+		w.mu.Unlock()
 		panic(fmt.Sprintf("bugle: Attach on dead entity %d", id))
 	}
-	bag[c.componentType()] = c
+	prev, existed := bag[ct]
+	bag[ct] = c
+	if len(w.diffHooks) > 0 {
+		hooks = make([]DiffHook, len(w.diffHooks))
+		copy(hooks, w.diffHooks)
+		if existed {
+			kind = DiffUpdated
+			old = prev
+		} else {
+			kind = DiffAttached
+		}
+	}
+	w.mu.Unlock()
+
+	for _, h := range hooks {
+		h(id, ct, kind, old, c)
+	}
 }
 
 // Get retrieves a component. Panics if the entity or component is not present.
@@ -123,13 +169,58 @@ func TryGet[T Component](w *World, id EntityID) (T, bool) {
 }
 
 // Detach removes a component from an entity. No-op if not present.
+// Diff hooks are called outside the write lock.
 func Detach[T Component](w *World, id EntityID) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
 	var zero T
+	ct := zero.componentType()
+
+	var (
+		old   Component
+		hooks []DiffHook
+	)
+
+	w.mu.Lock()
 	if bag, ok := w.components[id]; ok {
-		delete(bag, zero.componentType())
+		if prev, existed := bag[ct]; existed {
+			delete(bag, ct)
+			if len(w.diffHooks) > 0 {
+				hooks = make([]DiffHook, len(w.diffHooks))
+				copy(hooks, w.diffHooks)
+				old = prev
+			}
+		}
 	}
+	w.mu.Unlock()
+
+	for _, h := range hooks {
+		h(id, ct, DiffDetached, old, nil)
+	}
+}
+
+// QueryType returns all entity IDs that have the specified component type.
+// Unlike Query[T], this takes a ComponentType value for dynamic dispatch.
+func (w *World) QueryType(ct ComponentType) []EntityID {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	ids := make([]EntityID, 0)
+	for id, bag := range w.components {
+		if _, ok := bag[ct]; ok {
+			ids = append(ids, id)
+		}
+	}
+	return ids
+}
+
+// GetType retrieves a component by its ComponentType. Returns (nil, false) if absent.
+func (w *World) GetType(id EntityID, ct ComponentType) (Component, bool) {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	bag, ok := w.components[id]
+	if !ok {
+		return nil, false
+	}
+	c, ok := bag[ct]
+	return c, ok
 }
 
 // Query returns all entity IDs that have the specified component type.
