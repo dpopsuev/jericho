@@ -75,11 +75,11 @@ func TestE2E_MixedElements_Collaborate(t *testing.T) {
 
 	a := w.Spawn()
 	world.Attach(w, a, fire)
-	world.Attach(w, a, bugle.Health{State: bugle.Active})
+	world.Attach(w, a, world.Health{State: world.Active})
 
 	b := w.Spawn()
 	world.Attach(w, b, water)
-	world.Attach(w, b, bugle.Health{State: bugle.Active})
+	world.Attach(w, b, world.Health{State: world.Active})
 
 	tr := transport.NewLocalTransport()
 	defer tr.Close()
@@ -130,7 +130,7 @@ func TestE2E_FullStack_WorldIdentityTransportSignalView(t *testing.T) {
 	view := worldview.NewView(w)
 
 	// 1. Subscribe for health changes.
-	diffs := view.Subscribe(bugle.HealthType)
+	diffs := view.Subscribe(world.HealthType)
 
 	ctx := context.Background()
 	color0 := world.Get[palette.ColorIdentity](w, agents[0])
@@ -179,18 +179,18 @@ func TestE2E_FullStack_WorldIdentityTransportSignalView(t *testing.T) {
 	bus.Emit(&signal.Signal{Event: "message_sent", Agent: color2.Short()})
 
 	// 6. Verify WorldView snapshot shows all active.
-	snaps := view.Snapshot(bugle.HealthType)
+	snaps := view.Snapshot(world.HealthType)
 	if len(snaps) != 3 {
 		t.Errorf("snapshot count = %d, want 3", len(snaps))
 	}
 	for _, snap := range snaps {
-		h, ok := snap.Components[bugle.HealthType]
+		h, ok := snap.Components[world.HealthType]
 		if !ok {
 			t.Errorf("entity %d missing health in snapshot", snap.ID)
 			continue
 		}
-		health := h.(bugle.Health)
-		if health.State != bugle.Active {
+		health := h.(world.Health)
+		if health.State != world.Active {
 			t.Errorf("entity %d state = %s, want active", snap.ID, health.State)
 		}
 	}
@@ -200,8 +200,8 @@ func TestE2E_FullStack_WorldIdentityTransportSignalView(t *testing.T) {
 	if stats.TotalEntities != 3 {
 		t.Errorf("Stats.TotalEntities = %d, want 3", stats.TotalEntities)
 	}
-	if stats.ByState[bugle.Active] != 3 {
-		t.Errorf("Stats.ByState[Active] = %d, want 3", stats.ByState[bugle.Active])
+	if stats.ByState[world.Active] != 3 {
+		t.Errorf("Stats.ByState[Active] = %d, want 3", stats.ByState[world.Active])
 	}
 	if stats.Collectives != 1 {
 		t.Errorf("Stats.Collectives = %d, want 1", stats.Collectives)

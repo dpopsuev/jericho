@@ -3,7 +3,6 @@ package testkit
 import (
 	"fmt"
 
-	"github.com/dpopsuev/bugle"
 	"github.com/dpopsuev/bugle/palette"
 	"github.com/dpopsuev/bugle/transport"
 	"github.com/dpopsuev/bugle/world"
@@ -14,7 +13,7 @@ import (
 func QuickWorld(n int, collective string) (*world.World, []world.EntityID) {
 	w := world.NewWorld()
 	reg := palette.NewRegistry()
-	strategy := bugle.NewDefaultStrategy(w, reg)
+	strategy := palette.NewDefaultStrategy(w, reg)
 
 	agents := make([]world.EntityID, 0, n)
 	for i := range n {

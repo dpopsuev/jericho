@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/bugle"
 	"github.com/dpopsuev/bugle/palette"
 	"github.com/dpopsuev/bugle/signal"
 	"github.com/dpopsuev/bugle/world"
@@ -276,8 +275,8 @@ func TestCardFromEntity_WithHealth(t *testing.T) {
 	world.Attach(w, agent, palette.ColorIdentity{
 		Shade: "Azure", Colour: "Cerulean", Role: "Reviewer", Collective: "QA",
 	})
-	world.Attach(w, agent, bugle.Health{
-		State:    bugle.Active,
+	world.Attach(w, agent, world.Health{
+		State:    world.Active,
 		LastSeen: time.Now(),
 	})
 

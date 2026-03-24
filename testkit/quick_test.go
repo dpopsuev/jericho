@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dpopsuev/bugle"
 	"github.com/dpopsuev/bugle/palette"
 	"github.com/dpopsuev/bugle/signal"
 	"github.com/dpopsuev/bugle/transport"
@@ -26,7 +25,7 @@ func TestQuickWorld_CreatesNAgents(t *testing.T) {
 			t.Errorf("agent %d (id=%d) should be alive", i, id)
 		}
 		AssertEntityHas[palette.ColorIdentity](t, w, id)
-		AssertEntityHas[bugle.Health](t, w, id)
+		AssertEntityHas[world.Health](t, w, id)
 	}
 }
 

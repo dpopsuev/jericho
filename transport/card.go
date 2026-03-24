@@ -3,7 +3,6 @@ package transport
 import (
 	"fmt"
 
-	"github.com/dpopsuev/bugle"
 	"github.com/dpopsuev/bugle/palette"
 	"github.com/dpopsuev/bugle/world"
 )
@@ -39,7 +38,7 @@ func CardFromEntity(w *world.World, id world.EntityID) AgentCard {
 		card.Role = color.Role
 	}
 
-	if health, ok := world.TryGet[bugle.Health](w, id); ok {
+	if health, ok := world.TryGet[world.Health](w, id); ok {
 		card.Metadata["health"] = string(health.State)
 	}
 

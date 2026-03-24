@@ -5,7 +5,6 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/dpopsuev/bugle"
 	"github.com/dpopsuev/bugle/palette"
 	"github.com/dpopsuev/bugle/world"
 )
@@ -34,7 +33,7 @@ type TreeNode struct {
 // Stats provides aggregate counters for the world.
 type Stats struct {
 	TotalEntities int
-	ByState       map[bugle.AgentState]int
+	ByState       map[world.AgentState]int
 	Collectives   int
 }
 
@@ -178,7 +177,7 @@ func (v *View) Unsubscribe(ch <-chan Diff) {
 // Hierarchy builds a tree of all entities that have a Hierarchy component.
 // Roots are entities whose Parent is 0 or whose Parent is not alive.
 func (v *View) Hierarchy() []TreeNode {
-	ids := v.world.QueryType(bugle.HierarchyType)
+	ids := v.world.QueryType(world.HierarchyType)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -190,11 +189,11 @@ func (v *View) Hierarchy() []TreeNode {
 	}
 	entries := make([]entry, 0, len(ids))
 	for _, id := range ids {
-		c, ok := v.world.GetType(id, bugle.HierarchyType)
+		c, ok := v.world.GetType(id, world.HierarchyType)
 		if !ok {
 			continue
 		}
-		h := c.(bugle.Hierarchy) //nolint:errcheck // type guaranteed by QueryType
+		h := c.(world.Hierarchy) //nolint:errcheck // type guaranteed by QueryType
 		entries = append(entries, entry{id: id, parent: h.Parent})
 	}
 
@@ -235,16 +234,16 @@ func (v *View) Hierarchy() []TreeNode {
 func (v *View) Stats() Stats {
 	s := Stats{
 		TotalEntities: v.world.Count(),
-		ByState:       make(map[bugle.AgentState]int),
+		ByState:       make(map[world.AgentState]int),
 	}
 
-	healthIDs := v.world.QueryType(bugle.HealthType)
+	healthIDs := v.world.QueryType(world.HealthType)
 	for _, id := range healthIDs {
-		c, ok := v.world.GetType(id, bugle.HealthType)
+		c, ok := v.world.GetType(id, world.HealthType)
 		if !ok {
 			continue
 		}
-		h := c.(bugle.Health) //nolint:errcheck // type guaranteed by QueryType
+		h := c.(world.Health) //nolint:errcheck // type guaranteed by QueryType
 		s.ByState[h.State]++
 	}
 
