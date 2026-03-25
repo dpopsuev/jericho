@@ -62,7 +62,7 @@ func TestFork_CreatesEntity(t *testing.T) {
 	id, err := pool.Fork(ctx, "executor", LaunchConfig{
 		Role:  "executor",
 		Model: "sonnet-4",
-	})
+	}, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +83,7 @@ func TestFork_EmitsSignal(t *testing.T) {
 	pool, _, bus := setup()
 	ctx := context.Background()
 
-	pool.Fork(ctx, "executor", LaunchConfig{Role: "executor"})
+	pool.Fork(ctx, "executor", LaunchConfig{Role: "executor"}, 0)
 
 	signals := bus.Since(0)
 	if len(signals) == 0 {
@@ -98,7 +98,7 @@ func TestKill_StopsAndDespawns(t *testing.T) {
 	pool, launcher, bus := setup()
 	ctx := context.Background()
 
-	id, _ := pool.Fork(ctx, "executor", LaunchConfig{})
+	id, _ := pool.Fork(ctx, "executor", LaunchConfig{}, 0)
 	err := pool.Kill(ctx, id)
 	if err != nil {
 		t.Fatal(err)
@@ -136,9 +136,9 @@ func TestKillAll(t *testing.T) {
 	pool, _, _ := setup()
 	ctx := context.Background()
 
-	pool.Fork(ctx, "a", LaunchConfig{})
-	pool.Fork(ctx, "b", LaunchConfig{})
-	pool.Fork(ctx, "c", LaunchConfig{})
+	pool.Fork(ctx, "a", LaunchConfig{}, 0)
+	pool.Fork(ctx, "b", LaunchConfig{}, 0)
+	pool.Fork(ctx, "c", LaunchConfig{}, 0)
 
 	if pool.Count() != 3 {
 		t.Fatalf("count = %d", pool.Count())
@@ -154,8 +154,8 @@ func TestActive(t *testing.T) {
 	pool, _, _ := setup()
 	ctx := context.Background()
 
-	pool.Fork(ctx, "a", LaunchConfig{})
-	pool.Fork(ctx, "b", LaunchConfig{})
+	pool.Fork(ctx, "a", LaunchConfig{}, 0)
+	pool.Fork(ctx, "b", LaunchConfig{}, 0)
 
 	active := pool.Active()
 	if len(active) != 2 {
@@ -167,7 +167,7 @@ func TestGet(t *testing.T) {
 	pool, _, _ := setup()
 	ctx := context.Background()
 
-	id, _ := pool.Fork(ctx, "executor", LaunchConfig{Role: "executor"})
+	id, _ := pool.Fork(ctx, "executor", LaunchConfig{Role: "executor"}, 0)
 	entry, ok := pool.Get(id)
 	if !ok {
 		t.Fatal("should find entry")
@@ -181,7 +181,7 @@ func TestFork_WithBudget(t *testing.T) {
 	pool, _, _ := setup()
 	ctx := context.Background()
 
-	id, _ := pool.Fork(ctx, "executor", LaunchConfig{Budget: 100.0})
+	id, _ := pool.Fork(ctx, "executor", LaunchConfig{Budget: 100.0}, 0)
 	budget, ok := world.TryGet[world.Budget](pool.world, id)
 	if !ok {
 		t.Fatal("budget not attached")
@@ -202,7 +202,7 @@ func TestConcurrentForkKill(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			id, err := pool.Fork(ctx, "worker", LaunchConfig{})
+			id, err := pool.Fork(ctx, "worker", LaunchConfig{}, 0)
 			if err != nil {
 				t.Error(err)
 				return
