@@ -15,6 +15,9 @@ import (
 	"os/exec"
 	"sync"
 	"sync/atomic"
+	"time"
+
+	"github.com/dpopsuev/bugle/resilience"
 )
 
 // CommandFactory creates exec.Cmd — injectable for testing.
@@ -60,15 +63,35 @@ type Client struct {
 
 	clientInfo ClientInfo
 	cmdFactory CommandFactory
+
+	// Resilience options (all optional).
+	retry   *resilience.RetryConfig
+	circuit *resilience.CircuitBreaker
+	limiter *resilience.RateLimiter
+
+	// Timeout options.
+	handshakeTimeout time.Duration // default 10s
+	sessionTimeout   time.Duration // default 10s
+	promptTimeout    time.Duration // default 60s (0 = no limit)
 }
 
 // Option configures a Client.
 type Option func(*Client)
 
-func WithModel(m string) Option              { return func(c *Client) { c.model = m } }
-func WithLogger(l *slog.Logger) Option       { return func(c *Client) { c.log = l } }
-func WithCommandFactory(f CommandFactory) Option { return func(c *Client) { c.cmdFactory = f } }
-func WithClientInfo(info ClientInfo) Option   { return func(c *Client) { c.clientInfo = info } }
+func WithModel(m string) Option                    { return func(c *Client) { c.model = m } }
+func WithLogger(l *slog.Logger) Option             { return func(c *Client) { c.log = l } }
+func WithCommandFactory(f CommandFactory) Option   { return func(c *Client) { c.cmdFactory = f } }
+func WithClientInfo(info ClientInfo) Option        { return func(c *Client) { c.clientInfo = info } }
+func WithRetry(cfg resilience.RetryConfig) Option  { return func(c *Client) { c.retry = &cfg } }
+func WithCircuitBreaker(cfg resilience.CircuitConfig) Option {
+	return func(c *Client) { c.circuit = resilience.NewCircuitBreaker(cfg) }
+}
+func WithRateLimiter(cfg resilience.RateLimitConfig) Option {
+	return func(c *Client) { c.limiter = resilience.NewRateLimiter(cfg) }
+}
+func WithHandshakeTimeout(d time.Duration) Option  { return func(c *Client) { c.handshakeTimeout = d } }
+func WithSessionTimeout(d time.Duration) Option    { return func(c *Client) { c.sessionTimeout = d } }
+func WithPromptTimeout(d time.Duration) Option     { return func(c *Client) { c.promptTimeout = d } }
 
 // NewClient creates an ACP client for the named agent.
 func NewClient(agentName string, opts ...Option) (*Client, error) {
@@ -78,12 +101,15 @@ func NewClient(agentName string, opts ...Option) (*Client, error) {
 	}
 
 	c := &Client{
-		agentName:  agentName,
-		agentCmd:   args[0],
-		agentArgs:  args[1:],
-		log:        slog.Default(),
-		cmdFactory: exec.CommandContext,
-		clientInfo: ClientInfo{Name: "bugle", Version: "0.10.0"},
+		agentName:        agentName,
+		agentCmd:         args[0],
+		agentArgs:        args[1:],
+		log:              slog.Default(),
+		cmdFactory:       exec.CommandContext,
+		clientInfo:       ClientInfo{Name: "bugle", Version: "0.11.0"},
+		handshakeTimeout: 10 * time.Second,
+		sessionTimeout:   10 * time.Second,
+		promptTimeout:    60 * time.Second,
 	}
 	for _, o := range opts {
 		o(c)
@@ -100,8 +126,34 @@ func (c *Client) Model() string { return c.model }
 // SessionID returns the current ACP session ID.
 func (c *Client) SessionID() string { return c.sessionID }
 
+// ProcessAlive returns true if the underlying agent process is still running.
+func (c *Client) ProcessAlive() bool {
+	if c.cmd == nil || c.cmd.Process == nil {
+		return false
+	}
+	return c.cmd.ProcessState == nil // nil = not yet exited
+}
+
 // Start launches the agent process and performs the ACP handshake.
+// Applies per-operation timeouts and optional retry with circuit breaker.
 func (c *Client) Start(ctx context.Context) error {
+	startFn := func() error { return c.doStart(ctx) }
+
+	// Wrap with circuit breaker if configured.
+	if c.circuit != nil {
+		wrapped := startFn
+		startFn = func() error { return c.circuit.Call(wrapped) }
+	}
+
+	// Wrap with retry if configured.
+	if c.retry != nil {
+		return resilience.Retry(ctx, *c.retry, startFn)
+	}
+	return startFn()
+}
+
+// doStart is the actual start implementation with per-operation timeouts.
+func (c *Client) doStart(ctx context.Context) error {
 	args := make([]string, len(c.agentArgs))
 	copy(args, c.agentArgs)
 
@@ -128,50 +180,92 @@ func (c *Client) Start(ctx context.Context) error {
 
 	c.log.Info("ACP agent started", "agent", c.agentName, "pid", c.cmd.Process.Pid)
 
-	// Initialize handshake.
-	initResp, err := c.call("initialize", initializeParams{
-		ProtocolVersion: ProtocolVersion,
-		ClientInfo:      clientInfo{Name: c.clientInfo.Name, Version: c.clientInfo.Version},
-	})
-	if err != nil {
+	// Initialize handshake — with timeout.
+	initCtx, initCancel := context.WithTimeout(ctx, c.handshakeTimeout)
+	defer initCancel()
+
+	type callResult struct {
+		resp *json.RawMessage
+		err  error
+	}
+	initCh := make(chan callResult, 1)
+	go func() {
+		resp, err := c.call("initialize", initializeParams{
+			ProtocolVersion: ProtocolVersion,
+			ClientInfo:      clientInfo{Name: c.clientInfo.Name, Version: c.clientInfo.Version},
+		})
+		initCh <- callResult{resp, err}
+	}()
+
+	select {
+	case <-initCtx.Done():
 		c.cmd.Process.Kill() //nolint:errcheck
-		return fmt.Errorf("ACP initialize: %w", err)
+		return fmt.Errorf("ACP initialize: %w", initCtx.Err())
+	case r := <-initCh:
+		if r.err != nil {
+			c.cmd.Process.Kill() //nolint:errcheck
+			return fmt.Errorf("ACP initialize: %w", r.err)
+		}
+		var initResult initializeResult
+		if r.resp != nil {
+			json.Unmarshal(*r.resp, &initResult) //nolint:errcheck
+		}
+		c.log.Info("ACP initialized", "agent_name", initResult.AgentInfo.Name, "protocol", initResult.ProtocolVersion)
 	}
 
-	var initResult initializeResult
-	if initResp != nil {
-		json.Unmarshal(*initResp, &initResult) //nolint:errcheck
-	}
-	c.log.Info("ACP initialized", "agent_name", initResult.AgentInfo.Name, "protocol", initResult.ProtocolVersion)
+	// Create session — with timeout.
+	sessCtx, sessCancel := context.WithTimeout(ctx, c.sessionTimeout)
+	defer sessCancel()
 
-	// Create session.
 	cwd, _ := os.Getwd()
 	c.log.Debug("ACP session/new", "cwd", cwd)
-	sessResp, err := c.call("session/new", newSessionParams{CWD: cwd, MCPServers: []any{}})
-	if err != nil {
-		c.log.Error("ACP session/new failed", "error", err)
-		c.cmd.Process.Kill() //nolint:errcheck
-		return fmt.Errorf("ACP session/new: %w", err)
-	}
 
-	var sessResult newSessionResult
-	if sessResp != nil {
-		json.Unmarshal(*sessResp, &sessResult) //nolint:errcheck
+	sessCh := make(chan callResult, 1)
+	go func() {
+		resp, err := c.call("session/new", newSessionParams{CWD: cwd, MCPServers: []any{}})
+		sessCh <- callResult{resp, err}
+	}()
+
+	select {
+	case <-sessCtx.Done():
+		c.cmd.Process.Kill() //nolint:errcheck
+		return fmt.Errorf("ACP session/new: %w", sessCtx.Err())
+	case r := <-sessCh:
+		if r.err != nil {
+			c.log.Error("ACP session/new failed", "error", r.err)
+			c.cmd.Process.Kill() //nolint:errcheck
+			return fmt.Errorf("ACP session/new: %w", r.err)
+		}
+		var sessResult newSessionResult
+		if r.resp != nil {
+			json.Unmarshal(*r.resp, &sessResult) //nolint:errcheck
+		}
+		c.sessionID = sessResult.SessionID
+		c.log.Info("ACP session created", "session_id", c.sessionID)
 	}
-	c.sessionID = sessResult.SessionID
-	c.log.Info("ACP session created", "session_id", c.sessionID)
 
 	return nil
 }
 
 // Stop cancels the session and kills the agent process.
+// Sends a graceful cancel notification, then kills after 5s if still alive.
 func (c *Client) Stop(_ context.Context) error {
 	if c.cmd == nil || c.cmd.Process == nil {
 		return nil
 	}
 	c.notify("session/cancel", map[string]string{"sessionId": c.sessionID})
-	c.cmd.Process.Kill() //nolint:errcheck
-	return c.cmd.Wait()
+
+	// Give the process 5s to exit gracefully.
+	done := make(chan error, 1)
+	go func() { done <- c.cmd.Wait() }()
+
+	select {
+	case err := <-done:
+		return err
+	case <-time.After(5 * time.Second):
+		c.cmd.Process.Kill() //nolint:errcheck
+		return <-done
+	}
 }
 
 // Send appends a message to the conversation history.
@@ -191,7 +285,15 @@ func (c *Client) Messages() []Message {
 }
 
 // Chat sends the last message as a prompt and streams ACP session/update events.
+// Applies rate limiter (if configured) before sending the prompt.
 func (c *Client) Chat(ctx context.Context) (<-chan StreamEvent, error) {
+	// Rate limit — block until token available.
+	if c.limiter != nil {
+		if err := c.limiter.Wait(ctx); err != nil {
+			return nil, fmt.Errorf("rate limit: %w", err)
+		}
+	}
+
 	c.mu.Lock()
 	if len(c.messages) == 0 {
 		c.mu.Unlock()

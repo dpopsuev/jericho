@@ -67,11 +67,15 @@ func (l *ACPLauncher) Stop(ctx context.Context, id world.EntityID) error {
 }
 
 // Healthy returns true if the ACP agent process is still running.
+// Checks both map presence and actual process state.
 func (l *ACPLauncher) Healthy(_ context.Context, id world.EntityID) bool {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	_, ok := l.clients[id]
-	return ok
+	client, ok := l.clients[id]
+	if !ok {
+		return false
+	}
+	return client.ProcessAlive()
 }
 
 // Client returns the ACP Client for an entity (for sending messages).
