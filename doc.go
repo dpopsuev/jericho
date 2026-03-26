@@ -1,25 +1,31 @@
-// Package bugle is an ECS agent identity and coordination framework
-// with A2A protocol support.
+// Package bugle is an agent framework for AI systems.
 //
-// Bugle provides:
+// Bugle handles two protocol concerns:
+//   - A2A (Agent-to-Agent) — how agents coordinate with each other
+//   - ACP (Agent Client Protocol) — how editors and clients talk to agents
+//
+// MCP (Model Context Protocol) is a consumer concern — Bugle doesn't
+// know about tools. Consumers like Djinn and Origami wire MCP themselves.
+//
+// Core packages:
+//
 //   - ECS World (world/ — entity registry, component storage, system queries)
 //   - Agent identity (identity/ — AgentIdentity, ModelIdentity, Persona)
 //   - Heraldic color system (palette/ — ColorIdentity, Registry, Shade/Colour)
 //   - Behavioral profiles (element/ — Element, Approach)
 //   - Signal bus (signal/ — Bus, DurableBus)
-//   - Health tracking (root — Health, Hierarchy, Budget, Progress)
-//   - A2A transport (transport/ — LocalTransport, HTTPTransport)
+//   - Process supervision (pool/ — Fork, Kill, Wait, orphan reparenting)
+//   - A2A transport (transport/ — LocalTransport, Ask, Broadcast, RoleRegistry)
+//   - ACP client (acp/ — JSON-RPC over stdio, 12 providers, shape classifier)
+//   - Facade (facade/ — Staff, AgentHandle — API for Humans)
 //   - Observable state (worldview/ — View, Snapshot, Minimap)
-//
-// Identity is the primitive. Protocol is the adapter.
+//   - Billing (billing/ — per-agent cost tracking)
 //
 // Usage:
 //
-//	w := world.NewWorld()
-//	agent := w.Spawn()
-//	world.Attach(w, agent, palette.ColorIdentity{
-//	    Shade: "Indigo", Colour: "Denim", Role: "Writer", Collective: "Refactor",
-//	})
-//	fmt.Println(world.Get[palette.ColorIdentity](w, agent).Title())
-//	// → "Denim Writer of Indigo Refactor"
+//	staff := facade.NewStaff(myLauncher)
+//	agent, _ := staff.Spawn(ctx, "executor", pool.LaunchConfig{})
+//	agent.Listen(func(content string) string { return "done: " + content })
+//	response, _ := agent.Ask(ctx, "build auth module")
+//	staff.KillAll(ctx)
 package bugle
