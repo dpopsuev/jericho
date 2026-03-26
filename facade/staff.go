@@ -98,6 +98,14 @@ func (s *Staff) OnSignal(fn func(signal.Signal)) {
 	s.bus.OnEmit(fn)
 }
 
+// TreeFull returns the full hierarchical tree rooted at the given agent,
+// including agents hidden inside FacadeAgent collectives.
+// Tree() shows the collapsed view (facades as single nodes).
+// TreeFull() shows every real agent.
+func (s *Staff) TreeFull(root *AgentHandle) *pool.TreeNode {
+	return s.pool.Tree(root.ID())
+}
+
 // ---------------------------------------------------------------------------
 // Escape hatches — for advanced consumers who need the raw subsystems.
 // ---------------------------------------------------------------------------

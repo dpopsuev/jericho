@@ -1,10 +1,13 @@
-// Package dialectic defines the adversarial dialectic types:
-// thesis-antithesis-synthesis debate with evidence gap tracking.
+// Package collective provides AgentCollective — N agents behind one
+// interface — with pluggable strategies (Dialectic, Arbiter, etc.).
+//
+// This file contains the dialectic data types (thesis-antithesis-synthesis)
+// used as wire format between debate participants.
 //
 // Edge factory code (BuildEdgeFactory, HD1-HD13 evaluators) remains in
 // Origami's dialectic package because it depends on circuit.Edge and
 // engine.EdgeFactory.
-package dialectic
+package collective
 
 import "time"
 

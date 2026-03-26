@@ -1,4 +1,4 @@
-package dialectic
+package collective
 
 import "testing"
 

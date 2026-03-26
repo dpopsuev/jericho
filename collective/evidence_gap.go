@@ -1,4 +1,4 @@
-package dialectic
+package collective
 
 // GapSeverity classifies the impact of a missing evidence gap.
 type GapSeverity string
