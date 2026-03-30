@@ -1,10 +1,10 @@
-// Command orchestrate is a stdio MCP server that manages agent workers.
-// Register in Claude Code: claude mcp add orchestrator -- bugle orchestrate --endpoint http://localhost:9000/mcp
+// Command orchestrate is a stdio MCP server that proxies remote tools
+// and adds local worker management. Provides a unified facade:
+// circuit + signal + workers through one MCP connection.
 //
-// Usage:
+// Register in Claude Code:
 //
-//	orchestrate --endpoint http://localhost:9000/mcp
-//	orchestrate --endpoint http://localhost:9000/mcp --session iron-stag --agent claude --count 12
+//	claude mcp add origami -- origami orchestrate --endpoint http://localhost:9000/mcp
 package main
 
 import (
@@ -18,11 +18,9 @@ import (
 	"github.com/dpopsuev/bugle/orchestrate"
 )
 
-// Log key constants for sloglint compliance.
 const (
 	logKeyError    = "error"
 	logKeyEndpoint = "endpoint"
-	logKeyMode     = "mode"
 )
 
 func main() {
@@ -33,7 +31,7 @@ func main() {
 }
 
 func run() error {
-	endpoint := flag.String("endpoint", envOr("BUGLE_ENDPOINT", "http://localhost:9000/mcp"), "MCP endpoint to connect workers to")
+	endpoint := flag.String("endpoint", envOr("BUGLE_ENDPOINT", "http://localhost:9000/mcp"), "MCP endpoint to proxy and connect workers to")
 	session := flag.String("session", "", "auto-start workers for this session (optional)")
 	agent := flag.String("agent", "claude", "agent CLI name")
 	count := flag.Int("count", 4, "number of workers (for auto-start)")
@@ -54,7 +52,6 @@ func run() error {
 	}
 	mgr := orchestrate.NewManager(*endpoint, cfg)
 
-	// If --session is provided, auto-start workers immediately.
 	if *session != "" {
 		if err := mgr.Start(ctx, *session, *agent, *count); err != nil {
 			slog.ErrorContext(ctx, "auto-start failed", slog.Any(logKeyError, err))
@@ -62,12 +59,10 @@ func run() error {
 		}
 	}
 
-	// Run as stdio MCP server.
 	slog.InfoContext(ctx, "orchestrator starting",
-		slog.String(logKeyEndpoint, *endpoint),
-		slog.String(logKeyMode, "stdio"))
+		slog.String(logKeyEndpoint, *endpoint))
 
-	return orchestrate.ServeStdio(ctx, mgr)
+	return orchestrate.ServeStdioProxy(ctx, *endpoint, mgr)
 }
 
 func envOr(key, fallback string) string {
