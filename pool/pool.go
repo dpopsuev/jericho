@@ -148,11 +148,6 @@ func (p *AgentPool) Kill(ctx context.Context, id world.EntityID) error {
 	}
 	p.mu.Unlock()
 
-	// Notify Wait() callers.
-	if ch != nil {
-		close(ch)
-	}
-
 	// Stop process.
 	if err := p.launcher.Stop(ctx, id); err != nil {
 		_ = err // log but continue cleanup
@@ -163,7 +158,8 @@ func (p *AgentPool) Kill(ctx context.Context, id world.EntityID) error {
 	p.transport.Roles().Unregister(agentID)
 	p.transport.Unregister(agentID)
 
-	// Update health.
+	// Update health — BEFORE notifying Wait() callers, because reap()
+	// calls Despawn() which would make this Attach panic on a dead entity.
 	world.Attach(p.world, id, world.Health{State: world.Done, LastSeen: time.Now()})
 
 	// Emit signal.
@@ -178,8 +174,14 @@ func (p *AgentPool) Kill(ctx context.Context, id world.EntityID) error {
 	})
 
 	// Only despawn if auto-reaped (not zombie).
-	if p.autoReap[entry.ParentID] {
+	if shouldAutoReap {
 		p.world.Despawn(id)
+	}
+
+	// Notify Wait() callers — LAST, after all cleanup is done.
+	// Wait() → reap() → Despawn() is safe because Health is already set.
+	if ch != nil {
+		close(ch)
 	}
 
 	return nil
