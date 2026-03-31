@@ -3,8 +3,8 @@ package guard
 import (
 	"context"
 
-	bd "github.com/dpopsuev/bugle/dispatch"
-	"github.com/dpopsuev/bugle/resilience"
+	bd "github.com/dpopsuev/jericho/dispatch"
+	"github.com/dpopsuev/jericho/resilience"
 )
 
 // CircuitState is an alias for resilience.CircuitState.

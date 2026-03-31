@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	bd "github.com/dpopsuev/bugle/dispatch"
+	bd "github.com/dpopsuev/jericho/dispatch"
 )
 
 var _ bd.Dispatcher = (*Router)(nil)

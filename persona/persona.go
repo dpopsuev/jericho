@@ -1,14 +1,14 @@
 // Package persona provides the 8 perennial agent identity templates
 // (4 Thesis + 4 Antithesis) and registers a PersonaResolver with the
 // framework on import. Consumers that build walkers with persona names
-// should add: import _ "github.com/dpopsuev/bugle/persona"
+// should add: import _ "github.com/dpopsuev/jericho/persona"
 package persona
 
 import (
 	"strings"
 
-	"github.com/dpopsuev/bugle/element"
-	"github.com/dpopsuev/bugle/identity"
+	"github.com/dpopsuev/jericho/element"
+	"github.com/dpopsuev/jericho/identity"
 )
 
 func init() {

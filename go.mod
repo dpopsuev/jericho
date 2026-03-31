@@ -1,4 +1,4 @@
-module github.com/dpopsuev/bugle
+module github.com/dpopsuev/jericho
 
 go 1.25.7
 

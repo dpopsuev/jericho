@@ -9,7 +9,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/dpopsuev/bugle/facade"
+	"github.com/dpopsuev/jericho/facade"
 )
 
 // Gate decides if content should pass through a collective boundary.

@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dpopsuev/bugle/facade"
+	"github.com/dpopsuev/jericho/facade"
 )
 
 // ErrTooFewAgentsDialectic is returned when dialectic has fewer than 2 agents.

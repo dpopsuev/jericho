@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dpopsuev/bugle/element"
+	"github.com/dpopsuev/jericho/element"
 )
 
 const unknownValue = "unknown"

@@ -3,7 +3,7 @@ package palette
 import (
 	"time"
 
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/world"
 )
 
 // DefaultStrategy assigns random colors from the palette.

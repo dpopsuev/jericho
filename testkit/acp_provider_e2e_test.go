@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/bugle/acp"
+	"github.com/dpopsuev/jericho/acp"
 )
 
 // runRealACPTest is the shared test body for all real ACP providers.

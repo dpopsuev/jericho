@@ -6,7 +6,7 @@ package pool
 import (
 	"context"
 
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/world"
 )
 
 // LaunchConfig describes how to start an agent process.

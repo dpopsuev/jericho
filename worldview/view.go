@@ -5,8 +5,8 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/dpopsuev/bugle/palette"
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/palette"
+	"github.com/dpopsuev/jericho/world"
 )
 
 // EntitySnapshot is a point-in-time capture of an entity's components.

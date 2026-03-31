@@ -3,8 +3,8 @@ package persona
 import (
 	"testing"
 
-	"github.com/dpopsuev/bugle/element"
-	"github.com/dpopsuev/bugle/identity"
+	"github.com/dpopsuev/jericho/element"
+	"github.com/dpopsuev/jericho/identity"
 )
 
 func TestAll_Count(t *testing.T) {

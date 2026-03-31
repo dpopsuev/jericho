@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dpopsuev/bugle/facade"
+	"github.com/dpopsuev/jericho/facade"
 )
 
 // ErrTooFewAgentsArbiter is returned when arbiter has fewer than 3 agents.

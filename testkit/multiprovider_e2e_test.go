@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/bugle/palette"
-	"github.com/dpopsuev/bugle/signal"
-	"github.com/dpopsuev/bugle/transport"
-	"github.com/dpopsuev/bugle/world"
-	"github.com/dpopsuev/bugle/worldview"
+	"github.com/dpopsuev/jericho/palette"
+	"github.com/dpopsuev/jericho/signal"
+	"github.com/dpopsuev/jericho/transport"
+	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/jericho/worldview"
 )
 
 // providerSpec defines how to invoke a CLI provider in non-interactive mode.

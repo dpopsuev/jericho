@@ -9,10 +9,10 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/dpopsuev/bugle/palette"
-	"github.com/dpopsuev/bugle/signal"
-	"github.com/dpopsuev/bugle/transport"
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/palette"
+	"github.com/dpopsuev/jericho/signal"
+	"github.com/dpopsuev/jericho/transport"
+	"github.com/dpopsuev/jericho/world"
 )
 
 func TestStress_10Agents_50Messages(t *testing.T) {

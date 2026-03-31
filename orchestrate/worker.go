@@ -11,9 +11,9 @@ import (
 
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/dpopsuev/bugle/acp"
-	"github.com/dpopsuev/bugle/facade"
-	"github.com/dpopsuev/bugle/pool"
+	"github.com/dpopsuev/jericho/acp"
+	"github.com/dpopsuev/jericho/facade"
+	"github.com/dpopsuev/jericho/pool"
 )
 
 // Log key constants for sloglint compliance.

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	bd "github.com/dpopsuev/bugle/dispatch"
+	bd "github.com/dpopsuev/jericho/dispatch"
 )
 
 // Slog attribute key constants.

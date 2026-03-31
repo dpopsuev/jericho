@@ -9,8 +9,8 @@ package facade
 import (
 	"context"
 
-	"github.com/dpopsuev/bugle/pool"
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/pool"
+	"github.com/dpopsuev/jericho/world"
 )
 
 // Agent is the interface for interacting with an agent — single or collective.

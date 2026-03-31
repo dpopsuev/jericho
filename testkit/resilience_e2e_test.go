@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/bugle/acp"
-	"github.com/dpopsuev/bugle/billing"
-	"github.com/dpopsuev/bugle/resilience"
-	"github.com/dpopsuev/bugle/transport"
+	"github.com/dpopsuev/jericho/acp"
+	"github.com/dpopsuev/jericho/billing"
+	"github.com/dpopsuev/jericho/resilience"
+	"github.com/dpopsuev/jericho/transport"
 )
 
 // TestResilienceE2E_RetryRecoversFromTransientFailure proves retry

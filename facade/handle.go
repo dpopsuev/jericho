@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dpopsuev/bugle/pool"
-	"github.com/dpopsuev/bugle/signal"
-	"github.com/dpopsuev/bugle/transport"
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/pool"
+	"github.com/dpopsuev/jericho/signal"
+	"github.com/dpopsuev/jericho/transport"
+	"github.com/dpopsuev/jericho/world"
 )
 
 // AgentHandle wraps all subsystems into one human-readable object for a

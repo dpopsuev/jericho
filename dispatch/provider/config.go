@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	bd "github.com/dpopsuev/bugle/dispatch"
+	bd "github.com/dpopsuev/jericho/dispatch"
 
 	"gopkg.in/yaml.v3"
 )

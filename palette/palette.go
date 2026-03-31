@@ -5,7 +5,7 @@ package palette
 import (
 	"fmt"
 
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/world"
 )
 
 // ColorIdentityType is the ComponentType for ColorIdentity.

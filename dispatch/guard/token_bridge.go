@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	bd "github.com/dpopsuev/bugle/dispatch"
+	bd "github.com/dpopsuev/jericho/dispatch"
 
-	"github.com/dpopsuev/bugle/billing"
+	"github.com/dpopsuev/jericho/billing"
 )
 
 // Hook is called after each dispatch with timing and error info.

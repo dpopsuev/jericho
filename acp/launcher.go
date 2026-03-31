@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dpopsuev/bugle/pool"
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/pool"
+	"github.com/dpopsuev/jericho/world"
 )
 
 // ACPLauncher implements pool.Launcher by spawning ACP agent processes.

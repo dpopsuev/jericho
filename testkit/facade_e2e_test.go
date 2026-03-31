@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/bugle/facade"
-	"github.com/dpopsuev/bugle/pool"
-	"github.com/dpopsuev/bugle/signal"
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/facade"
+	"github.com/dpopsuev/jericho/pool"
+	"github.com/dpopsuev/jericho/signal"
+	"github.com/dpopsuev/jericho/world"
 )
 
 type pipeLauncher struct {

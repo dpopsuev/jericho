@@ -3,9 +3,9 @@ package testkit
 import (
 	"fmt"
 
-	"github.com/dpopsuev/bugle/palette"
-	"github.com/dpopsuev/bugle/transport"
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/palette"
+	"github.com/dpopsuev/jericho/transport"
+	"github.com/dpopsuev/jericho/world"
 )
 
 // QuickWorld creates a World with n agents, each with ColorIdentity + Health.

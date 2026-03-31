@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dpopsuev/bugle/facade"
-	"github.com/dpopsuev/bugle/pool"
+	"github.com/dpopsuev/jericho/facade"
+	"github.com/dpopsuev/jericho/pool"
 )
 
 // Sentinel errors for collective spawning.

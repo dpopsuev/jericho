@@ -4,7 +4,7 @@ package pool
 import (
 	"time"
 
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/world"
 )
 
 // ExitCode describes why an agent terminated.

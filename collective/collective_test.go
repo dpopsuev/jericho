@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dpopsuev/bugle/facade"
-	"github.com/dpopsuev/bugle/pool"
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/facade"
+	"github.com/dpopsuev/jericho/pool"
+	"github.com/dpopsuev/jericho/world"
 )
 
 type mockLauncher struct {

@@ -3,8 +3,8 @@ package transport
 import (
 	"fmt"
 
-	"github.com/dpopsuev/bugle/palette"
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/palette"
+	"github.com/dpopsuev/jericho/world"
 )
 
 // AgentCard is the A2A-compatible agent descriptor published for discovery.

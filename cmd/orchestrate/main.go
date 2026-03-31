@@ -15,7 +15,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/dpopsuev/bugle/orchestrate"
+	"github.com/dpopsuev/jericho/orchestrate"
 )
 
 const (

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dpopsuev/bugle/pool"
-	"github.com/dpopsuev/bugle/signal"
-	"github.com/dpopsuev/bugle/transport"
-	"github.com/dpopsuev/bugle/world"
+	"github.com/dpopsuev/jericho/pool"
+	"github.com/dpopsuev/jericho/signal"
+	"github.com/dpopsuev/jericho/transport"
+	"github.com/dpopsuev/jericho/world"
 )
 
 // Staff is the top-level entry point for the Bugle facade. It wires

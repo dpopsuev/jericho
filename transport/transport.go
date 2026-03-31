@@ -9,7 +9,7 @@ package transport
 import (
 	"context"
 
-	"github.com/dpopsuev/bugle/signal"
+	"github.com/dpopsuev/jericho/signal"
 )
 
 // Transport is the send/subscribe interface for agent-to-agent communication.

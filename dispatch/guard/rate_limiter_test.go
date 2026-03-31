@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	bd "github.com/dpopsuev/bugle/dispatch"
+	bd "github.com/dpopsuev/jericho/dispatch"
 )
 
 type countingDispatcher struct {

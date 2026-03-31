@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/bugle/signal"
+	"github.com/dpopsuev/jericho/signal"
 )
 
 // ---------------------------------------------------------------------------
