@@ -14,6 +14,14 @@ var (
 	ErrSessionRequired = errors.New("session is required")
 )
 
+// WorkerManager is the minimal interface for MCP tool integration.
+// Consumers provide their own implementation (e.g. workload.Controller).
+type WorkerManager interface {
+	Start(ctx context.Context, session string, count int) error
+	Stop() error
+	Health() map[string]any
+}
+
 // WorkersInput is the typed MCP tool input.
 type WorkersInput struct {
 	Action  string `json:"action"`
@@ -22,7 +30,7 @@ type WorkersInput struct {
 }
 
 // RegisterTool adds the workers MCP tool to the given server.
-func RegisterTool(server *sdkmcp.Server, mgr *Manager) {
+func RegisterTool(server *sdkmcp.Server, mgr WorkerManager) {
 	sdkmcp.AddTool(server, &sdkmcp.Tool{
 		Name:        "workers",
 		Description: "Agent worker management. Actions: start (spawn N workers), stop (kill all), health (status).",
@@ -53,9 +61,9 @@ func RegisterTool(server *sdkmcp.Server, mgr *Manager) {
 }
 
 // NewMCPServer creates an MCP server with the workers tool registered.
-func NewMCPServer(mgr *Manager) *sdkmcp.Server {
+func NewMCPServer(mgr WorkerManager) *sdkmcp.Server {
 	server := sdkmcp.NewServer(
-		&sdkmcp.Implementation{Name: "jericho-orchestrator", Version: "v0.1.0"},
+		&sdkmcp.Implementation{Name: "jericho-orchestrator", Version: "v0.2.0"},
 		nil,
 	)
 	RegisterTool(server, mgr)
@@ -63,7 +71,7 @@ func NewMCPServer(mgr *Manager) *sdkmcp.Server {
 }
 
 // ServeStdio runs the MCP server over stdio (for Claude Code integration).
-func ServeStdio(ctx context.Context, mgr *Manager) error {
+func ServeStdio(ctx context.Context, mgr WorkerManager) error {
 	server := NewMCPServer(mgr)
 	transport := &sdkmcp.StdioTransport{}
 	_, err := server.Connect(ctx, transport, nil)
