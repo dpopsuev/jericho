@@ -35,11 +35,11 @@ type WorkerConfig struct {
 	PushAction string
 	// Session key name in arguments (default: bugle.DefaultSessionKey).
 	SessionKey string
-	// WorkerID sent on step/submit. If empty, uses workerName argument.
+	// WorkerID sent on pull/push. If empty, uses workerName argument.
 	WorkerID string
-	// HornFunc is called before submit to report worker health. Nil = omit.
-	HornFunc func() *bugle.Horn
-	// BudgetFunc is called before submit to report resource consumption. Nil = omit.
+	// AndonFunc is called before push to report worker health. Nil = omit.
+	AndonFunc func() *bugle.Andon
+	// BudgetFunc is called before push to report resource consumption. Nil = omit.
 	BudgetFunc func() *bugle.BudgetActual
 	// OnPull is called after each pull response with protocol metadata. Nil = no-op.
 	OnPull func(bugle.PullMeta)
@@ -117,13 +117,13 @@ func RunWorker(ctx context.Context, endpoint, agentName, sessionID, workerName s
 		// Notify callback with protocol metadata.
 		if cfg.OnPull != nil {
 			cfg.OnPull(bugle.PullMeta{
-				Horn:            pullResp.Horn,
+				Andon:           pullResp.Andon,
 				BudgetRemaining: pullResp.BudgetRemaining,
 			})
 		}
 
-		// Horn black = abort signal.
-		if pullResp.Horn == bugle.HornBlack {
+		// Andon dead = abort signal.
+		if pullResp.Andon == bugle.AndonDead {
 			slog.WarnContext(ctx, "abort signal received",
 				slog.String(logKeyWorker, workerName))
 			return nil
@@ -159,9 +159,9 @@ func RunWorker(ctx context.Context, endpoint, agentName, sessionID, workerName s
 			"item":         pullResp.Item,
 			"fields":       json.RawMessage(response),
 		}
-		if cfg.HornFunc != nil {
-			if h := cfg.HornFunc(); h != nil {
-				submitArgs["horn"] = h
+		if cfg.AndonFunc != nil {
+			if a := cfg.AndonFunc(); a != nil {
+				submitArgs["andon"] = a
 			}
 		}
 		if cfg.BudgetFunc != nil {

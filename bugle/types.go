@@ -43,7 +43,7 @@ type PullResponse struct {
 	Item            string           `json:"item,omitempty"`
 	PromptContent   string           `json:"prompt_content,omitempty"`
 	DispatchID      int64            `json:"dispatch_id,omitempty"`
-	Horn            HornLevel        `json:"horn,omitempty"` // session-level severity
+	Andon           AndonLevel       `json:"andon,omitempty"` // session-level severity
 	BudgetRemaining *BudgetRemaining `json:"budget_remaining,omitempty"`
 }
 
@@ -58,7 +58,7 @@ type PushRequest struct {
 	Item       string          `json:"item"`
 	Fields     json.RawMessage `json:"fields"`
 	Status     SubmitStatus    `json:"status,omitempty"` // default: ok
-	Horn       *Horn           `json:"horn,omitempty"`
+	Andon      *Andon          `json:"andon,omitempty"`
 	Budget     *BudgetActual   `json:"budget_actual,omitempty"`
 	Auth       *AuthToken      `json:"auth,omitempty"`
 }
@@ -98,16 +98,17 @@ type StatusRequest struct {
 type StatusResponse struct {
 	SessionID string         `json:"session_id"`
 	Progress  Progress       `json:"progress"`
-	Health    *HealthSummary `json:"health,omitempty"`
+	Andon     *AndonSummary  `json:"andon,omitempty"`
 	Budget    *BudgetSummary `json:"budget,omitempty"`
 	Cordons   []Cordon       `json:"cordons,omitempty"`
 }
 
-// HealthSummary is the aggregated health in a status response.
-type HealthSummary struct {
-	Level         HornLevel            `json:"level"`
-	WorstCategory HornCategory         `json:"worst_category,omitempty"`
-	PerWorker     map[string]HornLevel `json:"per_worker,omitempty"`
+// AndonSummary is the aggregated andon in a status response.
+type AndonSummary struct {
+	Level         AndonLevel            `json:"level"`
+	Priority      uint8                 `json:"priority"`
+	WorstCategory AndonCategory         `json:"worst_category,omitempty"`
+	PerWorker     map[string]AndonLevel `json:"per_worker,omitempty"`
 }
 
 // --- Cordon ---
@@ -138,6 +139,6 @@ type AuthToken struct {
 
 // PullMeta carries protocol metadata from a pull response for worker callbacks.
 type PullMeta struct {
-	Horn            HornLevel        `json:"horn,omitempty"`
+	Andon           AndonLevel       `json:"andon,omitempty"`
 	BudgetRemaining *BudgetRemaining `json:"budget_remaining,omitempty"`
 }
