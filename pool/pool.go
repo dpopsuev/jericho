@@ -69,7 +69,8 @@ func (p *AgentPool) Fork(ctx context.Context, role string, config AgentConfig, p
 	id := p.world.Spawn()
 
 	// 2. Attach components.
-	world.Attach(p.world, id, world.Health{State: world.Active, LastSeen: time.Now()})
+	world.Attach(p.world, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
+	world.Attach(p.world, id, world.Ready{Ready: true, LastSeen: time.Now()})
 	world.Attach(p.world, id, world.Hierarchy{Parent: parentID})
 	if config.Budget > 0 {
 		world.Attach(p.world, id, world.Budget{Ceiling: config.Budget})
@@ -158,9 +159,10 @@ func (p *AgentPool) Kill(ctx context.Context, id world.EntityID) error {
 	p.transport.Roles().Unregister(agentID)
 	p.transport.Unregister(agentID)
 
-	// Update health — BEFORE notifying Wait() callers, because reap()
+	// Update liveness — BEFORE notifying Wait() callers, because reap()
 	// calls Despawn() which would make this Attach panic on a dead entity.
-	world.Attach(p.world, id, world.Health{State: world.Done, LastSeen: time.Now()})
+	world.Attach(p.world, id, world.Alive{State: world.AliveTerminated, ExitedAt: time.Now()})
+	world.Attach(p.world, id, world.Ready{Ready: false, LastSeen: time.Now(), Reason: "terminated"})
 
 	// Emit signal.
 	p.bus.Emit(&signal.Signal{

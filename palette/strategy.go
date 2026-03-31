@@ -27,6 +27,7 @@ func (s *DefaultStrategy) Resolve(role, collective string) (world.EntityID, erro
 
 	id := s.w.Spawn()
 	world.Attach(s.w, id, color)
-	world.Attach(s.w, id, world.Health{State: world.Active, LastSeen: time.Now()})
+	world.Attach(s.w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
+	world.Attach(s.w, id, world.Ready{Ready: true, LastSeen: time.Now()})
 	return id, nil
 }

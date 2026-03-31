@@ -49,13 +49,26 @@ func (a *Solo) IsAlive() bool {
 	return a.world.Alive(a.id)
 }
 
-// IsHealthy returns true if the agent's Health component has State == Active.
+// IsHealthy returns true if the agent is alive and ready.
 func (a *Solo) IsHealthy() bool {
-	h, ok := world.TryGet[world.Health](a.world, a.id)
-	if !ok {
+	alive, ok := world.TryGet[world.Alive](a.world, a.id)
+	if !ok || alive.State != world.AliveRunning {
 		return false
 	}
-	return h.State == world.Active
+	ready, ok := world.TryGet[world.Ready](a.world, a.id)
+	return ok && ready.Ready
+}
+
+// IsRunning returns true if the agent process is running (liveness probe).
+func (a *Solo) IsRunning() bool {
+	alive, ok := world.TryGet[world.Alive](a.world, a.id)
+	return ok && alive.State == world.AliveRunning
+}
+
+// IsReady returns true if the agent can accept work (readiness probe).
+func (a *Solo) IsReady() bool {
+	ready, ok := world.TryGet[world.Ready](a.world, a.id)
+	return ok && ready.Ready
 }
 
 // IsZombie returns true if the agent is finished but not yet reaped.
@@ -63,9 +76,14 @@ func (a *Solo) IsZombie() bool {
 	return a.pool.IsZombie(a.id)
 }
 
-// Health returns the agent's Health component.
-func (a *Solo) Health() (world.Health, bool) {
-	return world.TryGet[world.Health](a.world, a.id)
+// Alive returns the agent's liveness component.
+func (a *Solo) Alive() (world.Alive, bool) {
+	return world.TryGet[world.Alive](a.world, a.id)
+}
+
+// Ready returns the agent's readiness component.
+func (a *Solo) Ready() (world.Ready, bool) {
+	return world.TryGet[world.Ready](a.world, a.id)
 }
 
 // Budget returns the agent's Budget component.

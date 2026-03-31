@@ -88,7 +88,7 @@ func spawnAgent(t *testing.T, w *world.World, reg *palette.Registry, tr *transpo
 	}
 	id := w.Spawn()
 	world.Attach(w, id, color)
-	world.Attach(w, id, world.Health{State: world.Active, LastSeen: time.Now()})
+	world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
 	tr.Register(color.Short(), cliHandler(p.command, p.args))
 	t.Logf("spawned %s agent: %s (entity %d)", p.name, color.Title(), id)
 	return color.Short()
@@ -145,8 +145,8 @@ func runPairTest(t *testing.T, p providerSpec) {
 	if stats.TotalEntities != 2 {
 		t.Errorf("entities = %d, want 2", stats.TotalEntities)
 	}
-	if stats.ByState[world.Active] != 2 {
-		t.Errorf("active = %d, want 2", stats.ByState[world.Active])
+	if stats.ByAlive[world.AliveRunning] != 2 {
+		t.Errorf("active = %d, want 2", stats.ByAlive[world.AliveRunning])
 	}
 }
 
@@ -249,8 +249,8 @@ func TestE2E_MixedQuartet(t *testing.T) {
 	if stats.TotalEntities != len(agents) {
 		t.Errorf("entities = %d, want %d", stats.TotalEntities, len(agents))
 	}
-	if stats.ByState[world.Active] != len(agents) {
-		t.Errorf("active = %d, want %d", stats.ByState[world.Active], len(agents))
+	if stats.ByAlive[world.AliveRunning] != len(agents) {
+		t.Errorf("active = %d, want %d", stats.ByAlive[world.AliveRunning], len(agents))
 	}
 	if stats.Collectives != 1 {
 		t.Errorf("collectives = %d, want 1", stats.Collectives)

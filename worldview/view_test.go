@@ -19,17 +19,18 @@ func TestSnapshot_MatchesComponentTypes(t *testing.T) {
 	b := w.Spawn()
 	c := w.Spawn()
 
-	world.Attach(w, a, world.Health{State: world.Active})
+	world.Attach(w, a, world.Alive{State: world.AliveRunning, Since: time.Now()})
 	world.Attach(w, a, palette.ColorIdentity{Color: "Denim", Collective: "Refactor"})
 
-	world.Attach(w, b, world.Health{State: world.Idle})
+	world.Attach(w, b, world.Alive{State: world.AliveRunning, Since: time.Now()})
+	world.Attach(w, b, world.Ready{Ready: false, LastSeen: time.Now(), Reason: "idle"})
 	world.Attach(w, b, palette.ColorIdentity{Color: "Scarlet", Collective: "Triage"})
 
 	// c has only Health — should NOT match a 2-type query.
-	world.Attach(w, c, world.Health{State: world.Done})
+	world.Attach(w, c, world.Alive{State: world.AliveTerminated, ExitedAt: time.Now()})
 
 	v := worldview.NewView(w)
-	snaps := v.Snapshot(world.HealthType, palette.ColorIdentityType)
+	snaps := v.Snapshot(world.AliveType, palette.ColorIdentityType)
 
 	if len(snaps) != 2 {
 		t.Fatalf("Snapshot returned %d entities, want 2", len(snaps))
@@ -65,27 +66,27 @@ func TestSnapshot_NoMatches(t *testing.T) {
 func TestSnapshot_ReflectsLatestState(t *testing.T) {
 	w := world.NewWorld()
 	id := w.Spawn()
-	world.Attach(w, id, world.Health{State: world.Active})
+	world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
 
 	v := worldview.NewView(w)
 
 	// First snapshot.
-	snaps := v.Snapshot(world.HealthType)
+	snaps := v.Snapshot(world.AliveType)
 	if len(snaps) != 1 {
 		t.Fatalf("expected 1 snapshot, got %d", len(snaps))
 	}
-	h := snaps[0].Components[world.HealthType].(world.Health)
-	if h.State != world.Active {
-		t.Errorf("state = %s, want active", h.State)
+	alive := snaps[0].Components[world.AliveType].(world.Alive)
+	if alive.State != world.AliveRunning {
+		t.Errorf("state = %s, want running", alive.State)
 	}
 
-	// Update and re-snapshot.
-	world.Attach(w, id, world.Health{State: world.Errored, Error: "timeout"})
+	// Update ready and re-snapshot.
+	world.Attach(w, id, world.Ready{Ready: false, LastSeen: time.Now(), Reason: "errored", Error: "timeout"})
 
-	snaps = v.Snapshot(world.HealthType)
-	h = snaps[0].Components[world.HealthType].(world.Health)
-	if h.State != world.Errored {
-		t.Errorf("state = %s, want errored", h.State)
+	snaps = v.Snapshot(world.ReadyType)
+	r := snaps[0].Components[world.ReadyType].(world.Ready)
+	if r.Reason != "errored" {
+		t.Errorf("reason = %s, want errored", r.Reason)
 	}
 }
 
@@ -99,7 +100,7 @@ func TestSubscribe_AttachEmitsDiff(t *testing.T) {
 	ch := v.Subscribe()
 
 	id := w.Spawn()
-	world.Attach(w, id, world.Health{State: world.Active})
+	world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
 
 	select {
 	case d := <-ch:
@@ -109,8 +110,8 @@ func TestSubscribe_AttachEmitsDiff(t *testing.T) {
 		if d.Entity != id {
 			t.Errorf("entity = %d, want %d", d.Entity, id)
 		}
-		if d.Component != world.HealthType {
-			t.Errorf("component = %s, want %s", d.Component, world.HealthType)
+		if d.Component != world.AliveType {
+			t.Errorf("component = %s, want %s", d.Component, world.AliveType)
 		}
 		if d.Old != nil {
 			t.Error("Old should be nil for attached")
@@ -128,12 +129,12 @@ func TestSubscribe_UpdateEmitsDiff(t *testing.T) {
 	v := worldview.NewView(w)
 
 	id := w.Spawn()
-	world.Attach(w, id, world.Health{State: world.Active})
+	world.Attach(w, id, world.Ready{Ready: true, LastSeen: time.Now()})
 
 	ch := v.Subscribe()
 
-	// Second attach triggers DiffUpdated.
-	world.Attach(w, id, world.Health{State: world.Errored, Error: "timeout"})
+	// Second attach of same component triggers DiffUpdated.
+	world.Attach(w, id, world.Ready{Ready: false, LastSeen: time.Now(), Reason: "errored", Error: "timeout"})
 
 	select {
 	case d := <-ch:
@@ -143,13 +144,13 @@ func TestSubscribe_UpdateEmitsDiff(t *testing.T) {
 		if d.Old == nil {
 			t.Fatal("Old should not be nil for updated")
 		}
-		oldH := d.Old.(world.Health)
-		if oldH.State != world.Active {
-			t.Errorf("old state = %s, want active", oldH.State)
+		oldR := d.Old.(world.Ready)
+		if !oldR.Ready {
+			t.Errorf("old ready = false, want true")
 		}
-		newH := d.New.(world.Health)
-		if newH.State != world.Errored {
-			t.Errorf("new state = %s, want errored", newH.State)
+		newR := d.New.(world.Ready)
+		if newR.Reason != "errored" {
+			t.Errorf("new reason = %s, want errored", newR.Reason)
 		}
 	case <-time.After(time.Second):
 		t.Fatal("timed out waiting for diff")
@@ -161,10 +162,10 @@ func TestSubscribe_DetachEmitsDiff(t *testing.T) {
 	v := worldview.NewView(w)
 
 	id := w.Spawn()
-	world.Attach(w, id, world.Health{State: world.Active})
+	world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
 
 	ch := v.Subscribe()
-	world.Detach[world.Health](w, id)
+	world.Detach[world.Alive](w, id)
 
 	select {
 	case d := <-ch:
@@ -187,7 +188,7 @@ func TestSubscribe_FiltersByType(t *testing.T) {
 	v := worldview.NewView(w)
 
 	// Subscribe to Health only.
-	ch := v.Subscribe(world.HealthType)
+	ch := v.Subscribe(world.AliveType)
 
 	id := w.Spawn()
 	// Attach a ColorIdentity (should NOT trigger diff on this channel).
@@ -201,12 +202,12 @@ func TestSubscribe_FiltersByType(t *testing.T) {
 	}
 
 	// Now attach Health — should trigger.
-	world.Attach(w, id, world.Health{State: world.Active})
+	world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
 
 	select {
 	case d := <-ch:
-		if d.Component != world.HealthType {
-			t.Errorf("component = %s, want %s", d.Component, world.HealthType)
+		if d.Component != world.AliveType {
+			t.Errorf("component = %s, want %s", d.Component, world.AliveType)
 		}
 	case <-time.After(time.Second):
 		t.Fatal("timed out waiting for Health diff")
@@ -228,7 +229,7 @@ func TestSubscribe_Unsubscribe(t *testing.T) {
 
 	// Attach should not panic (no subscriber).
 	id := w.Spawn()
-	world.Attach(w, id, world.Health{State: world.Active})
+	world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
 }
 
 func TestSubscribe_MultipleSubs(t *testing.T) {
@@ -239,7 +240,7 @@ func TestSubscribe_MultipleSubs(t *testing.T) {
 	ch2 := v.Subscribe()
 
 	id := w.Spawn()
-	world.Attach(w, id, world.Health{State: world.Active})
+	world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
 
 	for i, ch := range []<-chan worldview.Diff{ch1, ch2} {
 		select {
@@ -323,21 +324,24 @@ func TestHierarchy_RootsHaveNoParent(t *testing.T) {
 // Stats tests
 // ---------------------------------------------------------------------------
 
-func TestStats_CountsByState(t *testing.T) {
+func TestStats_CountsByAliveAndReady(t *testing.T) {
 	w := world.NewWorld()
 
-	// 3 active, 2 idle, 1 errored.
+	// 3 running + ready, 2 running + not-ready, 1 terminated.
 	for range 3 {
 		id := w.Spawn()
-		world.Attach(w, id, world.Health{State: world.Active})
+		world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
+		world.Attach(w, id, world.Ready{Ready: true, LastSeen: time.Now()})
 	}
 	for range 2 {
 		id := w.Spawn()
-		world.Attach(w, id, world.Health{State: world.Idle})
+		world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
+		world.Attach(w, id, world.Ready{Ready: false, LastSeen: time.Now(), Reason: "idle"})
 	}
 	{
 		id := w.Spawn()
-		world.Attach(w, id, world.Health{State: world.Errored})
+		world.Attach(w, id, world.Alive{State: world.AliveTerminated, ExitedAt: time.Now()})
+		world.Attach(w, id, world.Ready{Ready: false, LastSeen: time.Now(), Reason: "terminated"})
 	}
 
 	v := worldview.NewView(w)
@@ -346,14 +350,17 @@ func TestStats_CountsByState(t *testing.T) {
 	if s.TotalEntities != 6 {
 		t.Errorf("TotalEntities = %d, want 6", s.TotalEntities)
 	}
-	if s.ByState[world.Active] != 3 {
-		t.Errorf("Active = %d, want 3", s.ByState[world.Active])
+	if s.ByAlive[world.AliveRunning] != 5 {
+		t.Errorf("Running = %d, want 5", s.ByAlive[world.AliveRunning])
 	}
-	if s.ByState[world.Idle] != 2 {
-		t.Errorf("Idle = %d, want 2", s.ByState[world.Idle])
+	if s.ByAlive[world.AliveTerminated] != 1 {
+		t.Errorf("Terminated = %d, want 1", s.ByAlive[world.AliveTerminated])
 	}
-	if s.ByState[world.Errored] != 1 {
-		t.Errorf("Errored = %d, want 1", s.ByState[world.Errored])
+	if s.ReadyCount != 3 {
+		t.Errorf("Ready = %d, want 3", s.ReadyCount)
+	}
+	if s.NotReadyCount != 3 {
+		t.Errorf("NotReady = %d, want 3", s.NotReadyCount)
 	}
 }
 
@@ -392,11 +399,11 @@ func TestAcceptance_MinimapPattern(t *testing.T) {
 		shade      string
 		role       string
 		collective string
-		state      world.AgentState
+		ready      bool
 	}{
-		{"Denim", "Indigo", "Writer", "Refactor", world.Active},
-		{"Scarlet", "Crimson", "Reviewer", "Refactor", world.Active},
-		{"Cerulean", "Azure", "Coder", "Triage", world.Idle},
+		{"Denim", "Indigo", "Writer", "Refactor", true},
+		{"Scarlet", "Crimson", "Reviewer", "Refactor", true},
+		{"Cerulean", "Azure", "Coder", "Triage", false},
 	}
 
 	for _, a := range agents {
@@ -407,13 +414,14 @@ func TestAcceptance_MinimapPattern(t *testing.T) {
 			Role:       a.role,
 			Collective: a.collective,
 		})
-		world.Attach(w, id, world.Health{State: a.state, LastSeen: time.Now()})
+		world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
+		world.Attach(w, id, world.Ready{Ready: a.ready, LastSeen: time.Now()})
 	}
 
 	v := worldview.NewView(w)
 
 	// Snapshot all agents with both components.
-	snaps := v.Snapshot(palette.ColorIdentityType, world.HealthType)
+	snaps := v.Snapshot(palette.ColorIdentityType, world.AliveType)
 	if len(snaps) != 3 {
 		t.Fatalf("expected 3 snapshots, got %d", len(snaps))
 	}
@@ -421,14 +429,14 @@ func TestAcceptance_MinimapPattern(t *testing.T) {
 	// Verify each snapshot has readable data.
 	for _, s := range snaps {
 		ci := s.Components[palette.ColorIdentityType].(palette.ColorIdentity)
-		h := s.Components[world.HealthType].(world.Health)
+		alive := s.Components[world.AliveType].(world.Alive)
 		if ci.Color == "" {
 			t.Errorf("entity %d: empty Color", s.ID)
 		}
-		if h.State == "" {
+		if alive.State == "" {
 			t.Errorf("entity %d: empty State", s.ID)
 		}
-		t.Logf("entity %d: %s — %s", s.ID, ci.Title(), h.State)
+		t.Logf("entity %d: %s — %s", s.ID, ci.Title(), alive.State)
 	}
 
 	// Stats should reflect the world.
@@ -436,8 +444,8 @@ func TestAcceptance_MinimapPattern(t *testing.T) {
 	if stats.TotalEntities != 3 {
 		t.Errorf("TotalEntities = %d, want 3", stats.TotalEntities)
 	}
-	if stats.ByState[world.Active] != 2 {
-		t.Errorf("Active = %d, want 2", stats.ByState[world.Active])
+	if stats.ByAlive[world.AliveRunning] != 3 {
+		t.Errorf("Running = %d, want 3", stats.ByAlive[world.AliveRunning])
 	}
 	if stats.Collectives != 2 {
 		t.Errorf("Collectives = %d, want 2", stats.Collectives)

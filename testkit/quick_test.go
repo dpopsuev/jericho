@@ -25,7 +25,7 @@ func TestQuickWorld_CreatesNAgents(t *testing.T) {
 			t.Errorf("agent %d (id=%d) should be alive", i, id)
 		}
 		AssertEntityHas[palette.ColorIdentity](t, w, id)
-		AssertEntityHas[world.Health](t, w, id)
+		AssertEntityHas[world.Alive](t, w, id)
 	}
 }
 

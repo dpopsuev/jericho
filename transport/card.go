@@ -38,8 +38,15 @@ func CardFromEntity(w *world.World, id world.EntityID) AgentCard {
 		card.Role = color.Role
 	}
 
-	if health, ok := world.TryGet[world.Health](w, id); ok {
-		card.Metadata["health"] = string(health.State)
+	if alive, ok := world.TryGet[world.Alive](w, id); ok {
+		card.Metadata["alive"] = string(alive.State)
+	}
+	if ready, ok := world.TryGet[world.Ready](w, id); ok {
+		if ready.Ready {
+			card.Metadata["ready"] = "true"
+		} else {
+			card.Metadata["ready"] = ready.Reason
+		}
 	}
 
 	// Clean up empty metadata to match JSON omitempty semantics.

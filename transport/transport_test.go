@@ -275,18 +275,19 @@ func TestCardFromEntity_WithHealth(t *testing.T) {
 	world.Attach(w, agent, palette.ColorIdentity{
 		Shade: "Azure", Color: "Cerulean", Role: "Reviewer", Collective: "QA",
 	})
-	world.Attach(w, agent, world.Health{
-		State:    world.Active,
-		LastSeen: time.Now(),
-	})
+	world.Attach(w, agent, world.Alive{State: world.AliveRunning, Since: time.Now()})
+	world.Attach(w, agent, world.Ready{Ready: true, LastSeen: time.Now()})
 
 	card := CardFromEntity(w, agent)
 
 	if card.Metadata == nil {
-		t.Fatal("Metadata should not be nil when Health is attached")
+		t.Fatal("Metadata should not be nil when Alive is attached")
 	}
-	if card.Metadata["health"] != "active" {
-		t.Errorf("Metadata[health] = %q, want %q", card.Metadata["health"], "active")
+	if card.Metadata["alive"] != "running" {
+		t.Errorf("Metadata[alive] = %q, want %q", card.Metadata["alive"], "running")
+	}
+	if card.Metadata["ready"] != "true" {
+		t.Errorf("Metadata[ready] = %q, want %q", card.Metadata["ready"], "true")
 	}
 }
 

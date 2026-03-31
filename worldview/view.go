@@ -33,7 +33,9 @@ type TreeNode struct {
 // Stats provides aggregate counters for the world.
 type Stats struct {
 	TotalEntities int
-	ByState       map[world.AgentState]int
+	ByAlive       map[world.AliveState]int
+	ReadyCount    int
+	NotReadyCount int
 	Collectives   int
 }
 
@@ -234,17 +236,31 @@ func (v *View) Hierarchy() []TreeNode {
 func (v *View) Stats() Stats {
 	s := Stats{
 		TotalEntities: v.world.Count(),
-		ByState:       make(map[world.AgentState]int),
+		ByAlive:       make(map[world.AliveState]int),
 	}
 
-	healthIDs := v.world.QueryType(world.HealthType)
-	for _, id := range healthIDs {
-		c, ok := v.world.GetType(id, world.HealthType)
+	aliveIDs := v.world.QueryType(world.AliveType)
+	for _, id := range aliveIDs {
+		c, ok := v.world.GetType(id, world.AliveType)
 		if !ok {
 			continue
 		}
-		h := c.(world.Health) //nolint:errcheck // type guaranteed by QueryType
-		s.ByState[h.State]++
+		a := c.(world.Alive) //nolint:errcheck // type guaranteed by QueryType
+		s.ByAlive[a.State]++
+	}
+
+	readyIDs := v.world.QueryType(world.ReadyType)
+	for _, id := range readyIDs {
+		c, ok := v.world.GetType(id, world.ReadyType)
+		if !ok {
+			continue
+		}
+		r := c.(world.Ready) //nolint:errcheck // type guaranteed by QueryType
+		if r.Ready {
+			s.ReadyCount++
+		} else {
+			s.NotReadyCount++
+		}
 	}
 
 	colorIDs := v.world.QueryType(palette.ColorIdentityType)

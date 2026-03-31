@@ -4,33 +4,45 @@ import "time"
 
 // Component type constants for core components.
 const (
-	HealthType    ComponentType = "health"
+	AliveType     ComponentType = "alive"
+	ReadyType     ComponentType = "ready"
 	HierarchyType ComponentType = "hierarchy"
 	BudgetType    ComponentType = "budget"
 	ProgressType  ComponentType = "progress"
 	DisplayType   ComponentType = "display"
 )
 
-// AgentState represents the liveness state of an agent.
-type AgentState string
-
-const (
-	Active  AgentState = "active"
-	Idle    AgentState = "idle"
-	Stale   AgentState = "stale"
-	Errored AgentState = "errored"
-	Done    AgentState = "done"
-)
-
-// Health tracks agent liveness and status.
-type Health struct {
-	State    AgentState `json:"state"`
-	LastSeen time.Time  `json:"last_seen"`
-	Error    string     `json:"error,omitempty"`
+// Alive tracks whether the agent process exists (liveness probe).
+// Attached at fork, state set to Done at kill, detached at despawn.
+type Alive struct {
+	State    AliveState `json:"state"`
+	Since    time.Time  `json:"since"`
+	ExitedAt time.Time  `json:"exited_at,omitempty"`
 }
 
 // ComponentType implements Component.
-func (Health) ComponentType() ComponentType { return HealthType }
+func (Alive) ComponentType() ComponentType { return AliveType }
+
+// AliveState is the liveness state of an agent process.
+type AliveState string
+
+const (
+	AliveRunning    AliveState = "running"    // process exists
+	AliveTerminated AliveState = "terminated" // process exited
+)
+
+// Ready tracks whether the agent can accept work (readiness probe).
+// Independent of Alive — an agent can be alive but not ready
+// (starting up, overloaded, errored).
+type Ready struct {
+	Ready    bool      `json:"ready"`
+	LastSeen time.Time `json:"last_seen"`
+	Reason   string    `json:"reason,omitempty"` // why not ready (idle, stale, errored, ...)
+	Error    string    `json:"error,omitempty"`
+}
+
+// ComponentType implements Component.
+func (Ready) ComponentType() ComponentType { return ReadyType }
 
 // Hierarchy represents a parent-child relationship.
 type Hierarchy struct {
