@@ -18,6 +18,9 @@ var safeEnvKeys = []string{
 	"OPENAI_API_KEY",
 	"GOOGLE_API_KEY",
 	"GEMINI_API_KEY",
+	"CODEX_API_KEY",
+	// Claude Vertex AI routing.
+	"CLAUDE_CODE_USE_VERTEX",
 }
 
 // safeEnv builds a minimal environment for child processes.
