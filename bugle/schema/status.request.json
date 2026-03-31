@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bugle/v1/status.request",
+  "title": "Bugle Protocol — status request",
+  "type": "object",
+  "properties": {
+    "action": { "const": "status" },
+    "session_id": { "type": "string" },
+    "auth": { "$ref": "start.request.json#/$defs/auth_token" }
+  },
+  "required": ["action", "session_id"]
+}

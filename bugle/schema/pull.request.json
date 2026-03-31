@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bugle/v1/pull.request",
+  "title": "Bugle Protocol — pull request",
+  "type": "object",
+  "properties": {
+    "action": { "const": "pull" },
+    "session_id": { "type": "string" },
+    "worker_id": { "type": "string", "description": "Opaque worker identity, survives reconnection" },
+    "timeout_ms": { "type": "integer", "minimum": 0, "description": "Max wait in milliseconds" },
+    "role": { "type": "string", "enum": ["worker", "reviewer"], "description": "reviewer pulls blocked items (HITL)" },
+    "auth": { "$ref": "start.request.json#/$defs/auth_token" }
+  },
+  "required": ["action", "session_id"]
+}

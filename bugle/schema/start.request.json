@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bugle/v1/start.request",
+  "title": "Bugle Protocol — start request",
+  "type": "object",
+  "properties": {
+    "action": { "const": "start" },
+    "session_id": { "type": "string", "description": "Optional — server generates if omitted" },
+    "parallel": { "type": "integer", "minimum": 1, "description": "Hint: expected concurrency" },
+    "force": { "type": "boolean", "description": "Cancel existing session and start fresh" },
+    "extra": { "type": "object", "additionalProperties": true, "description": "Domain-specific parameters (pass-through)" },
+    "agent": { "type": "string", "description": "Agent CLI name for auto-spawned workers" },
+    "workers": { "type": "integer", "minimum": 1, "description": "Number of workers to auto-spawn" },
+    "auth": { "$ref": "#/$defs/auth_token" }
+  },
+  "required": ["action"],
+  "$defs": {
+    "auth_token": {
+      "type": "object",
+      "properties": { "token": { "type": "string" } },
+      "required": ["token"]
+    }
+  }
+}

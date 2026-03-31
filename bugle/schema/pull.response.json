@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bugle/v1/pull.response",
+  "title": "Bugle Protocol — pull response",
+  "type": "object",
+  "properties": {
+    "done": { "type": "boolean", "description": "True when session is complete" },
+    "available": { "type": "boolean", "description": "True when a work item is available" },
+    "item": { "type": "string", "description": "Work item identifier" },
+    "prompt_content": { "type": "string", "description": "Prompt text for the agent" },
+    "dispatch_id": { "type": "integer", "description": "Opaque ID — echo back on push" },
+    "andon": { "type": "string", "description": "Session-level andon severity (reserved level name)" },
+    "budget_remaining": {
+      "type": "object",
+      "properties": {
+        "tokens": { "type": "integer" },
+        "time_ms": { "type": "integer" },
+        "cost_usd": { "type": "number" }
+      }
+    }
+  },
+  "required": ["done", "available"]
+}

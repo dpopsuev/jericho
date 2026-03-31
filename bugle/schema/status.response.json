@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bugle/v1/status.response",
+  "title": "Bugle Protocol — status response",
+  "type": "object",
+  "properties": {
+    "session_id": { "type": "string" },
+    "progress": {
+      "type": "object",
+      "properties": {
+        "total": { "type": "integer" },
+        "pending": { "type": "integer" },
+        "assigned": { "type": "integer" },
+        "done": { "type": "integer" },
+        "failed": { "type": "integer" },
+        "blocked": { "type": "integer" },
+        "canceled": { "type": "integer" }
+      },
+      "required": ["total", "pending", "assigned", "done", "failed", "blocked", "canceled"]
+    },
+    "andon": {
+      "type": "object",
+      "properties": {
+        "level": { "type": "string" },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "worst_category": { "type": "string" },
+        "per_worker": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "worker_id → andon level name"
+        }
+      },
+      "required": ["level", "priority"]
+    },
+    "budget": {
+      "type": "object",
+      "properties": {
+        "elapsed_ms": { "type": "integer" },
+        "total_tokens_in": { "type": "integer" },
+        "total_tokens_out": { "type": "integer" },
+        "total_cost_usd": { "type": "number" },
+        "avg_step_ms": { "type": "integer" },
+        "avg_step_tokens": { "type": "integer" }
+      }
+    },
+    "cordons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "scope": { "type": "array", "items": { "type": "string" } },
+          "reason": { "type": "string" }
+        },
+        "required": ["scope"]
+      }
+    }
+  },
+  "required": ["session_id", "progress"]
+}

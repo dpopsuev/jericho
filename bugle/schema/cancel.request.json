@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bugle/v1/cancel.request",
+  "title": "Bugle Protocol — cancel request",
+  "type": "object",
+  "properties": {
+    "action": { "const": "cancel" },
+    "session_id": { "type": "string" },
+    "dispatch_id": { "type": "integer", "description": "Cancel one item. Omit to cancel entire session." },
+    "reason": { "type": "string" },
+    "auth": { "$ref": "start.request.json#/$defs/auth_token" }
+  },
+  "required": ["action", "session_id"]
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bugle/v1/start.response",
+  "title": "Bugle Protocol — start response",
+  "type": "object",
+  "properties": {
+    "session_id": { "type": "string" },
+    "total_items": { "type": "integer" },
+    "status": { "type": "string" },
+    "capabilities": { "$ref": "#/$defs/capabilities" }
+  },
+  "required": ["session_id", "total_items", "status"],
+  "$defs": {
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "protocol": { "type": "string", "const": "bugle/v1" },
+        "layers": {
+          "type": "object",
+          "properties": {
+            "andon": { "type": "boolean" },
+            "budget": { "type": "boolean" },
+            "hitl": { "type": "boolean" },
+            "status": { "type": "boolean" }
+          }
+        },
+        "andon_levels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "priority": { "type": "integer", "minimum": 0, "maximum": 255 },
+              "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+            },
+            "required": ["name", "priority", "color"]
+          }
+        }
+      }
+    }
+  }
+}

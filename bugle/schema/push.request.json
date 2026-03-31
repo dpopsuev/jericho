@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bugle/v1/push.request",
+  "title": "Bugle Protocol — push request",
+  "type": "object",
+  "properties": {
+    "action": { "const": "push" },
+    "session_id": { "type": "string" },
+    "worker_id": { "type": "string" },
+    "dispatch_id": { "type": "integer", "description": "From pull response — echoed back" },
+    "item": { "type": "string", "description": "Work item identifier from pull" },
+    "fields": { "type": "object", "additionalProperties": true, "description": "Result payload — server defines expected shape" },
+    "status": {
+      "type": "string",
+      "enum": ["ok", "blocked", "resolved", "canceled", "error"],
+      "default": "ok",
+      "description": "Item outcome (orthogonal to andon)"
+    },
+    "andon": {
+      "type": "object",
+      "properties": {
+        "level": { "type": "string", "description": "Andon level name (reserved or custom)" },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "category": { "type": "string", "enum": ["budget", "deadlock", "lifecycle", "quality", "security", "drift"] },
+        "message": { "type": "string", "description": "REQUIRED — always explain what's happening" },
+        "detail": { "type": "string", "description": "Structured metadata, consumer-defined format" }
+      },
+      "required": ["level", "priority", "message"]
+    },
+    "budget_actual": {
+      "type": "object",
+      "properties": {
+        "tokens_in": { "type": "integer" },
+        "tokens_out": { "type": "integer" },
+        "wall_ms": { "type": "integer" },
+        "cost_usd": { "type": "number" }
+      }
+    },
+    "auth": { "$ref": "start.request.json#/$defs/auth_token" }
+  },
+  "required": ["action", "session_id", "dispatch_id", "item", "fields"]
+}

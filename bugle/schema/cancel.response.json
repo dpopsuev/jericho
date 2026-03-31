@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bugle/v1/cancel.response",
+  "title": "Bugle Protocol — cancel response",
+  "type": "object",
+  "properties": {
+    "ok": { "type": "boolean" },
+    "canceled": { "type": "integer", "description": "Number of items canceled" }
+  },
+  "required": ["ok", "canceled"]
+}
