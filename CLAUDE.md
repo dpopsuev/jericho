@@ -6,7 +6,7 @@ Jericho is the agent platform — ECS framework for managing autonomous AI agent
 
 - Repo: github.com/dpopsuev/jericho (renamed from bugle on 2026-03-31)
 - Scribe scope: jericho (legacy artifacts use BGL- prefix)
-- Campaigns: BGL-CMP-6 (v0.1.0 Bugle Protocol, complete), BGL-CMP-7 (v0.2.0 Cloud Native, active)
+- Campaigns: BGL-CMP-6 (v0.1.0, complete), BGL-CMP-7 (v0.2.0 Cloud Native, complete)
 
 ## Ecosystem Dependency Rules (JRC-SPC-2)
 
@@ -21,19 +21,22 @@ Dependency direction: `Origami -> Jericho <- Djinn`
 ## Package Map
 
 ```
-bugle/        — Bugle Protocol types (LEAF, zero external deps)
-orchestrate/  — Protocol client loop (uses Responder interface)
+bugle/        — Bugle Protocol types + AuthServer middleware (LEAF, zero deps)
+orchestrate/  — Protocol client loop (RunWorker, MCP helpers)
 resilience/   — Circuit breaker, rate limiter, retry (pure algorithms)
-acp/          — Agent Context Protocol launcher
-pool/         — Agent process lifecycle (Fork/Kill/Wait)
-agent/        — Staff, Solo, Agent interface (was facade/)
-collective/   — Multi-agent collectives (Dialectic, Arbiter strategies)
+acp/          — Agent Context Protocol launcher (safe cmd.Env)
+pool/         — Agent process lifecycle (Fork/Kill/Wait, restart, graceful term)
+agent/        — Staff, Solo, Agent interface
+collective/   — Multi-agent collectives (Dialectic, Arbiter, RoundRobin, Race, Scatter, DialecticPair)
 transport/    — A2A messaging (LocalTransport, role-based routing, AgentLookup)
-signal/       — Event bus (Bus, DurableBus)
-world/        — ECS entity-component store
-palette/      — Color identity engine (56 colors, registry)
-identity/     — Agent identity types (Persona, AgentIdentity)
+signal/       — Event bus (Bus, DurableBus, WorkerStatus typed enum)
+world/        — ECS entity-component store (Alive/Ready probes, ZonedWorld)
+symbol/       — Visual identity (Color, Element, Persona, 12-shade palette, Registry)
+trait/        — Behavioral traits (8-trait vocabulary, FromVector bridge to Arsenal)
+intent/       — Mission purpose (ECS component)
 persona/      — Default persona templates (Herald, Seeker, etc.)
+arsenal/      — Embedded model catalog (trait-scored selection, Select/Pick, snapshot pinning)
+workload/     — Declarative YAML workload types (WorkerPool, DebateTeam, TaskRunner, Controller)
 billing/      — Token/cost tracking
 worldview/    — Observable agent state (Snapshot, Subscribe)
 testkit/      — Test fixtures (QuickWorld, handlers, assertions)
