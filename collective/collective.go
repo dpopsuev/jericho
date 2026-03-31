@@ -35,6 +35,16 @@ type DebateRound struct {
 	Converged          bool
 }
 
+// Phase represents the lifecycle state of a collective.
+type Phase string
+
+const (
+	PhasePending   Phase = "pending"   // spawning agents
+	PhaseRunning   Phase = "running"   // operational
+	PhaseSucceeded Phase = "succeeded" // all done cleanly
+	PhaseFailed    Phase = "failed"    // error during operation
+)
+
 // Collective wraps N agents behind the agent.Agent interface.
 // Operators see one agent. Internally, N agents debate/collaborate.
 type Collective struct {
@@ -47,6 +57,7 @@ type Collective struct {
 	handler  func(content string) string
 	mu       sync.RWMutex
 	rounds   []DebateRound
+	phase    Phase
 }
 
 // CollectiveOption configures an Collective.
@@ -69,6 +80,7 @@ func NewCollective(id world.EntityID, role string, strategy CollectiveStrategy, 
 		role:     role,
 		strategy: strategy,
 		agents:   agents,
+		phase:    PhaseRunning,
 	}
 	for _, o := range opts {
 		o(c)
@@ -148,14 +160,22 @@ func (c *Collective) Broadcast(ctx context.Context, content string) error {
 
 // --- Lifecycle ---
 
-// Kill stops all internal agents.
+// Kill stops all internal agents and transitions to Succeeded or Failed.
 func (c *Collective) Kill(ctx context.Context) error {
+	var firstErr error
 	for _, a := range c.agents {
-		if err := a.Kill(ctx); err != nil {
-			return err
+		if err := a.Kill(ctx); err != nil && firstErr == nil {
+			firstErr = err
 		}
 	}
-	return nil
+	c.mu.Lock()
+	if firstErr != nil {
+		c.phase = PhaseFailed
+	} else {
+		c.phase = PhaseSucceeded
+	}
+	c.mu.Unlock()
+	return firstErr
 }
 
 // KillWithReason stops all agents with the given exit code.
@@ -258,6 +278,44 @@ func (c *Collective) addDebateRound(r DebateRound) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.rounds = append(c.rounds, r)
+}
+
+// Phase returns the current lifecycle phase.
+func (c *Collective) Phase() Phase {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.phase
+}
+
+// Scale adjusts the number of agents to the target count.
+// Spawns new agents or kills excess agents as needed.
+func (c *Collective) Scale(ctx context.Context, target int, config pool.AgentConfig, staff *agent.Staff) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	current := len(c.agents)
+	if target == current {
+		return nil
+	}
+
+	if target > current {
+		// Scale up — spawn new agents.
+		for range target - current {
+			a, err := staff.Spawn(ctx, config.Role, config)
+			if err != nil {
+				return fmt.Errorf("collective scale up: %w", err)
+			}
+			c.agents = append(c.agents, a)
+		}
+	} else {
+		// Scale down — kill excess agents (from the end).
+		for i := current - 1; i >= target; i-- {
+			c.agents[i].Kill(ctx) //nolint:errcheck // best-effort during scale down
+		}
+		c.agents = c.agents[:target]
+	}
+
+	return nil
 }
 
 // Compile-time checks.

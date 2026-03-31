@@ -16,13 +16,18 @@ var (
 	ErrNoStrategy   = errors.New("collective requires a strategy")
 )
 
+// ErrInitFailed is returned when an init agent fails before main agents start.
+var ErrInitFailed = errors.New("collective init agent failed")
+
 // CollectiveConfig configures a new Collective.
 type CollectiveConfig struct {
-	Role     string             // collective's external role name
-	Strategy CollectiveStrategy // how agents collaborate
-	Agents   []pool.AgentConfig // one config per internal agent
-	Ingress  *pool.AgentConfig  // optional ingress gate agent (bouncer)
-	Egress   *pool.AgentConfig  // optional egress gate agent (reviewer)
+	Role       string             // collective's external role name
+	Strategy   CollectiveStrategy // how agents collaborate
+	Agents     []pool.AgentConfig // one config per internal agent
+	Init       []pool.AgentConfig // init agents — run to completion before main agents start
+	InitPrompt string             // prompt to send to each init agent (empty = skip Ask)
+	Ingress    *pool.AgentConfig  // optional ingress gate agent (bouncer)
+	Egress     *pool.AgentConfig  // optional egress gate agent (reviewer)
 }
 
 // SpawnCollective creates an Collective by spawning N agents via Staff.
@@ -36,6 +41,22 @@ func SpawnCollective(ctx context.Context, staff *agent.Staff, cfg CollectiveConf
 		return nil, ErrNoStrategy
 	}
 
+	// Phase: Pending — run init agents to completion first.
+	for i := range cfg.Init {
+		initAgent, err := staff.Spawn(ctx, cfg.Init[i].Role, cfg.Init[i])
+		if err != nil {
+			return nil, fmt.Errorf("%w: spawn init agent %q: %w", ErrInitFailed, cfg.Init[i].Role, err)
+		}
+		if cfg.InitPrompt != "" {
+			if _, err := initAgent.Ask(ctx, cfg.InitPrompt); err != nil {
+				initAgent.Kill(ctx) //nolint:errcheck // cleanup
+				return nil, fmt.Errorf("%w: init agent %q: %w", ErrInitFailed, cfg.Init[i].Role, err)
+			}
+		}
+		initAgent.Kill(ctx) //nolint:errcheck // init agents run to completion
+	}
+
+	// Phase: Spawning main agents.
 	agents := make([]*agent.Solo, 0, len(cfg.Agents))
 	for i := range cfg.Agents {
 		a, err := staff.Spawn(ctx, cfg.Agents[i].Role, cfg.Agents[i])
