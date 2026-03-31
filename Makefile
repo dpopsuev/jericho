@@ -15,7 +15,13 @@ lint:
 lint-new:
 	golangci-lint run --new-from-rev=HEAD ./...
 
-preflight: fmt vet lint test
+check-imports:
+	@echo "Checking forbidden imports..."
+	@! grep -r '"github.com/dpopsuev/origami' --include='*.go' . && \
+	 ! grep -r '"github.com/dpopsuev/djinn' --include='*.go' . && \
+	 echo "OK: no forbidden imports"
+
+preflight: fmt vet lint check-imports test
 
 install-hooks:
 	@echo '#!/bin/sh' > .git/hooks/pre-commit
