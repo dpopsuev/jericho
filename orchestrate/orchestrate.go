@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"sync"
 	"sync/atomic"
+
+	"github.com/dpopsuev/jericho/bugle"
 )
 
 // Log key constants for sloglint compliance.
@@ -19,31 +21,46 @@ const (
 var (
 	ErrAlreadyRunning = errors.New("workers are already running; call stop first")
 	ErrNotRunning     = errors.New("no workers running")
-	ErrStepFailed     = errors.New("step failed")
+	ErrStepFailed     = errors.New("pull failed")
 )
+
+// ResponderFactory creates a Responder for a worker. Called once per worker
+// goroutine. The consumer controls how agents are spawned:
+//   - Origami: ACP launcher + facade.AgentHandle
+//   - Djinn: driver-based agent
+//   - K8s: Pod exec client
+//   - Test: StaticResponder
+//
+// The returned cleanup function is called when the worker exits.
+type ResponderFactory func(ctx context.Context, workerID string) (bugle.Responder, func(), error)
 
 // Manager manages a pool of agent workers that connect to an MCP endpoint.
 type Manager struct {
-	mu        sync.Mutex
-	endpoint  string
-	cancel    context.CancelFunc
-	running   bool
-	count     int
-	agent     string
-	session   string
-	cfg       WorkerConfig
-	completed atomic.Int64
-	errored   atomic.Int64
+	mu               sync.Mutex
+	endpoint         string
+	cancel           context.CancelFunc
+	running          bool
+	count            int
+	session          string
+	cfg              WorkerConfig
+	completed        atomic.Int64
+	errored          atomic.Int64
+	responderFactory ResponderFactory
 }
 
 // NewManager creates a manager that spawns workers connecting to the given endpoint.
-func NewManager(endpoint string, cfg WorkerConfig) *Manager {
+// The factory creates a Responder for each worker goroutine.
+func NewManager(endpoint string, factory ResponderFactory, cfg WorkerConfig) *Manager {
 	cfg.defaults()
-	return &Manager{endpoint: endpoint, cfg: cfg}
+	return &Manager{
+		endpoint:         endpoint,
+		cfg:              cfg,
+		responderFactory: factory,
+	}
 }
 
-// Start spawns N agent workers as goroutines.
-func (m *Manager) Start(ctx context.Context, session, agent string, count int) error {
+// Start spawns N worker goroutines.
+func (m *Manager) Start(ctx context.Context, session string, count int) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -51,15 +68,11 @@ func (m *Manager) Start(ctx context.Context, session, agent string, count int) e
 		return ErrAlreadyRunning
 	}
 
-	if agent == "" {
-		agent = "claude"
-	}
 	if count < 1 {
 		count = 4
 	}
 
 	m.session = session
-	m.agent = agent
 	m.count = count
 	m.running = true
 	m.completed.Store(0)
@@ -73,16 +86,37 @@ func (m *Manager) Start(ctx context.Context, session, agent string, count int) e
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			name := fmt.Sprintf("worker-%d", id+1)
-			if err := RunWorker(workerCtx, m.endpoint, agent, session, name, m.cfg); err != nil {
+			workerID := fmt.Sprintf("worker-%d", id+1)
+
+			responder, cleanup, err := m.responderFactory(workerCtx, workerID)
+			if err != nil {
+				m.errored.Add(1)
+				slog.ErrorContext(workerCtx, "responder factory failed",
+					slog.String(logKeyWorker, workerID),
+					slog.Any(logKeyError, err))
+				return
+			}
+			defer cleanup()
+
+			mcpSession, err := ConnectEndpoint(workerCtx, m.endpoint, workerID)
+			if err != nil {
+				m.errored.Add(1)
+				slog.ErrorContext(workerCtx, "connect failed",
+					slog.String(logKeyWorker, workerID),
+					slog.Any(logKeyError, err))
+				return
+			}
+			defer mcpSession.Close()
+
+			if err := RunWorker(workerCtx, mcpSession, responder, session, workerID, m.cfg); err != nil {
 				m.errored.Add(1)
 				slog.ErrorContext(workerCtx, "worker failed",
-					slog.String(logKeyWorker, name),
+					slog.String(logKeyWorker, workerID),
 					slog.Any(logKeyError, err))
 			} else {
 				m.completed.Add(1)
 				slog.InfoContext(workerCtx, "worker done",
-					slog.String(logKeyWorker, name))
+					slog.String(logKeyWorker, workerID))
 			}
 		}(i)
 	}
@@ -96,7 +130,6 @@ func (m *Manager) Start(ctx context.Context, session, agent string, count int) e
 
 	slog.InfoContext(ctx, "workers started",
 		slog.String(logKeySession, session),
-		slog.String(logKeyAgent, agent),
 		slog.Int(logKeyCount, count))
 
 	return nil
@@ -123,7 +156,6 @@ func (m *Manager) Health() map[string]any {
 	return map[string]any{
 		"running":   running,
 		"session":   m.session,
-		"agent":     m.agent,
 		"count":     m.count,
 		"completed": m.completed.Load(),
 		"errored":   m.errored.Load(),

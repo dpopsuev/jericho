@@ -1,5 +1,5 @@
 // Package orchestrate manages agent workers that connect to MCP endpoints
-// and loop pull-work/pipe-to-agent/submit via the Bugle Protocol.
+// and loop pull/push via the Bugle Protocol.
 package orchestrate
 
 import (
@@ -10,22 +10,18 @@ import (
 
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/dpopsuev/jericho/acp"
 	"github.com/dpopsuev/jericho/bugle"
-	"github.com/dpopsuev/jericho/facade"
-	"github.com/dpopsuev/jericho/pool"
 )
 
 // Log key constants for sloglint compliance.
 const (
 	logKeyWorker = "worker"
-	logKeyAgent  = "agent"
-	logKeyItems  = "steps"
+	logKeyItems  = "items"
 	logKeyItem   = "item"
 	logKeyError  = "error"
 )
 
-// WorkerConfig configures the Bugle Protocol step/submit loop.
+// WorkerConfig configures the Bugle Protocol pull/push loop.
 type WorkerConfig struct {
 	// MCP tool name (default: bugle.DefaultToolName).
 	ToolName string
@@ -35,8 +31,6 @@ type WorkerConfig struct {
 	PushAction string
 	// Session key name in arguments (default: bugle.DefaultSessionKey).
 	SessionKey string
-	// WorkerID sent on pull/push. If empty, uses workerName argument.
-	WorkerID string
 	// AndonFunc is called before push to report worker health. Nil = omit.
 	AndonFunc func() *bugle.Andon
 	// BudgetFunc is called before push to report resource consumption. Nil = omit.
@@ -60,31 +54,16 @@ func (c *WorkerConfig) defaults() {
 	}
 }
 
-// RunWorker is a single worker loop: spawn agent, connect to endpoint,
-// pull steps, pipe to agent, submit artifacts. Blocks until done or ctx canceled.
+// RunWorker is the Bugle Protocol client loop: pull work, send to responder,
+// push results. Blocks until done or ctx canceled.
 //
-//nolint:funlen // protocol loop with step/submit/abort/blocked paths
-func RunWorker(ctx context.Context, endpoint, agentName, sessionID, workerName string, cfg WorkerConfig) error {
+// The caller owns agent lifecycle and MCP connection — RunWorker is pure protocol.
+//
+//nolint:funlen // protocol loop with pull/push/abort/blocked paths
+func RunWorker(ctx context.Context, session *sdkmcp.ClientSession, responder bugle.Responder, sessionID, workerID string, cfg WorkerConfig) error {
 	cfg.defaults()
 
-	workerID := cfg.WorkerID
-	if workerID == "" {
-		workerID = workerName
-	}
-
-	handle, staff, err := spawnAgent(ctx, agentName, workerName)
-	if err != nil {
-		return err
-	}
-	defer staff.KillAll(ctx)
-
-	session, err := connectEndpoint(ctx, endpoint, workerName)
-	if err != nil {
-		return err
-	}
-	defer session.Close()
-
-	steps := 0
+	items := 0
 	for {
 		if ctx.Err() != nil {
 			return ctx.Err()
@@ -111,7 +90,7 @@ func RunWorker(ctx context.Context, endpoint, agentName, sessionID, workerName s
 		text := textContent(result)
 		var pullResp bugle.PullResponse
 		if err := json.Unmarshal([]byte(text), &pullResp); err != nil {
-			return fmt.Errorf("parse step: %w", err)
+			return fmt.Errorf("parse pull response: %w", err)
 		}
 
 		// Notify callback with protocol metadata.
@@ -125,33 +104,33 @@ func RunWorker(ctx context.Context, endpoint, agentName, sessionID, workerName s
 		// Andon dead = abort signal.
 		if pullResp.Andon == bugle.AndonDead {
 			slog.WarnContext(ctx, "abort signal received",
-				slog.String(logKeyWorker, workerName))
+				slog.String(logKeyWorker, workerID))
 			return nil
 		}
 
 		if pullResp.Done {
 			slog.InfoContext(ctx, "work complete",
-				slog.String(logKeyWorker, workerName),
-				slog.Int(logKeyItems, steps))
+				slog.String(logKeyWorker, workerID),
+				slog.Int(logKeyItems, items))
 			return nil
 		}
 		if !pullResp.Available {
 			continue
 		}
 
-		response, err := handle.Ask(ctx, pullResp.PromptContent)
+		response, err := responder.Respond(ctx, pullResp.PromptContent)
 		if err != nil {
-			slog.ErrorContext(ctx, "agent ask failed",
-				slog.String(logKeyWorker, workerName),
+			slog.ErrorContext(ctx, "responder failed",
+				slog.String(logKeyWorker, workerID),
 				slog.String(logKeyItem, pullResp.Item),
 				slog.Any(logKeyError, err))
 
-			// Submit as blocked instead of silently continuing.
-			submitBlocked(ctx, session, cfg, sessionID, workerID, pullResp, err)
+			// Push as blocked instead of silently continuing.
+			pushBlocked(ctx, session, cfg, sessionID, workerID, pullResp, err)
 			continue
 		}
 
-		submitArgs := map[string]any{
+		pushArgs := map[string]any{
 			"action":       cfg.PushAction,
 			cfg.SessionKey: sessionID,
 			"worker_id":    workerID,
@@ -161,46 +140,54 @@ func RunWorker(ctx context.Context, endpoint, agentName, sessionID, workerName s
 		}
 		if cfg.AndonFunc != nil {
 			if a := cfg.AndonFunc(); a != nil {
-				submitArgs["andon"] = a
+				pushArgs["andon"] = a
 			}
 		}
 		if cfg.BudgetFunc != nil {
 			if b := cfg.BudgetFunc(); b != nil {
-				submitArgs["budget_actual"] = b
+				pushArgs["budget_actual"] = b
 			}
 		}
 
 		_, err = session.CallTool(ctx, &sdkmcp.CallToolParams{
 			Name:      cfg.ToolName,
-			Arguments: marshalArgs(submitArgs),
+			Arguments: marshalArgs(pushArgs),
 		})
 		if err != nil {
-			slog.WarnContext(ctx, "submit failed",
-				slog.String(logKeyWorker, workerName),
+			slog.WarnContext(ctx, "push failed",
+				slog.String(logKeyWorker, workerID),
 				slog.String(logKeyItem, pullResp.Item),
 				slog.Any(logKeyError, err))
 		}
-		steps++
+		items++
 	}
 }
 
-func spawnAgent(ctx context.Context, agentName, workerName string) (*facade.AgentHandle, *facade.Staff, error) {
-	launcher := acp.NewACPLauncher()
-	staff := facade.NewStaff(launcher)
-	handle, err := staff.Spawn(ctx, "worker", pool.LaunchConfig{
-		Model: agentName,
-		Role:  "worker",
+// pushBlocked sends a blocked status when the responder fails.
+func pushBlocked(ctx context.Context, session *sdkmcp.ClientSession, cfg WorkerConfig, sessionID, workerID string, pullResp bugle.PullResponse, respondErr error) {
+	blockedArgs := map[string]any{
+		"action":       cfg.PushAction,
+		cfg.SessionKey: sessionID,
+		"worker_id":    workerID,
+		"dispatch_id":  pullResp.DispatchID,
+		"item":         pullResp.Item,
+		"status":       bugle.StatusBlocked,
+		"fields":       map[string]any{"reason": respondErr.Error()},
+	}
+	_, err := session.CallTool(ctx, &sdkmcp.CallToolParams{
+		Name:      cfg.ToolName,
+		Arguments: marshalArgs(blockedArgs),
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("spawn agent %q: %w", agentName, err)
+		slog.WarnContext(ctx, "push blocked failed",
+			slog.String(logKeyItem, pullResp.Item),
+			slog.Any(logKeyError, err))
 	}
-	slog.InfoContext(ctx, "agent spawned",
-		slog.String(logKeyWorker, workerName),
-		slog.String(logKeyAgent, agentName))
-	return handle, staff, nil
 }
 
-func connectEndpoint(ctx context.Context, endpoint, workerName string) (*sdkmcp.ClientSession, error) {
+// ConnectEndpoint creates an MCP client session to the given endpoint.
+// Convenience helper — callers may create sessions any way they prefer.
+func ConnectEndpoint(ctx context.Context, endpoint, workerName string) (*sdkmcp.ClientSession, error) {
 	transport := &sdkmcp.StreamableClientTransport{Endpoint: endpoint}
 	client := sdkmcp.NewClient(
 		&sdkmcp.Implementation{Name: "jericho-" + workerName, Version: "v0.1.0"},
@@ -211,28 +198,6 @@ func connectEndpoint(ctx context.Context, endpoint, workerName string) (*sdkmcp.
 		return nil, fmt.Errorf("connect to endpoint: %w", err)
 	}
 	return session, nil
-}
-
-// submitBlocked sends a blocked status when the agent fails.
-func submitBlocked(ctx context.Context, session *sdkmcp.ClientSession, cfg WorkerConfig, sessionID, workerID string, pullResp bugle.PullResponse, askErr error) {
-	blockedArgs := map[string]any{
-		"action":       cfg.PushAction,
-		cfg.SessionKey: sessionID,
-		"worker_id":    workerID,
-		"dispatch_id":  pullResp.DispatchID,
-		"item":         pullResp.Item,
-		"status":       bugle.StatusBlocked,
-		"fields":       map[string]any{"reason": askErr.Error()},
-	}
-	_, err := session.CallTool(ctx, &sdkmcp.CallToolParams{
-		Name:      cfg.ToolName,
-		Arguments: marshalArgs(blockedArgs),
-	})
-	if err != nil {
-		slog.WarnContext(ctx, "submit blocked failed",
-			slog.String(logKeyItem, pullResp.Item),
-			slog.Any(logKeyError, err))
-	}
 }
 
 func marshalArgs(v any) json.RawMessage {

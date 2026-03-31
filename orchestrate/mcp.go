@@ -18,7 +18,6 @@ var (
 type WorkersInput struct {
 	Action  string `json:"action"`
 	Session string `json:"session,omitempty"`
-	Agent   string `json:"agent,omitempty"`
 	Count   int    `json:"count,omitempty"`
 }
 
@@ -33,7 +32,7 @@ func RegisterTool(server *sdkmcp.Server, mgr *Manager) {
 			if input.Session == "" {
 				return nil, nil, ErrSessionRequired
 			}
-			if err := mgr.Start(ctx, input.Session, input.Agent, input.Count); err != nil {
+			if err := mgr.Start(ctx, input.Session, input.Count); err != nil {
 				return nil, nil, err
 			}
 			return nil, mgr.Health(), nil
