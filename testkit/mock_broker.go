@@ -1,0 +1,58 @@
+package testkit
+
+import (
+	"context"
+	"fmt"
+	"sync/atomic"
+
+	"github.com/dpopsuev/jericho"
+)
+
+// MockBroker is a test Broker that spawns MockActors.
+type MockBroker struct {
+	// Actors pre-configured for spawning. Pick returns configs for these.
+	Actors []*MockActor
+
+	spawned atomic.Int64
+}
+
+// NewMockBroker creates a broker with n echo actors.
+func NewMockBroker(n int) *MockBroker {
+	actors := make([]*MockActor, n)
+	for i := range n {
+		actors[i] = &MockActor{
+			Name: fmt.Sprintf("actor-%d", i+1),
+		}
+	}
+	return &MockBroker{Actors: actors}
+}
+
+// Pick returns configs for the pre-configured actors.
+func (b *MockBroker) Pick(_ context.Context, prefs jericho.Preferences) ([]jericho.ActorConfig, error) {
+	count := prefs.Count
+	if count <= 0 {
+		count = 1
+	}
+	if count > len(b.Actors) {
+		count = len(b.Actors)
+	}
+
+	configs := make([]jericho.ActorConfig, count)
+	for i := range count {
+		configs[i] = jericho.ActorConfig{
+			Model: "mock",
+			Role:  b.Actors[i].Name,
+		}
+	}
+	return configs, nil
+}
+
+// Spawn returns the next pre-configured MockActor.
+func (b *MockBroker) Spawn(_ context.Context, config jericho.ActorConfig) (jericho.Actor, error) {
+	idx := int(b.spawned.Add(1)) - 1
+	if idx >= len(b.Actors) {
+		return nil, fmt.Errorf("mock broker: no more actors (spawned %d, have %d)", idx+1, len(b.Actors))
+	}
+	b.Actors[idx].Name = config.Role
+	return b.Actors[idx], nil
+}

@@ -1,31 +1,22 @@
-// Package bugle is the Jericho agent framework for AI systems.
+// Package jericho is an AI Agent Broker — it provides the primitives
+// that make multi-agent orchestration possible without vendor lock-in.
 //
-// Jericho handles two protocol concerns:
-//   - A2A (Agent-to-Agent) — how agents coordinate with each other
-//   - ACP (Agent Client Protocol) — how editors and clients talk to agents
+// Jericho does not orchestrate. Directors (Origami, Djinn, custom) bring
+// orchestration strategies. Jericho provides the actors.
 //
-// MCP (Model Context Protocol) is a consumer concern — Bugle doesn't
-// know about tools. Consumers like Djinn and Origami wire MCP themselves.
+// Public API — 3 interfaces, 6 methods:
 //
-// Core packages:
+//	broker := jericho.NewBroker(...)
+//	actors, _ := broker.Pick(ctx, prefs)    // what's available?
+//	actor, _ := broker.Spawn(ctx, config)   // hire an actor
+//	response, _ := actor.Perform(ctx, prompt) // do work
+//	actor.Ready()                           // health check
+//	actor.Kill(ctx)                         // stop
 //
-//   - ECS World (world/ — entity registry, component storage, system queries)
-//   - Agent identity (identity/ — AgentIdentity, ModelIdentity, Persona)
-//   - Heraldic color system (palette/ — ColorIdentity, Registry, Shade/Color)
-//   - Behavioral profiles (element/ — Element, Approach)
-//   - Signal bus (signal/ — Bus, DurableBus)
-//   - Process supervision (pool/ — Fork, Kill, Wait, orphan reparenting)
-//   - A2A transport (transport/ — LocalTransport, Ask, Broadcast, RoleRegistry)
-//   - ACP client (acp/ — JSON-RPC over stdio, 12 providers, shape classifier)
-//   - Agent (agent/ — Staff, Solo — API for Humans)
-//   - Observable state (worldview/ — View, Snapshot, Minimap)
-//   - Billing (billing/ — per-agent cost tracking)
+// Directors implement the orchestration strategy:
 //
-// Usage:
-//
-//	staff := agent.NewStaff(myLauncher)
-//	agent, _ := staff.Spawn(ctx, "executor", pool.AgentConfig{})
-//	agent.Listen(func(content string) string { return "done: " + content })
-//	response, _ := agent.Ask(ctx, "build auth module")
-//	staff.KillAll(ctx)
-package bugle
+//	events, _ := director.Direct(ctx, broker)
+//	for ev := range events {
+//	    fmt.Println(ev.Kind, ev.Step, ev.Agent)
+//	}
+package jericho
