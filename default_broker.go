@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/dpopsuev/jericho/agent"
 	"github.com/dpopsuev/jericho/identity"
@@ -32,9 +33,18 @@ func WithLauncher(l warden.AgentSupervisor) BrokerOption {
 	return func(c *brokerConfig) { c.launcher = l }
 }
 
-// NewBroker creates a DefaultBroker. The endpoint parameter is reserved for
-// location-transparent construction. For now, pass "" for local in-process.
-func NewBroker(endpoint string, opts ...BrokerOption) *DefaultBroker {
+// NewBroker creates a Broker. If the endpoint is a remote URL (https://),
+// returns a RemoteBroker that proxies over HTTP. Otherwise, returns a
+// local DefaultBroker.
+func NewBroker(endpoint string, opts ...BrokerOption) Broker {
+	if strings.HasPrefix(endpoint, "http://") || strings.HasPrefix(endpoint, "https://") {
+		return newRemoteBroker(endpoint)
+	}
+	return newLocalBroker(opts...)
+}
+
+// newLocalBroker creates an in-process DefaultBroker.
+func newLocalBroker(opts ...BrokerOption) *DefaultBroker {
 	cfg := &brokerConfig{}
 	for _, o := range opts {
 		o(cfg)

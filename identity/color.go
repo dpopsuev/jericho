@@ -30,15 +30,21 @@ type PaletteColor struct {
 // Color is the visual identity ECS component for agents.
 // Format: "Denim Writer of Indigo Refactor" (Color Role of Shade Collective).
 type Color struct {
-	Shade      string `json:"shade"`      // group family: "Indigo", "Crimson"
-	Name       string `json:"name"`       // individual: "Denim", "Scarlet"
-	Role       string `json:"role"`       // function: "Writer", "Reviewer"
-	Collective string `json:"collective"` // formation: "Refactor", "Triage"
-	Hex        string `json:"hex"`        // CSS hex: "#6F8FAF"
+	Family     string `json:"family"`     // color family: "red", "blue"
+	Shade      string `json:"shade"`      // shade within family: "crimson", "azure"
+	Name       string `json:"name"`       // display name (= shade): "crimson"
+	Role       string `json:"role"`       // function: "worker", "reviewer"
+	Collective string `json:"collective"` // formation: "rca", "triage"
+	Hex        string `json:"hex"`        // CSS hex: "#DC143C"
 }
 
 // ComponentType implements world.Component.
 func (Color) ComponentType() world.ComponentType { return ColorType }
+
+// FQDN returns the fully qualified agent address: shade.family.director.broker.
+func (c Color) FQDN(director, broker string) string { //nolint:gocritic // value receiver for ECS
+	return fmt.Sprintf("%s.%s.%s.%s", c.Shade, c.Family, director, broker)
+}
 
 // Title returns the heraldic name: "Denim Writer of Indigo Refactor".
 func (c Color) Title() string { //nolint:gocritic // value receiver needed for ECS Get[T]
@@ -80,130 +86,9 @@ type Reservation struct {
 	Color string // preferred color (empty = any in shade)
 }
 
-// Palette defines 7 shade families x 8 colors = 56 unique agent identities.
-var Palette = []Shade{
-	{Name: "Azure", Colors: []PaletteColor{
-		{"Cerulean", "#007BA7"},
-		{"Cobalt", "#0047AB"},
-		{"Sapphire", "#0F52BA"},
-		{"Indigo", "#4B0082"},
-		{"Navy", "#000080"},
-		{"Periwinkle", "#CCCCFF"},
-		{"Steel", "#4682B4"},
-		{"Teal", "#008080"},
-	}},
-	{Name: "Crimson", Colors: []PaletteColor{
-		{"Scarlet", "#FF2400"},
-		{"Vermillion", "#E34234"},
-		{"Ruby", "#E0115F"},
-		{"Garnet", "#733635"},
-		{"Cardinal", "#C41E3A"},
-		{"Carmine", "#960018"},
-		{"Rust", "#B7410E"},
-		{"Coral", "#FF7F50"},
-	}},
-	{Name: "Forest", Colors: []PaletteColor{
-		{"Emerald", "#50C878"},
-		{"Jade", "#00A86B"},
-		{"Sage", "#BCB88A"},
-		{"Olive", "#808000"},
-		{"Mint", "#3EB489"},
-		{"Hunter", "#355E3B"},
-		{"Moss", "#8A9A5B"},
-		{"Viridian", "#40826D"},
-	}},
-	{Name: "Amber", Colors: []PaletteColor{
-		{"Saffron", "#F4C430"},
-		{"Gold", "#FFD700"},
-		{"Marigold", "#EAA221"},
-		{"Tangerine", "#FF9966"},
-		{"Apricot", "#FBCEB1"},
-		{"Ochre", "#CC7722"},
-		{"Bronze", "#CD7F32"},
-		{"Copper", "#B87333"},
-	}},
-	{Name: "Violet", Colors: []PaletteColor{
-		{"Amethyst", "#9966CC"},
-		{"Lavender", "#E6E6FA"},
-		{"Plum", "#8E4585"},
-		{"Mauve", "#E0B0FF"},
-		{"Orchid", "#DA70D6"},
-		{"Thistle", "#D8BFD8"},
-		{"Iris", "#5A4FCF"},
-		{"Heather", "#B7C3D0"},
-	}},
-	{Name: "Slate", Colors: []PaletteColor{
-		{"Charcoal", "#36454F"},
-		{"Ash", "#B2BEB5"},
-		{"Pewter", "#8BA8B7"},
-		{"Silver", "#C0C0C0"},
-		{"Smoke", "#738276"},
-		{"Graphite", "#383838"},
-		{"Iron", "#48494B"},
-		{"Flint", "#6F6A63"},
-	}},
-	{Name: "Ivory", Colors: []PaletteColor{
-		{"Pearl", "#EAE0C8"},
-		{"Cream", "#FFFDD0"},
-		{"Linen", "#FAF0E6"},
-		{"Snow", "#FFFAFA"},
-		{"Alabaster", "#F2F0E6"},
-		{"Bone", "#E3DAC9"},
-		{"Shell", "#FFF5EE"},
-		{"Chalk", "#FDFDFD"},
-	}},
-	// Reserved shades — 5 empty slots for consumer customization.
-	{Name: "Teal", Colors: []PaletteColor{
-		{"Aquamarine", "#7FFFD4"},
-		{"Turquoise", "#40E0D0"},
-		{"Cyan", "#00FFFF"},
-		{"Arctic", "#4CC8DB"},
-		{"Lagoon", "#4CB7A5"},
-		{"Seafoam", "#71D9B7"},
-		{"Reef", "#009B8D"},
-		{"Marina", "#4CBFA6"},
-	}},
-	{Name: "Rose", Colors: []PaletteColor{
-		{"Blush", "#DE5D83"},
-		{"Peony", "#DB7093"},
-		{"Fuchsia", "#FF00FF"},
-		{"Magenta", "#FF0090"},
-		{"Cerise", "#DE3163"},
-		{"Petal", "#F4C2C2"},
-		{"Blossom", "#FFB7C5"},
-		{"Rosewood", "#65000B"},
-	}},
-	{Name: "Bronze", Colors: []PaletteColor{
-		{"Umber", "#635147"},
-		{"Sienna", "#A0522D"},
-		{"Mahogany", "#C04000"},
-		{"Chestnut", "#954535"},
-		{"Walnut", "#773F1A"},
-		{"Cinnamon", "#D2691E"},
-		{"Toffee", "#755139"},
-		{"Espresso", "#3C1414"},
-	}},
-	{Name: "Indigo", Colors: []PaletteColor{
-		{"Midnight", "#191970"},
-		{"Dusk", "#7B68EE"},
-		{"Twilight", "#5B5EA6"},
-		{"Nebula", "#483D8B"},
-		{"Eclipse", "#3C1361"},
-		{"Cosmos", "#443399"},
-		{"Galactic", "#2E2D88"},
-		{"Aurora", "#6A5ACD"},
-	}},
-	{Name: "Sage", Colors: []PaletteColor{
-		{"Laurel", "#A9BA9D"},
-		{"Pistachio", "#93C572"},
-		{"Lichen", "#7DA98D"},
-		{"Fern", "#4F7942"},
-		{"Thyme", "#596D48"},
-		{"Basil", "#5C7A29"},
-		{"Clover", "#3EA055"},
-		{"Willow", "#65A374"},
-	}},
-}
+// Palette defines 12 color families × 12 shades = 144 unique agent addresses.
+// All shade names sourced from real color vocabulary.
+var Palette = DefaultPalette()
 
 // LookupShade finds a shade by name. Returns nil if not found.
 func LookupShade(name string) *Shade {
@@ -273,7 +158,8 @@ func (r *Registry) Assign(role, collective string) (Color, error) {
 			if !r.assigned[key] {
 				r.assigned[key] = true
 				return Color{
-					Shade:      shade.Name,
+					Family:     shade.Name,
+					Shade:      color.Name,
 					Name:       color.Name,
 					Role:       role,
 					Collective: collective,
@@ -300,7 +186,8 @@ func (r *Registry) AssignInGroup(shade, role, collective string) (Color, error) 
 		if !r.assigned[key] {
 			r.assigned[key] = true
 			return Color{
-				Shade:      s.Name,
+				Family:     s.Name,
+				Shade:      color.Name,
 				Name:       color.Name,
 				Role:       role,
 				Collective: collective,
@@ -345,7 +232,8 @@ func (r *Registry) Set(shade, color, role, collective string) (Color, error) {
 
 	r.assigned[key] = true
 	return Color{
-		Shade:      shade,
+		Family:     foundShade,
+		Shade:      c.Name,
 		Name:       c.Name,
 		Role:       role,
 		Collective: collective,
