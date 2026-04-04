@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/dpopsuev/jericho"
-	"github.com/dpopsuev/jericho/agent"
-	"github.com/dpopsuev/jericho/warden"
+	"github.com/dpopsuev/jericho/internal/agent"
+	"github.com/dpopsuev/jericho/internal/warden"
 	"github.com/dpopsuev/jericho/world"
 )
 

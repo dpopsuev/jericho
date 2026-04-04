@@ -3,8 +3,8 @@ package testkit
 import (
 	"context"
 
+	"github.com/dpopsuev/jericho/internal/transport"
 	"github.com/dpopsuev/jericho/signal"
-	"github.com/dpopsuev/jericho/transport"
 )
 
 // EchoHandler returns a handler that echoes the message back with Confirm performative.

@@ -4,20 +4,20 @@ import (
 	"context"
 	"sync"
 
-	"github.com/dpopsuev/jericho/work"
+	"github.com/dpopsuev/jericho/internal/protocol"
 )
 
-// MockServer implements work.Server with configurable handlers and call tracking.
+// MockServer implements protocol.Server with configurable handlers and call tracking.
 type MockServer struct {
 	mu sync.Mutex
 
-	startFn  func(work.StartRequest) (work.StartResponse, error)
-	pullFn   func(work.PullRequest) (work.PullResponse, error)
-	pushFn   func(work.PushRequest) (work.PushResponse, error)
-	cancelFn func(work.CancelRequest) (work.CancelResponse, error)
-	statusFn func(work.StatusRequest) (work.StatusResponse, error)
+	startFn  func(protocol.StartRequest) (protocol.StartResponse, error)
+	pullFn   func(protocol.PullRequest) (protocol.PullResponse, error)
+	pushFn   func(protocol.PushRequest) (protocol.PushResponse, error)
+	cancelFn func(protocol.CancelRequest) (protocol.CancelResponse, error)
+	statusFn func(protocol.StatusRequest) (protocol.StatusResponse, error)
 
-	pushes  []work.PushRequest
+	pushes  []protocol.PushRequest
 	pulls   int
 	starts  int
 	cancels int
@@ -29,42 +29,42 @@ func NewMockServer() *MockServer {
 }
 
 // OnStart sets the handler for start requests.
-func (s *MockServer) OnStart(fn func(work.StartRequest) (work.StartResponse, error)) {
+func (s *MockServer) OnStart(fn func(protocol.StartRequest) (protocol.StartResponse, error)) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.startFn = fn
 }
 
 // OnPull sets the handler for pull requests.
-func (s *MockServer) OnPull(fn func(work.PullRequest) (work.PullResponse, error)) {
+func (s *MockServer) OnPull(fn func(protocol.PullRequest) (protocol.PullResponse, error)) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.pullFn = fn
 }
 
 // OnPush sets the handler for push requests.
-func (s *MockServer) OnPush(fn func(work.PushRequest) (work.PushResponse, error)) {
+func (s *MockServer) OnPush(fn func(protocol.PushRequest) (protocol.PushResponse, error)) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.pushFn = fn
 }
 
 // OnCancel sets the handler for cancel requests.
-func (s *MockServer) OnCancel(fn func(work.CancelRequest) (work.CancelResponse, error)) {
+func (s *MockServer) OnCancel(fn func(protocol.CancelRequest) (protocol.CancelResponse, error)) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.cancelFn = fn
 }
 
 // OnStatus sets the handler for status requests.
-func (s *MockServer) OnStatus(fn func(work.StatusRequest) (work.StatusResponse, error)) {
+func (s *MockServer) OnStatus(fn func(protocol.StatusRequest) (protocol.StatusResponse, error)) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.statusFn = fn
 }
 
-// Start implements work.Server.
-func (s *MockServer) Start(_ context.Context, req work.StartRequest) (work.StartResponse, error) {
+// Start implements protocol.Server.
+func (s *MockServer) Start(_ context.Context, req protocol.StartRequest) (protocol.StartResponse, error) {
 	s.mu.Lock()
 	s.starts++
 	fn := s.startFn
@@ -72,11 +72,11 @@ func (s *MockServer) Start(_ context.Context, req work.StartRequest) (work.Start
 	if fn != nil {
 		return fn(req)
 	}
-	return work.StartResponse{SessionID: "mock-session", TotalItems: 0, Status: "running"}, nil
+	return protocol.StartResponse{SessionID: "mock-session", TotalItems: 0, Status: "running"}, nil
 }
 
-// Pull implements work.Server.
-func (s *MockServer) Pull(_ context.Context, req work.PullRequest) (work.PullResponse, error) {
+// Pull implements protocol.Server.
+func (s *MockServer) Pull(_ context.Context, req protocol.PullRequest) (protocol.PullResponse, error) {
 	s.mu.Lock()
 	s.pulls++
 	fn := s.pullFn
@@ -84,11 +84,11 @@ func (s *MockServer) Pull(_ context.Context, req work.PullRequest) (work.PullRes
 	if fn != nil {
 		return fn(req)
 	}
-	return work.PullResponse{Done: true}, nil
+	return protocol.PullResponse{Done: true}, nil
 }
 
-// Push implements work.Server.
-func (s *MockServer) Push(_ context.Context, req work.PushRequest) (work.PushResponse, error) {
+// Push implements protocol.Server.
+func (s *MockServer) Push(_ context.Context, req protocol.PushRequest) (protocol.PushResponse, error) {
 	s.mu.Lock()
 	s.pushes = append(s.pushes, req)
 	fn := s.pushFn
@@ -96,11 +96,11 @@ func (s *MockServer) Push(_ context.Context, req work.PushRequest) (work.PushRes
 	if fn != nil {
 		return fn(req)
 	}
-	return work.PushResponse{OK: true}, nil
+	return protocol.PushResponse{OK: true}, nil
 }
 
-// Cancel implements work.Server.
-func (s *MockServer) Cancel(_ context.Context, req work.CancelRequest) (work.CancelResponse, error) {
+// Cancel implements protocol.Server.
+func (s *MockServer) Cancel(_ context.Context, req protocol.CancelRequest) (protocol.CancelResponse, error) {
 	s.mu.Lock()
 	s.cancels++
 	fn := s.cancelFn
@@ -108,18 +108,18 @@ func (s *MockServer) Cancel(_ context.Context, req work.CancelRequest) (work.Can
 	if fn != nil {
 		return fn(req)
 	}
-	return work.CancelResponse{OK: true, Canceled: 1}, nil
+	return protocol.CancelResponse{OK: true, Canceled: 1}, nil
 }
 
-// Status implements work.Server.
-func (s *MockServer) Status(_ context.Context, req work.StatusRequest) (work.StatusResponse, error) {
+// Status implements protocol.Server.
+func (s *MockServer) Status(_ context.Context, req protocol.StatusRequest) (protocol.StatusResponse, error) {
 	s.mu.Lock()
 	fn := s.statusFn
 	s.mu.Unlock()
 	if fn != nil {
 		return fn(req)
 	}
-	return work.StatusResponse{SessionID: req.SessionID, Progress: work.Progress{}}, nil
+	return protocol.StatusResponse{SessionID: req.SessionID, Progress: protocol.Progress{}}, nil
 }
 
 // --- Inspection methods ---
@@ -132,16 +132,16 @@ func (s *MockServer) PushCount() int {
 }
 
 // Pushes returns all push requests received.
-func (s *MockServer) Pushes() []work.PushRequest {
+func (s *MockServer) Pushes() []protocol.PushRequest {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	cp := make([]work.PushRequest, len(s.pushes))
+	cp := make([]protocol.PushRequest, len(s.pushes))
 	copy(cp, s.pushes)
 	return cp
 }
 
 // LastPush returns the most recent push request. Panics if none.
-func (s *MockServer) LastPush() work.PushRequest {
+func (s *MockServer) LastPush() protocol.PushRequest {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.pushes[len(s.pushes)-1]

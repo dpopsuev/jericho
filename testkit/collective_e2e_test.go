@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/jericho/acp"
-	"github.com/dpopsuev/jericho/agent"
 	"github.com/dpopsuev/jericho/collective"
-	"github.com/dpopsuev/jericho/warden"
+	"github.com/dpopsuev/jericho/internal/acp"
+	"github.com/dpopsuev/jericho/internal/agent"
+	"github.com/dpopsuev/jericho/internal/warden"
 )
 
 // TestCollectiveE2E_DialecticWithRealAgents spawns 2 real Cursor agents,

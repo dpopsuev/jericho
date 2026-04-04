@@ -3,11 +3,11 @@ package mcp
 import (
 	"testing"
 
-	"github.com/dpopsuev/jericho/work"
+	"github.com/dpopsuev/jericho/internal/protocol"
 )
 
 func TestServerContract_MockServer(t *testing.T) {
-	RunServerContract(t, func() work.Server {
+	RunServerContract(t, func() protocol.Server {
 		return NewMockServer()
 	})
 }

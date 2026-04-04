@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/dpopsuev/jericho/identity"
+	"github.com/dpopsuev/jericho/internal/transport"
 	"github.com/dpopsuev/jericho/signal"
-	"github.com/dpopsuev/jericho/transport"
 	"github.com/dpopsuev/jericho/world"
 	"github.com/dpopsuev/jericho/worldview"
 )

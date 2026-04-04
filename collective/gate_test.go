@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dpopsuev/jericho/agent"
-	"github.com/dpopsuev/jericho/warden"
+	"github.com/dpopsuev/jericho/internal/agent"
+	"github.com/dpopsuev/jericho/internal/warden"
 )
 
 // ═══════════════════════════════════════════════════════════════════════

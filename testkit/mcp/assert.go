@@ -3,7 +3,7 @@ package mcp
 import (
 	"testing"
 
-	"github.com/dpopsuev/jericho/work"
+	"github.com/dpopsuev/jericho/internal/protocol"
 )
 
 // AssertPushCount verifies the number of push calls.
@@ -15,7 +15,7 @@ func AssertPushCount(t *testing.T, server *MockServer, want int) {
 }
 
 // AssertPushStatus verifies the last push has the given status.
-func AssertPushStatus(t *testing.T, server *MockServer, want work.SubmitStatus) {
+func AssertPushStatus(t *testing.T, server *MockServer, want protocol.SubmitStatus) {
 	t.Helper()
 	if server.PushCount() == 0 {
 		t.Fatal("no pushes received")
@@ -27,7 +27,7 @@ func AssertPushStatus(t *testing.T, server *MockServer, want work.SubmitStatus) 
 }
 
 // AssertAndonLevel verifies the last push has the given andon level.
-func AssertAndonLevel(t *testing.T, server *MockServer, want work.AndonLevel) {
+func AssertAndonLevel(t *testing.T, server *MockServer, want protocol.AndonLevel) {
 	t.Helper()
 	if server.PushCount() == 0 {
 		t.Fatal("no pushes received")

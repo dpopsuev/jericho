@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dpopsuev/jericho/agent"
 	"github.com/dpopsuev/jericho/identity"
-	"github.com/dpopsuev/jericho/warden"
+	"github.com/dpopsuev/jericho/internal/agent"
+	"github.com/dpopsuev/jericho/internal/warden"
 )
 
 // ErrNoLauncher is returned when Spawn is called without a configured launcher.

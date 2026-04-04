@@ -3,8 +3,8 @@ package testkit
 import (
 	"testing"
 
+	"github.com/dpopsuev/jericho/internal/transport"
 	"github.com/dpopsuev/jericho/signal"
-	"github.com/dpopsuev/jericho/transport"
 	"github.com/dpopsuev/jericho/world"
 )
 
