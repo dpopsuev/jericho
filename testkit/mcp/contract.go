@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/dpopsuev/jericho/internal/protocol"
+	"github.com/dpopsuev/troupe/internal/protocol"
 )
 
 // RunServerContract validates any protocol.Server implementation against the

@@ -63,7 +63,7 @@ func RegisterTool(server *sdkmcp.Server, mgr WorkerManager) {
 // NewMCPServer creates an MCP server with the workers tool registered.
 func NewMCPServer(mgr WorkerManager) *sdkmcp.Server {
 	server := sdkmcp.NewServer(
-		&sdkmcp.Implementation{Name: "jericho-orchestrator", Version: "v0.2.0"},
+		&sdkmcp.Implementation{Name: "troupe-orchestrator", Version: "v0.1.0"},
 		nil,
 	)
 	RegisterTool(server, mgr)

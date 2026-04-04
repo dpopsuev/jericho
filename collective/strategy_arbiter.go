@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dpopsuev/jericho"
+	"github.com/dpopsuev/troupe"
 )
 
 // ErrTooFewAgentsArbiter is returned when arbiter has fewer than 3 agents.
@@ -40,7 +40,7 @@ func (a *Arbiter) defaults() int {
 }
 
 // Orchestrate runs the arbiter debate. Judge decides after each round.
-func (a *Arbiter) Orchestrate(ctx context.Context, prompt string, agents []jericho.Actor) (string, error) {
+func (a *Arbiter) Orchestrate(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
 	if len(agents) < 3 {
 		return "", fmt.Errorf("%w, got %d", ErrTooFewAgentsArbiter, len(agents))
 	}

@@ -1,17 +1,17 @@
-package jericho_test
+package troupe_test
 
 import (
 	"encoding/json"
 	"testing"
 
-	"github.com/dpopsuev/jericho"
+	"github.com/dpopsuev/troupe"
 )
 
 // P1 Security: malformed SSE messages should not panic or corrupt state.
 
 func TestParseSSE_MalformedJSON(t *testing.T) {
 	// SSE data line with invalid JSON should not produce an event
-	data, _ := json.Marshal(jericho.Event{Kind: jericho.Started, Step: "test"})
+	data, _ := json.Marshal(troupe.Event{Kind: troupe.Started, Step: "test"})
 	_ = data // reference to avoid unused
 
 	// Simulated malformed payloads that could arrive over the wire
@@ -33,8 +33,8 @@ func TestParseSSE_MalformedJSON(t *testing.T) {
 // P1 Security: Event JSON roundtrip preserves all fields.
 
 func TestEvent_JSONRoundTrip(t *testing.T) {
-	original := jericho.Event{
-		Kind:  jericho.Started,
+	original := troupe.Event{
+		Kind:  troupe.Started,
 		Step:  "investigate",
 		Agent: "crimson.red.origami.local",
 	}
@@ -44,7 +44,7 @@ func TestEvent_JSONRoundTrip(t *testing.T) {
 		t.Fatalf("marshal: %v", err)
 	}
 
-	var decoded jericho.Event
+	var decoded troupe.Event
 	if err := json.Unmarshal(data, &decoded); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
@@ -65,7 +65,7 @@ func TestEvent_JSONRoundTrip(t *testing.T) {
 func TestFQDN_NoDots_InShadeName(t *testing.T) {
 	// A shade name with dots would break FQDN parsing
 	// shade.color.director.broker — 4 segments expected
-	c := jericho.ActorConfig{Role: "test"}
+	c := troupe.ActorConfig{Role: "test"}
 	_ = c // The FQDN is on identity.Color, not ActorConfig
 	// This test validates that the palette has no dots in shade names
 }

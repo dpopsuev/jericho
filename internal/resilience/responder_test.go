@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dpopsuev/jericho/testkit/mcp"
+	"github.com/dpopsuev/troupe/testkit/mcp"
 )
 
 func TestCircuitBreakerResponder_Opens(t *testing.T) {

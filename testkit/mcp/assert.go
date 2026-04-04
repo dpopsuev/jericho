@@ -3,7 +3,7 @@ package mcp
 import (
 	"testing"
 
-	"github.com/dpopsuev/jericho/internal/protocol"
+	"github.com/dpopsuev/troupe/internal/protocol"
 )
 
 // AssertPushCount verifies the number of push calls.

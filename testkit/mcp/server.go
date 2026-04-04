@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/dpopsuev/jericho/internal/protocol"
+	"github.com/dpopsuev/troupe/internal/protocol"
 )
 
 // MockServer implements protocol.Server with configurable handlers and call tracking.

@@ -1,11 +1,11 @@
-package jericho_test
+package troupe_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/jericho"
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // RED: Driver must be a proper public interface, not a type alias.
@@ -22,7 +22,7 @@ func newTestDriver() *testDriver {
 	}
 }
 
-func (d *testDriver) Start(_ context.Context, id world.EntityID, _ jericho.ActorConfig) error {
+func (d *testDriver) Start(_ context.Context, id world.EntityID, _ troupe.ActorConfig) error {
 	d.started[id] = true
 	return nil
 }
@@ -35,9 +35,9 @@ func (d *testDriver) Stop(_ context.Context, id world.EntityID) error {
 func TestDriver_Interface(t *testing.T) {
 	// A custom Driver can be passed to NewBroker via WithDriver
 	driver := newTestDriver()
-	broker := jericho.NewBroker("", jericho.WithDriver(driver))
+	broker := troupe.NewBroker("", troupe.WithDriver(driver))
 
-	actor, err := broker.Spawn(context.Background(), jericho.ActorConfig{Role: "test"})
+	actor, err := broker.Spawn(context.Background(), troupe.ActorConfig{Role: "test"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
@@ -56,5 +56,5 @@ func TestDriver_Interface(t *testing.T) {
 func TestDriver_PublicType(t *testing.T) {
 	// Driver must be a public interface, not a type alias to internal
 	// This test proves consumers can implement Driver without importing internal/
-	var _ jericho.Driver = newTestDriver()
+	var _ troupe.Driver = newTestDriver()
 }

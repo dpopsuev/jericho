@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/dpopsuev/jericho/internal/protocol"
+	"github.com/dpopsuev/troupe/internal/protocol"
 )
 
 // runLoop simulates the protocol loop without MCP transport.

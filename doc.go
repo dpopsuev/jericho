@@ -1,12 +1,12 @@
-// Package jericho is an AI Agent Broker — it provides the primitives
+// Package troupe is an AI Agent Broker — it provides the primitives
 // that make multi-agent orchestration possible without vendor lock-in.
 //
-// Jericho does not orchestrate. Directors (Origami, Djinn, custom) bring
-// orchestration strategies. Jericho provides the actors.
+// Troupe does not orchestrate. Directors (Origami, Djinn, custom) bring
+// orchestration strategies. Troupe provides the actors.
 //
 // Public API — 3 interfaces, 6 methods:
 //
-//	broker := jericho.NewBroker(...)
+//	broker := troupe.NewBroker(...)
 //	actors, _ := broker.Pick(ctx, prefs)    // what's available?
 //	actor, _ := broker.Spawn(ctx, config)   // hire an actor
 //	response, _ := actor.Perform(ctx, prompt) // do work
@@ -19,4 +19,4 @@
 //	for ev := range events {
 //	    fmt.Println(ev.Kind, ev.Step, ev.Agent)
 //	}
-package jericho
+package troupe

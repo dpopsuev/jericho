@@ -1,7 +1,8 @@
 package protocol
 
-// ProtocolVersion is the current Bugle Protocol version.
-const ProtocolVersion = "jericho/v1"
+// ProtocolVersion is the current protocol version.
+// Override at build time: -ldflags "-X github.com/dpopsuev/troupe/internal/protocol.ProtocolVersion=custom/v1"
+var ProtocolVersion = "troupe/v1" //nolint:gochecknoglobals // ldflag-settable
 
 // Capabilities declares which protocol layers a server supports.
 // Returned on start response.

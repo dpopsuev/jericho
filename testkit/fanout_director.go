@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dpopsuev/jericho"
+	"github.com/dpopsuev/troupe"
 )
 
 // FanOutDirector sends one prompt to multiple actors concurrently.
@@ -15,18 +15,18 @@ type FanOutDirector struct {
 	Count  int // how many actors to fan out to
 }
 
-func (d *FanOutDirector) Direct(ctx context.Context, broker jericho.Broker) (<-chan jericho.Event, error) {
+func (d *FanOutDirector) Direct(ctx context.Context, broker troupe.Broker) (<-chan troupe.Event, error) {
 	count := d.Count
 	if count <= 0 {
 		count = 1
 	}
 
-	configs, err := broker.Pick(ctx, jericho.Preferences{Count: count})
+	configs, err := broker.Pick(ctx, troupe.Preferences{Count: count})
 	if err != nil {
 		return nil, err
 	}
 
-	actors := make([]jericho.Actor, len(configs))
+	actors := make([]troupe.Actor, len(configs))
 	for i, cfg := range configs {
 		a, err := broker.Spawn(ctx, cfg)
 		if err != nil {
@@ -35,7 +35,7 @@ func (d *FanOutDirector) Direct(ctx context.Context, broker jericho.Broker) (<-c
 		actors[i] = a
 	}
 
-	ch := make(chan jericho.Event, len(actors)*2+1)
+	ch := make(chan troupe.Event, len(actors)*2+1)
 
 	go func() {
 		defer close(ch)
@@ -43,26 +43,26 @@ func (d *FanOutDirector) Direct(ctx context.Context, broker jericho.Broker) (<-c
 		var wg sync.WaitGroup
 		for i, actor := range actors {
 			wg.Add(1)
-			go func(a jericho.Actor, cfg jericho.ActorConfig) {
+			go func(a troupe.Actor, cfg troupe.ActorConfig) {
 				defer wg.Done()
 
-				ch <- jericho.Event{Kind: jericho.Started, Step: d.Prompt, Agent: cfg.Role}
+				ch <- troupe.Event{Kind: troupe.Started, Step: d.Prompt, Agent: cfg.Role}
 
 				start := time.Now()
 				_, err := a.Perform(ctx, d.Prompt)
 				elapsed := time.Since(start)
 
 				if err != nil {
-					ch <- jericho.Event{Kind: jericho.Failed, Step: d.Prompt, Agent: cfg.Role, Error: err, Elapsed: elapsed}
+					ch <- troupe.Event{Kind: troupe.Failed, Step: d.Prompt, Agent: cfg.Role, Error: err, Elapsed: elapsed}
 					return
 				}
 
-				ch <- jericho.Event{Kind: jericho.Completed, Step: d.Prompt, Agent: cfg.Role, Elapsed: elapsed}
+				ch <- troupe.Event{Kind: troupe.Completed, Step: d.Prompt, Agent: cfg.Role, Elapsed: elapsed}
 			}(actor, configs[i])
 		}
 
 		wg.Wait()
-		ch <- jericho.Event{Kind: jericho.Done}
+		ch <- troupe.Event{Kind: troupe.Done}
 	}()
 
 	return ch, nil

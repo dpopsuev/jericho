@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/jericho"
+	"github.com/dpopsuev/troupe"
 )
 
 func TestDirector_LinearPipeline(t *testing.T) {
@@ -22,20 +22,20 @@ func TestDirector_LinearPipeline(t *testing.T) {
 		t.Fatalf("Direct: %v", err)
 	}
 
-	kinds := make([]jericho.EventKind, 0, 7) //nolint:mnd // 3 steps × 2 events + Done
+	kinds := make([]troupe.EventKind, 0, 7) //nolint:mnd // 3 steps × 2 events + Done
 	for ev := range events {
 		kinds = append(kinds, ev.Kind)
-		if ev.Kind == jericho.Failed {
+		if ev.Kind == troupe.Failed {
 			t.Fatalf("unexpected failure at step %s: %v", ev.Step, ev.Error)
 		}
 	}
 
 	// 3 steps × (Started + Completed) + Done = 7 events
-	want := []jericho.EventKind{
-		jericho.Started, jericho.Completed,
-		jericho.Started, jericho.Completed,
-		jericho.Started, jericho.Completed,
-		jericho.Done,
+	want := []troupe.EventKind{
+		troupe.Started, troupe.Completed,
+		troupe.Started, troupe.Completed,
+		troupe.Started, troupe.Completed,
+		troupe.Done,
 	}
 
 	if len(kinds) != len(want) {
@@ -78,7 +78,7 @@ func TestDirector_LinearPipeline_FailureMidway(t *testing.T) {
 	// Instead, just test that we get events for all steps
 	var completed int
 	for ev := range events {
-		if ev.Kind == jericho.Completed {
+		if ev.Kind == troupe.Completed {
 			completed++
 		}
 	}
@@ -103,13 +103,13 @@ func TestDirector_FanOut(t *testing.T) {
 	var done bool
 	for ev := range events {
 		switch ev.Kind {
-		case jericho.Started:
+		case troupe.Started:
 			started++
-		case jericho.Completed:
+		case troupe.Completed:
 			completed++
-		case jericho.Done:
+		case troupe.Done:
 			done = true
-		case jericho.Failed:
+		case troupe.Failed:
 			t.Fatalf("unexpected failure: agent=%s err=%v", ev.Agent, ev.Error)
 		}
 	}
@@ -150,13 +150,13 @@ func TestDirector_FanOut_PartialFailure(t *testing.T) {
 	var started, completed, failed int
 	for ev := range events {
 		switch ev.Kind {
-		case jericho.Started:
+		case troupe.Started:
 			started++
-		case jericho.Completed:
+		case troupe.Completed:
 			completed++
-		case jericho.Failed:
+		case troupe.Failed:
 			failed++
-		case jericho.Done:
+		case troupe.Done:
 		}
 	}
 
@@ -190,7 +190,7 @@ func TestDirector_ContextCancellation(t *testing.T) {
 
 	var sawFailed bool
 	for ev := range events {
-		if ev.Kind == jericho.Failed {
+		if ev.Kind == troupe.Failed {
 			sawFailed = true
 		}
 	}

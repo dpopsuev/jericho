@@ -89,7 +89,13 @@ func TestDefaultCapabilities(t *testing.T) {
 
 func TestProtocolVersion_NotBugle(t *testing.T) {
 	if ProtocolVersion == "bugle/v1" {
-		t.Error("ProtocolVersion still says bugle — should be jericho")
+		t.Error("ProtocolVersion still says bugle — should be troupe")
+	}
+}
+
+func TestProtocolVersion_IsTroupe(t *testing.T) {
+	if ProtocolVersion != "troupe/v1" {
+		t.Errorf("ProtocolVersion = %q, want troupe/v1", ProtocolVersion)
 	}
 }
 

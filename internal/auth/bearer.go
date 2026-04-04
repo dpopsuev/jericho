@@ -6,8 +6,8 @@ import (
 	"errors"
 	"os"
 
-	"github.com/dpopsuev/jericho/internal/protocol"
-	"github.com/dpopsuev/jericho/internal/resilience"
+	"github.com/dpopsuev/troupe/internal/protocol"
+	"github.com/dpopsuev/troupe/internal/resilience"
 )
 
 // Sentinel errors.

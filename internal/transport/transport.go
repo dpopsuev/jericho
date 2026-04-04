@@ -9,7 +9,7 @@ package transport
 import (
 	"context"
 
-	"github.com/dpopsuev/jericho/signal"
+	"github.com/dpopsuev/troupe/signal"
 )
 
 // AgentID is a typed identifier for agents in the transport layer.

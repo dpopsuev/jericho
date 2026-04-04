@@ -6,7 +6,7 @@
 // Stubs in v0.2.0 — full inference pipeline deferred to Arsenal (JRC-NED-2).
 package identity
 
-import "github.com/dpopsuev/jericho/world"
+import "github.com/dpopsuev/troupe/world"
 
 // TraitType is the ComponentType for a trait Set.
 const TraitType world.ComponentType = "trait"

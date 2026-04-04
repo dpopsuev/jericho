@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dpopsuev/jericho/internal/warden"
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe/internal/warden"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // ACPLauncher implements warden.AgentSupervisor by spawning ACP agent processes.

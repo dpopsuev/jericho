@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dpopsuev/jericho"
-	"github.com/dpopsuev/jericho/internal/warden"
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/troupe/internal/warden"
+	"github.com/dpopsuev/troupe/world"
 )
 
 type mockDriver struct {
@@ -39,7 +39,7 @@ type echoStrategy struct {
 	orchestrateCalled bool
 }
 
-func (s *echoStrategy) Orchestrate(_ context.Context, prompt string, agents []jericho.Actor) (string, error) {
+func (s *echoStrategy) Orchestrate(_ context.Context, prompt string, agents []troupe.Actor) (string, error) {
 	s.orchestrateCalled = true
 	return "synthesized: " + prompt, nil
 }
@@ -55,7 +55,7 @@ func TestAgentCollective_Ask(t *testing.T) {
 	a2, _ := parts.spawn(ctx, "antithesis")
 
 	strategy := &echoStrategy{}
-	coll := NewCollective(a1.ID(), "debater", strategy, []jericho.Actor{a1, a2})
+	coll := NewCollective(a1.ID(), "debater", strategy, []troupe.Actor{a1, a2})
 
 	result, err := coll.Perform(ctx, "test prompt")
 	if err != nil {
@@ -76,7 +76,7 @@ func TestAgentCollective_Identity(t *testing.T) {
 	a1, _ := parts.spawn(ctx, "thesis")
 	a2, _ := parts.spawn(ctx, "antithesis")
 
-	coll := NewCollective(a1.ID(), "reviewer", &echoStrategy{}, []jericho.Actor{a1, a2})
+	coll := NewCollective(a1.ID(), "reviewer", &echoStrategy{}, []troupe.Actor{a1, a2})
 
 	if coll.Role() != "reviewer" {
 		t.Fatalf("Role = %q", coll.Role())
@@ -97,7 +97,7 @@ func TestAgentCollective_IsAlive(t *testing.T) {
 	a1, _ := parts.spawn(ctx, "thesis")
 	a2, _ := parts.spawn(ctx, "antithesis")
 
-	coll := NewCollective(a1.ID(), "debater", &echoStrategy{}, []jericho.Actor{a1, a2})
+	coll := NewCollective(a1.ID(), "debater", &echoStrategy{}, []troupe.Actor{a1, a2})
 
 	if !coll.Ready() {
 		t.Fatal("collective should be alive")
@@ -114,7 +114,7 @@ func TestAgentCollective_Children(t *testing.T) {
 	a1, _ := parts.spawn(ctx, "thesis")
 	a2, _ := parts.spawn(ctx, "antithesis")
 
-	coll := NewCollective(a1.ID(), "debater", &echoStrategy{}, []jericho.Actor{a1, a2})
+	coll := NewCollective(a1.ID(), "debater", &echoStrategy{}, []troupe.Actor{a1, a2})
 
 	children := coll.Children()
 	if len(children) != 2 {
@@ -134,7 +134,7 @@ func TestAgentCollective_Kill(t *testing.T) {
 	a1, _ := parts.spawn(ctx, "thesis")
 	a2, _ := parts.spawn(ctx, "antithesis")
 
-	coll := NewCollective(a1.ID(), "debater", &echoStrategy{}, []jericho.Actor{a1, a2})
+	coll := NewCollective(a1.ID(), "debater", &echoStrategy{}, []troupe.Actor{a1, a2})
 
 	if err := coll.Kill(ctx); err != nil {
 		t.Fatalf("Kill: %v", err)
@@ -143,7 +143,7 @@ func TestAgentCollective_Kill(t *testing.T) {
 
 func TestDialectic_RequiresAtLeast2Agents(t *testing.T) {
 	d := &Dialectic{MaxRounds: 3}
-	_, err := d.Orchestrate(context.Background(), "test", []jericho.Actor{})
+	_, err := d.Orchestrate(context.Background(), "test", []troupe.Actor{})
 	if err == nil || !strings.Contains(err.Error(), "at least 2") {
 		t.Fatalf("err = %v, want 'at least 2 agents'", err)
 	}
@@ -162,7 +162,7 @@ func TestDialectic_Defaults(t *testing.T) {
 
 func TestArbiter_RequiresAtLeast3Agents(t *testing.T) {
 	a := &Arbiter{MaxRounds: 3}
-	_, err := a.Orchestrate(context.Background(), "test", []jericho.Actor{})
+	_, err := a.Orchestrate(context.Background(), "test", []troupe.Actor{})
 	if err == nil || !strings.Contains(err.Error(), "at least 3") {
 		t.Fatalf("err = %v, want 'at least 3 agents'", err)
 	}
@@ -235,7 +235,7 @@ func TestCollective_IngressRejects(t *testing.T) {
 	a2, _ := parts.spawn(ctx, "antithesis")
 
 	strategy := &echoStrategy{}
-	coll := NewCollective(a1.ID(), "debater", strategy, []jericho.Actor{a1, a2},
+	coll := NewCollective(a1.ID(), "debater", strategy, []troupe.Actor{a1, a2},
 		WithIngress(&rejectGate{reason: "destructive request"}),
 	)
 
@@ -262,7 +262,7 @@ func TestCollective_NoGates_BackwardCompat(t *testing.T) {
 	a1, _ := parts.spawn(ctx, "thesis")
 	a2, _ := parts.spawn(ctx, "antithesis")
 
-	coll := NewCollective(a1.ID(), "debater", &echoStrategy{}, []jericho.Actor{a1, a2})
+	coll := NewCollective(a1.ID(), "debater", &echoStrategy{}, []troupe.Actor{a1, a2})
 
 	result, err := coll.Perform(ctx, "test")
 	if err != nil {
@@ -280,7 +280,7 @@ func TestCollective_BothGatesPass(t *testing.T) {
 	a1, _ := parts.spawn(ctx, "thesis")
 	a2, _ := parts.spawn(ctx, "antithesis")
 
-	coll := NewCollective(a1.ID(), "debater", &echoStrategy{}, []jericho.Actor{a1, a2},
+	coll := NewCollective(a1.ID(), "debater", &echoStrategy{}, []troupe.Actor{a1, a2},
 		WithIngress(&passGate{}),
 		WithEgress(&passGate{}),
 	)
@@ -301,7 +301,7 @@ func TestCollective_EgressRejects(t *testing.T) {
 	a1, _ := parts.spawn(ctx, "thesis")
 	a2, _ := parts.spawn(ctx, "antithesis")
 
-	coll := NewCollective(a1.ID(), "debater", &echoStrategy{}, []jericho.Actor{a1, a2},
+	coll := NewCollective(a1.ID(), "debater", &echoStrategy{}, []troupe.Actor{a1, a2},
 		WithEgress(&rejectGate{reason: "low confidence"}),
 	)
 

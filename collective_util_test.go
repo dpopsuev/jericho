@@ -1,11 +1,11 @@
-package jericho_test
+package troupe_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/jericho/collective"
-	"github.com/dpopsuev/jericho/testkit"
+	"github.com/dpopsuev/troupe/collective"
+	"github.com/dpopsuev/troupe/testkit"
 )
 
 func TestSpawnCollective_WithMockBroker(t *testing.T) {

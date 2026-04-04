@@ -3,7 +3,7 @@ package mcp
 import (
 	"testing"
 
-	"github.com/dpopsuev/jericho/internal/protocol"
+	"github.com/dpopsuev/troupe/internal/protocol"
 )
 
 func TestServerContract_MockServer(t *testing.T) {

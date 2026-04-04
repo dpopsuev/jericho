@@ -1,9 +1,9 @@
-package jericho
+package troupe
 
 import (
 	"context"
 
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // Driver provisions and communicates with agents. The Broker delegates

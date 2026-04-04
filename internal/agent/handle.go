@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dpopsuev/jericho/internal/transport"
-	"github.com/dpopsuev/jericho/internal/warden"
-	"github.com/dpopsuev/jericho/signal"
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe/internal/transport"
+	"github.com/dpopsuev/troupe/internal/warden"
+	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // Solo wraps all subsystems into one human-readable object for a
@@ -70,7 +70,7 @@ func (a *Solo) IsRunning() bool {
 }
 
 // Ready returns true if the agent can accept work (readiness probe).
-// Implements jericho.Actor.
+// Implements troupe.Actor.
 func (a *Solo) Ready() bool {
 	ready, ok := world.TryGet[world.Ready](a.world, a.id)
 	return ok && ready.Ready
@@ -134,7 +134,7 @@ func (a *Solo) Uptime() time.Duration {
 // ---------------------------------------------------------------------------
 
 // Perform sends a prompt to this agent and blocks until a response is received.
-// Implements jericho.Actor.
+// Implements troupe.Actor.
 func (a *Solo) Perform(ctx context.Context, content string) (string, error) {
 	msg := transport.Message{
 		From:         "agent",

@@ -10,9 +10,9 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/dpopsuev/jericho/internal/acp"
-	"github.com/dpopsuev/jericho/internal/warden"
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe/internal/acp"
+	"github.com/dpopsuev/troupe/internal/warden"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // mockACPServer simulates an ACP agent over stdio.

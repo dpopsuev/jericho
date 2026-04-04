@@ -1,29 +1,29 @@
-package jericho_test
+package troupe_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/jericho"
+	"github.com/dpopsuev/troupe"
 )
 
 func TestNewBroker_EmptyEndpoint_ReturnsLocal(t *testing.T) {
-	broker := jericho.NewBroker("")
+	broker := troupe.NewBroker("")
 	if broker == nil {
 		t.Fatal("NewBroker(\"\") returned nil")
 	}
 }
 
 func TestNewBroker_HTTPSEndpoint_ReturnsRemote(t *testing.T) {
-	broker := jericho.NewBroker("https://cluster:8080")
+	broker := troupe.NewBroker("https://cluster:8080")
 	if broker == nil {
 		t.Fatal("NewBroker(\"https://...\") returned nil")
 	}
 }
 
 func TestDefaultBroker_Pick_DefaultCount(t *testing.T) {
-	broker := jericho.NewBroker("")
-	configs, err := broker.Pick(context.Background(), jericho.Preferences{})
+	broker := troupe.NewBroker("")
+	configs, err := broker.Pick(context.Background(), troupe.Preferences{})
 	if err != nil {
 		t.Fatalf("Pick: %v", err)
 	}
@@ -33,8 +33,8 @@ func TestDefaultBroker_Pick_DefaultCount(t *testing.T) {
 }
 
 func TestDefaultBroker_Pick_ExplicitCount(t *testing.T) {
-	broker := jericho.NewBroker("")
-	configs, err := broker.Pick(context.Background(), jericho.Preferences{Count: 3, Role: "worker"})
+	broker := troupe.NewBroker("")
+	configs, err := broker.Pick(context.Background(), troupe.Preferences{Count: 3, Role: "worker"})
 	if err != nil {
 		t.Fatalf("Pick: %v", err)
 	}
@@ -44,8 +44,8 @@ func TestDefaultBroker_Pick_ExplicitCount(t *testing.T) {
 }
 
 func TestDefaultBroker_Spawn_NoLauncher(t *testing.T) {
-	broker := jericho.NewBroker("")
-	_, err := broker.Spawn(context.Background(), jericho.ActorConfig{Model: "sonnet"})
+	broker := troupe.NewBroker("")
+	_, err := broker.Spawn(context.Background(), troupe.ActorConfig{Model: "sonnet"})
 	if err == nil {
 		t.Fatal("expected error for spawn without launcher")
 	}

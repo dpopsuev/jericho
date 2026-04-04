@@ -10,7 +10,7 @@ package arsenal
 import (
 	"errors"
 
-	"github.com/dpopsuev/jericho/identity"
+	"github.com/dpopsuev/troupe/identity"
 )
 
 // Sentinel errors.

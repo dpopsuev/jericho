@@ -188,7 +188,7 @@ func pushBlocked(ctx context.Context, session *sdkmcp.ClientSession, cfg WorkerC
 func ConnectEndpoint(ctx context.Context, endpoint, workerName string) (*sdkmcp.ClientSession, error) {
 	transport := &sdkmcp.StreamableClientTransport{Endpoint: endpoint}
 	client := sdkmcp.NewClient(
-		&sdkmcp.Implementation{Name: "jericho-" + workerName, Version: "v0.1.0"},
+		&sdkmcp.Implementation{Name: "troupe-" + workerName, Version: "v0.1.0"},
 		nil,
 	)
 	session, err := client.Connect(ctx, transport, nil)

@@ -1,4 +1,4 @@
-package jericho_test
+package troupe_test
 
 import (
 	"context"
@@ -9,17 +9,17 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/dpopsuev/jericho"
-	"github.com/dpopsuev/jericho/testkit"
+	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/troupe/testkit"
 )
 
 func TestRemoteBroker_PickAndSpawnRoundTrip(t *testing.T) {
 	server := httptest.NewServer(mockBrokerHandler())
 	defer server.Close()
 
-	broker := jericho.NewBroker(server.URL)
+	broker := troupe.NewBroker(server.URL)
 
-	configs, err := broker.Pick(context.Background(), jericho.Preferences{Count: 2})
+	configs, err := broker.Pick(context.Background(), troupe.Preferences{Count: 2})
 	if err != nil {
 		t.Fatalf("Pick: %v", err)
 	}
@@ -27,7 +27,7 @@ func TestRemoteBroker_PickAndSpawnRoundTrip(t *testing.T) {
 		t.Errorf("Pick returned %d configs, want 2", len(configs))
 	}
 
-	actor, err := broker.Spawn(context.Background(), jericho.ActorConfig{Role: "worker"})
+	actor, err := broker.Spawn(context.Background(), troupe.ActorConfig{Role: "worker"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
@@ -58,16 +58,16 @@ func TestSSEDirector_RoundTrip(t *testing.T) {
 	}
 	mockBroker := testkit.NewMockBroker(1)
 
-	server := httptest.NewServer(jericho.DirectorHandler(director, mockBroker))
+	server := httptest.NewServer(troupe.DirectorHandler(director, mockBroker))
 	defer server.Close()
 
-	sseDirector := jericho.ConnectDirector(server.URL)
+	sseDirector := troupe.ConnectDirector(server.URL)
 	events, err := sseDirector.Direct(context.Background(), nil)
 	if err != nil {
 		t.Fatalf("Direct: %v", err)
 	}
 
-	kinds := make([]jericho.EventKind, 0, 5) //nolint:mnd // expected event count
+	kinds := make([]troupe.EventKind, 0, 5) //nolint:mnd // expected event count
 	for ev := range events {
 		kinds = append(kinds, ev.Kind)
 	}
@@ -75,7 +75,7 @@ func TestSSEDirector_RoundTrip(t *testing.T) {
 	if len(kinds) != 5 { //nolint:mnd // 2 steps × (Started + Completed) + Done
 		t.Fatalf("received %d events, want 5: %v", len(kinds), kinds)
 	}
-	if kinds[len(kinds)-1] != jericho.Done {
+	if kinds[len(kinds)-1] != troupe.Done {
 		t.Errorf("last event = %s, want done", kinds[len(kinds)-1])
 	}
 }
@@ -84,8 +84,8 @@ func TestProxyActor_ConcurrentPerform(t *testing.T) {
 	server := httptest.NewServer(mockBrokerHandler())
 	defer server.Close()
 
-	broker := jericho.NewBroker(server.URL)
-	actor, err := broker.Spawn(context.Background(), jericho.ActorConfig{Role: "worker"})
+	broker := troupe.NewBroker(server.URL)
+	actor, err := broker.Spawn(context.Background(), troupe.ActorConfig{Role: "worker"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
@@ -111,15 +111,15 @@ func mockBrokerHandler() http.Handler {
 	var mu sync.Mutex
 
 	mux.HandleFunc("POST /pick", func(w http.ResponseWriter, r *http.Request) {
-		var prefs jericho.Preferences
+		var prefs troupe.Preferences
 		json.NewDecoder(r.Body).Decode(&prefs) //nolint:errcheck // test helper
 		count := prefs.Count
 		if count <= 0 {
 			count = 1
 		}
-		configs := make([]jericho.ActorConfig, count)
+		configs := make([]troupe.ActorConfig, count)
 		for i := range count {
-			configs[i] = jericho.ActorConfig{Role: fmt.Sprintf("actor-%d", i+1)}
+			configs[i] = troupe.ActorConfig{Role: fmt.Sprintf("actor-%d", i+1)}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(configs) //nolint:errcheck // test helper

@@ -3,9 +3,9 @@ package testkit
 import (
 	"testing"
 
-	"github.com/dpopsuev/jericho/internal/transport"
-	"github.com/dpopsuev/jericho/signal"
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe/internal/transport"
+	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // AssertTaskState verifies a task reached the expected state.

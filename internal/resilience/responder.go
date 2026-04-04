@@ -3,7 +3,7 @@ package resilience
 import (
 	"context"
 
-	"github.com/dpopsuev/jericho/internal/protocol"
+	"github.com/dpopsuev/troupe/internal/protocol"
 )
 
 // CircuitBreakerResponder wraps a protocol.Responder with circuit breaker protection.

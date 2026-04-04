@@ -3,11 +3,11 @@ package collective
 import (
 	"context"
 
-	"github.com/dpopsuev/jericho/internal/agent"
-	"github.com/dpopsuev/jericho/internal/transport"
-	"github.com/dpopsuev/jericho/internal/warden"
-	"github.com/dpopsuev/jericho/signal"
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe/internal/agent"
+	"github.com/dpopsuev/troupe/internal/transport"
+	"github.com/dpopsuev/troupe/internal/warden"
+	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // testBrokerParts creates the subsystems for testing (replaces Staff).

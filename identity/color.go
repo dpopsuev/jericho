@@ -9,7 +9,7 @@ import (
 	"math/rand/v2"
 	"sync"
 
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // ColorType is the ComponentType for Color (visual identity ECS component).

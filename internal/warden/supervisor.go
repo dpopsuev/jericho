@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // RestartPolicy controls automatic restart behavior after an agent exits.

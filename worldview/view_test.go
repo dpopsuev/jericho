@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/jericho/identity"
-	"github.com/dpopsuev/jericho/world"
-	"github.com/dpopsuev/jericho/worldview"
+	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/troupe/worldview"
 )
 
 // ---------------------------------------------------------------------------

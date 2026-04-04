@@ -3,7 +3,7 @@ package identity
 import (
 	"time"
 
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // DefaultStrategy assigns random colors from the palette.

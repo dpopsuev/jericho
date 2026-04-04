@@ -1,17 +1,17 @@
-package jericho
+package troupe
 
 import (
 	"context"
 	"fmt"
 	"strings"
 
-	"github.com/dpopsuev/jericho/identity"
-	"github.com/dpopsuev/jericho/internal/acp"
-	"github.com/dpopsuev/jericho/internal/agent"
-	"github.com/dpopsuev/jericho/internal/transport"
-	"github.com/dpopsuev/jericho/internal/warden"
-	"github.com/dpopsuev/jericho/signal"
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/internal/acp"
+	"github.com/dpopsuev/troupe/internal/agent"
+	"github.com/dpopsuev/troupe/internal/transport"
+	"github.com/dpopsuev/troupe/internal/warden"
+	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // driverAdapter wraps a public Driver as a warden.AgentSupervisor.

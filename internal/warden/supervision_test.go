@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/jericho/internal/transport"
-	"github.com/dpopsuev/jericho/signal"
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe/internal/transport"
+	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/troupe/world"
 )
 
 func setupSupervision() (*AgentWarden, *mockLauncher) {

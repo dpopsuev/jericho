@@ -1,4 +1,4 @@
-module github.com/dpopsuev/jericho
+module github.com/dpopsuev/troupe
 
 go 1.25.7
 

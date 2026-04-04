@@ -5,7 +5,7 @@ package auth
 import (
 	"context"
 
-	"github.com/dpopsuev/jericho/internal/protocol"
+	"github.com/dpopsuev/troupe/internal/protocol"
 )
 
 // Noop allows all requests. Use for development and testing.

@@ -18,7 +18,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/dpopsuev/jericho/internal/resilience"
+	"github.com/dpopsuev/troupe/internal/resilience"
 )
 
 // Slog attribute key constants.

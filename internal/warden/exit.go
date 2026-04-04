@@ -4,7 +4,7 @@ package warden
 import (
 	"time"
 
-	"github.com/dpopsuev/jericho/world"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // ExitCode describes why an agent terminated.

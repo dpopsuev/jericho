@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/dpopsuev/jericho"
+	"github.com/dpopsuev/troupe"
 )
 
 // MockBroker is a test Broker that spawns MockActors.
@@ -28,7 +28,7 @@ func NewMockBroker(n int) *MockBroker {
 }
 
 // Pick returns configs for the pre-configured actors.
-func (b *MockBroker) Pick(_ context.Context, prefs jericho.Preferences) ([]jericho.ActorConfig, error) {
+func (b *MockBroker) Pick(_ context.Context, prefs troupe.Preferences) ([]troupe.ActorConfig, error) {
 	count := prefs.Count
 	if count <= 0 {
 		count = 1
@@ -37,9 +37,9 @@ func (b *MockBroker) Pick(_ context.Context, prefs jericho.Preferences) ([]jeric
 		count = len(b.Actors)
 	}
 
-	configs := make([]jericho.ActorConfig, count)
+	configs := make([]troupe.ActorConfig, count)
 	for i := range count {
-		configs[i] = jericho.ActorConfig{
+		configs[i] = troupe.ActorConfig{
 			Model: "mock",
 			Role:  b.Actors[i].Name,
 		}
@@ -48,7 +48,7 @@ func (b *MockBroker) Pick(_ context.Context, prefs jericho.Preferences) ([]jeric
 }
 
 // Spawn returns the next pre-configured MockActor.
-func (b *MockBroker) Spawn(_ context.Context, config jericho.ActorConfig) (jericho.Actor, error) {
+func (b *MockBroker) Spawn(_ context.Context, config troupe.ActorConfig) (troupe.Actor, error) {
 	idx := int(b.spawned.Add(1)) - 1
 	if idx >= len(b.Actors) {
 		return nil, fmt.Errorf("mock broker: no more actors (spawned %d, have %d)", idx+1, len(b.Actors))

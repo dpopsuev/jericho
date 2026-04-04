@@ -4,7 +4,7 @@
 // how the agent looks or behaves.
 package identity
 
-import "github.com/dpopsuev/jericho/world"
+import "github.com/dpopsuev/troupe/world"
 
 // MissionType is the ComponentType for Mission.
 const MissionType world.ComponentType = "mission"

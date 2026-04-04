@@ -1,4 +1,4 @@
-package jericho
+package troupe
 
 import (
 	"context"

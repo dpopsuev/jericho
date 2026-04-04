@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/jericho/billing"
+	"github.com/dpopsuev/troupe/billing"
 )
 
 // ---------------------------------------------------------------------------
