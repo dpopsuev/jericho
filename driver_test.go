@@ -2,6 +2,7 @@ package troupe_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/dpopsuev/troupe"
@@ -57,4 +58,57 @@ func TestDriver_PublicType(t *testing.T) {
 	// Driver must be a public interface, not a type alias to internal
 	// This test proves consumers can implement Driver without importing internal/
 	var _ troupe.Driver = newTestDriver()
+}
+
+// --- DriverDescriptor / DriverValidator tests ---
+
+type validatingDriver struct {
+	testDriver
+	envErr error
+	info   troupe.DriverInfo
+}
+
+func (d *validatingDriver) ValidateEnvironment(_ context.Context) error { return d.envErr }
+func (d *validatingDriver) Describe() troupe.DriverInfo                 { return d.info }
+
+func TestDriverDescriptor_OptionalInterface(t *testing.T) {
+	// A bare testDriver should NOT implement DriverDescriptor.
+	var d troupe.Driver = newTestDriver()
+	if _, ok := d.(troupe.DriverDescriptor); ok {
+		t.Error("bare testDriver should not implement DriverDescriptor")
+	}
+
+	// A validatingDriver SHOULD implement both optional interfaces.
+	vd := &validatingDriver{info: troupe.DriverInfo{Name: "test"}}
+	if _, ok := troupe.Driver(vd).(troupe.DriverDescriptor); !ok {
+		t.Error("validatingDriver should implement DriverDescriptor")
+	}
+	if _, ok := troupe.Driver(vd).(troupe.DriverValidator); !ok {
+		t.Error("validatingDriver should implement DriverValidator")
+	}
+}
+
+func TestDriverValidator_RejectsInvalidEnv(t *testing.T) {
+	errMissing := errors.New("missing API key")
+	driver := &validatingDriver{
+		testDriver: *newTestDriver(),
+		envErr:     errMissing,
+	}
+	broker := troupe.NewBroker("", troupe.WithDriver(driver))
+	_, err := broker.Spawn(context.Background(), troupe.ActorConfig{Role: "test"})
+	if err == nil {
+		t.Fatal("expected env validation error")
+	}
+	if !errors.Is(err, errMissing) {
+		t.Fatalf("expected wrapped env error, got: %v", err)
+	}
+}
+
+func TestDriverValidator_PassesValidEnv(t *testing.T) {
+	driver := &validatingDriver{testDriver: *newTestDriver()}
+	broker := troupe.NewBroker("", troupe.WithDriver(driver))
+	_, err := broker.Spawn(context.Background(), troupe.ActorConfig{Role: "test"})
+	if err != nil {
+		t.Fatalf("Spawn with valid env: %v", err)
+	}
 }

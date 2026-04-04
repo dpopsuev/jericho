@@ -20,3 +20,28 @@ type Driver interface {
 	// Stop deprovisions the agent for the given entity.
 	Stop(ctx context.Context, id world.EntityID) error
 }
+
+// DriverDescriptor is an optional interface that Drivers implement to
+// declare capabilities. Drivers that don't implement it are treated as
+// opaque. Go assertion pattern: if d, ok := driver.(DriverDescriptor); ok.
+type DriverDescriptor interface {
+	Describe() DriverInfo
+}
+
+// DriverInfo describes a Driver's capabilities and constraints.
+type DriverInfo struct {
+	// Name is a human-readable driver name (e.g., "acp", "http-anthropic").
+	Name string
+	// Models lists the model identifiers this driver can provision.
+	// Empty = unknown/any.
+	Models []string
+	// MaxConcurrent is how many simultaneous agents this driver supports.
+	// 0 = unlimited.
+	MaxConcurrent int
+}
+
+// DriverValidator is an optional interface for pre-flight environment checks.
+// Broker.Spawn calls ValidateEnvironment before Driver.Start if implemented.
+type DriverValidator interface {
+	ValidateEnvironment(ctx context.Context) error
+}

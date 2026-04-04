@@ -39,18 +39,38 @@ type DefaultBroker struct {
 	transport *transport.LocalTransport
 	bus       signal.Bus
 	registry  *identity.Registry
+	hooks     []Hook
+	driver    Driver // original driver (for optional interface checks)
+	meter     Meter
 }
 
 // BrokerOption configures a DefaultBroker.
 type BrokerOption func(*brokerConfig)
 
 type brokerConfig struct {
-	driver Driver
+	driver       Driver
+	hooks        []Hook
+	pickStrategy PickStrategy
+	meter        Meter
 }
 
 // WithDriver sets the agent driver. Default: ACP (subprocess + JSON-RPC).
 func WithDriver(d Driver) BrokerOption {
 	return func(c *brokerConfig) { c.driver = d }
+}
+
+// WithHook registers a lifecycle hook. Nil hooks are ignored.
+func WithHook(h Hook) BrokerOption {
+	return func(c *brokerConfig) {
+		if h != nil {
+			c.hooks = append(c.hooks, h)
+		}
+	}
+}
+
+// WithMeter sets the resource usage meter. Default: none.
+func WithMeter(m Meter) BrokerOption {
+	return func(c *brokerConfig) { c.meter = m }
 }
 
 // NewBroker creates a Broker. If the endpoint is a remote URL (https://),
@@ -89,6 +109,9 @@ func newLocalBroker(opts ...BrokerOption) *DefaultBroker {
 		transport: t,
 		bus:       b,
 		registry:  identity.NewRegistry(),
+		hooks:     cfg.hooks,
+		driver:    cfg.driver,
+		meter:     cfg.meter,
 	}
 }
 
@@ -111,6 +134,24 @@ func (b *DefaultBroker) Pick(_ context.Context, prefs Preferences) ([]ActorConfi
 
 // Spawn creates a running actor.
 func (b *DefaultBroker) Spawn(ctx context.Context, config ActorConfig) (Actor, error) {
+	// Driver environment validation (optional interface).
+	if b.driver != nil {
+		if v, ok := b.driver.(DriverValidator); ok {
+			if err := v.ValidateEnvironment(ctx); err != nil {
+				return nil, fmt.Errorf("driver validate: %w", err)
+			}
+		}
+	}
+
+	// Pre-spawn hooks: any SpawnHook can reject.
+	for _, h := range b.hooks {
+		if sh, ok := h.(SpawnHook); ok {
+			if err := sh.PreSpawn(ctx, config); err != nil {
+				return nil, fmt.Errorf("hook %s pre-spawn: %w", sh.Name(), err)
+			}
+		}
+	}
+
 	role := config.Role
 	if role == "" {
 		role = "actor"
@@ -119,12 +160,39 @@ func (b *DefaultBroker) Spawn(ctx context.Context, config ActorConfig) (Actor, e
 	id, err := b.warden.Fork(ctx, role, warden.AgentConfig{
 		Model: config.Model,
 	}, 0)
+
+	var actor Actor
+	if err == nil {
+		actor = agent.NewSolo(id, role, b.world, b.warden, b.transport)
+	}
+
+	// Post-spawn hooks: observe result.
+	for _, h := range b.hooks {
+		if sh, ok := h.(SpawnHook); ok {
+			sh.PostSpawn(ctx, config, actor, err)
+		}
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("broker spawn: %w", err)
 	}
 
-	return agent.NewSolo(id, role, b.world, b.warden, b.transport), nil
+	// Wrap with perform hooks if any are registered.
+	var performHooks []PerformHook
+	for _, h := range b.hooks {
+		if ph, ok := h.(PerformHook); ok {
+			performHooks = append(performHooks, ph)
+		}
+	}
+	if len(performHooks) > 0 {
+		actor = newHookedActor(actor, performHooks)
+	}
+
+	return actor, nil
 }
+
+// Meter returns the resource usage meter (nil if none configured).
+func (b *DefaultBroker) Meter() Meter { return b.meter }
 
 // Signal returns the event bus.
 func (b *DefaultBroker) Signal() signal.Bus { return b.bus }
