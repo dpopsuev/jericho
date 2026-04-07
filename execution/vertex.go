@@ -63,7 +63,7 @@ func (v *VertexProvider) Completion(ctx context.Context, params anyllm.Completio
 	}
 
 	resp, err := v.client.Messages.New(ctx, anthropic.MessageNewParams{
-		Model:     anthropic.Model(model),
+		Model:     anthropic.Model(params.Model),
 		Messages:  msgs,
 		MaxTokens: maxTokens,
 	})
