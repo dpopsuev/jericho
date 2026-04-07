@@ -14,7 +14,7 @@ import (
 // Vertex provider constants.
 const (
 	vertexProviderName = "anthropic-vertex"
-	vertexDefaultModel = "claude-sonnet-4-20250514"
+	vertexDefaultModel = "claude-sonnet-4@20250514"
 	vertexMaxTokens    = int64(4096)
 	vertexAPIKeyDummy  = "vertex" // SDK requires non-empty key even for Vertex
 )
