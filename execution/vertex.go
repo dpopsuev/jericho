@@ -3,6 +3,7 @@ package execution
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
@@ -59,7 +60,7 @@ func (v *VertexProvider) Completion(ctx context.Context, params anyllm.Completio
 	}
 
 	if params.Model == "" {
-		return nil, fmt.Errorf("vertex: model is required (resolved by Arsenal, not provider)")
+		return nil, fmt.Errorf("%w (resolved by Arsenal, not provider)", ErrModelRequired)
 	}
 
 	resp, err := v.client.Messages.New(ctx, anthropic.MessageNewParams{
@@ -68,7 +69,7 @@ func (v *VertexProvider) Completion(ctx context.Context, params anyllm.Completio
 		MaxTokens: maxTokens,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("vertex completion: %w", err)
+		return nil, classifyVertexError(err)
 	}
 
 	return convertResponse(resp), nil
@@ -76,9 +77,24 @@ func (v *VertexProvider) Completion(ctx context.Context, params anyllm.Completio
 
 // CompletionStream is not implemented — Shell Harness uses Completion().
 // Streaming is TUI concern, not agent concern.
+// classifyVertexError maps HTTP errors from the Anthropic SDK to sentinel errors.
+func classifyVertexError(err error) error {
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, "404") || strings.Contains(msg, "NOT_FOUND"):
+		return fmt.Errorf("%w: %w", ErrModelNotFound, err)
+	case strings.Contains(msg, "401") || strings.Contains(msg, "403") || strings.Contains(msg, "PERMISSION_DENIED"):
+		return fmt.Errorf("%w: %w", ErrAuthFailed, err)
+	case strings.Contains(msg, "429") || strings.Contains(msg, "RESOURCE_EXHAUSTED"):
+		return fmt.Errorf("%w: %w", ErrQuotaExceeded, err)
+	default:
+		return fmt.Errorf("vertex completion: %w", err)
+	}
+}
+
 func (v *VertexProvider) CompletionStream(_ context.Context, _ anyllm.CompletionParams) (<-chan anyllm.ChatCompletionChunk, <-chan error) {
 	errs := make(chan error, 1)
-	errs <- fmt.Errorf("vertex: streaming not implemented, use Completion()")
+	errs <- fmt.Errorf("%w: use Completion()", ErrStreamingNotSupported)
 	close(errs)
 	chunks := make(chan anyllm.ChatCompletionChunk)
 	close(chunks)

@@ -28,7 +28,7 @@ func LLMActorFunc(provider anyllm.Provider, model string, recorder UsageRecorder
 			return "", fmt.Errorf("llm completion: %w", err)
 		}
 		if len(resp.Choices) == 0 {
-			return "", fmt.Errorf("llm completion: no choices returned")
+			return "", ErrNoChoices
 		}
 
 		if recorder != nil && resp.Usage != nil {
@@ -37,7 +37,7 @@ func LLMActorFunc(provider anyllm.Provider, model string, recorder UsageRecorder
 
 		content, ok := resp.Choices[0].Message.Content.(string)
 		if !ok {
-			return "", fmt.Errorf("llm completion: content is not a string")
+			return "", ErrContentNotText
 		}
 		return content, nil
 	}
