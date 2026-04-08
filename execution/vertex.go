@@ -18,7 +18,7 @@ import (
 // Vertex provider constants.
 const (
 	vertexProviderName = "anthropic-vertex"
-	vertexMaxTokens    = int64(4096)
+	vertexMaxTokensFallback = int64(4096) // overridden by ConfiguredProvider
 	vertexAPIKeyDummy  = "vertex" // SDK requires non-empty key even for Vertex
 )
 
@@ -58,7 +58,7 @@ func (v *VertexProvider) Completion(ctx context.Context, params anyllm.Completio
 	start := time.Now()
 	msgs := convertMessages(params.Messages)
 
-	maxTokens := vertexMaxTokens
+	maxTokens := vertexMaxTokensFallback
 	if params.MaxTokens != nil && *params.MaxTokens > 0 {
 		maxTokens = int64(*params.MaxTokens)
 	}

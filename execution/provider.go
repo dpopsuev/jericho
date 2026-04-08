@@ -108,8 +108,23 @@ func NewProviderByName(name string) (anyllm.Provider, error) {
 	if err := checkCredentials(spec); err != nil {
 		return nil, err
 	}
+	p, err := createProvider(spec)
+	if err != nil {
+		return nil, err
+	}
 	slog.Info("provider created", slog.String(logKeyProvider, spec.name))
-	return createProvider(spec)
+	return p, nil
+}
+
+// NewProviderWithConfig creates a provider wrapped with common defaults.
+// The config's MaxTokens is injected into every CompletionParams that
+// doesn't set its own.
+func NewProviderWithConfig(name string, cfg ProviderConfig) (anyllm.Provider, error) {
+	base, err := NewProviderByName(name)
+	if err != nil {
+		return nil, err
+	}
+	return NewConfiguredProvider(base, cfg), nil
 }
 
 func createProvider(spec providerSpec) (anyllm.Provider, error) {
