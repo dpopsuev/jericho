@@ -56,7 +56,8 @@ func (v *VertexProvider) Name() string { return vertexProviderName }
 // Completion sends a chat completion request via Vertex AI.
 func (v *VertexProvider) Completion(ctx context.Context, params anyllm.CompletionParams) (*anyllm.ChatCompletion, error) {
 	start := time.Now()
-	msgs := convertMessages(params.Messages)
+	conv := VertexConverter{}
+	msgs, system := convertAllMessages(conv, params.Messages)
 
 	maxTokens := vertexMaxTokensFallback
 	if params.MaxTokens != nil && *params.MaxTokens > 0 {
@@ -77,6 +78,11 @@ func (v *VertexProvider) Completion(ctx context.Context, params anyllm.Completio
 		Model:     anthropic.Model(params.Model),
 		Messages:  msgs,
 		MaxTokens: maxTokens,
+	}
+
+	// Pass system prompt if extracted from messages.
+	if system != "" {
+		req.System = []anthropic.TextBlockParam{{Text: system}}
 	}
 
 	// Pass through Tools.
@@ -175,21 +181,11 @@ func (v *VertexProvider) CompletionStream(_ context.Context, _ anyllm.Completion
 	return chunks, errs
 }
 
+// convertMessages is kept for backward compatibility with tests.
+// New code should use convertAllMessages(converter, msgs).
 func convertMessages(msgs []anyllm.Message) []anthropic.MessageParam {
-	out := make([]anthropic.MessageParam, 0, len(msgs))
-	for _, m := range msgs {
-		content, _ := m.Content.(string)
-		switch m.Role {
-		case vertexRoleUser:
-			out = append(out, anthropic.NewUserMessage(
-				anthropic.NewTextBlock(content),
-			))
-		case vertexRoleAssistant:
-			out = append(out, anthropic.NewAssistantMessage(
-				anthropic.NewTextBlock(content),
-			))
-		}
-	}
+	conv := VertexConverter{}
+	out, _ := convertAllMessages(conv, msgs)
 	return out
 }
 
