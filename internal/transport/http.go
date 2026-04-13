@@ -2,7 +2,9 @@ package transport
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 )
 
 // HTTPTransport is an HTTP-based A2A transport. Embeds baseTransport
@@ -30,6 +32,9 @@ func (t *HTTPTransport) Mux() *http.ServeMux {
 }
 
 // handleSend is the HTTP handler for POST /a2a/send.
+// Supports two modes based on Accept header:
+//   - text/event-stream → SSE: streams every TaskState transition as an event
+//   - otherwise → JSON: blocks until terminal state, returns one response
 func (t *HTTPTransport) handleSend(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		To  AgentID `json:"to"`
@@ -52,6 +57,41 @@ func (t *HTTPTransport) handleSend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if wantsSSE(r) {
+		t.handleSendSSE(w, ch)
+	} else {
+		t.handleSendJSON(w, task, ch)
+	}
+}
+
+// handleSendSSE streams every task state transition as an SSE event.
+func (t *HTTPTransport) handleSendSSE(w http.ResponseWriter, ch <-chan Event) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "streaming not supported", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	for ev := range ch {
+		data, err := json.Marshal(ev)
+		if err != nil {
+			continue
+		}
+		fmt.Fprintf(w, "event: %s\ndata: %s\n\n", ev.State, data)
+		flusher.Flush()
+
+		if ev.State == TaskCompleted || ev.State == TaskFailed {
+			return
+		}
+	}
+}
+
+// handleSendJSON blocks until a terminal state and returns one JSON response.
+func (t *HTTPTransport) handleSendJSON(w http.ResponseWriter, task *Task, ch <-chan Event) {
 	for ev := range ch {
 		if ev.State == TaskCompleted || ev.State == TaskFailed {
 			w.Header().Set("Content-Type", "application/json")
@@ -66,6 +106,11 @@ func (t *HTTPTransport) handleSend(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Error(w, "task did not complete", http.StatusInternalServerError)
+}
+
+// wantsSSE checks if the client requested SSE via Accept header.
+func wantsSSE(r *http.Request) bool {
+	return strings.Contains(r.Header.Get("Accept"), "text/event-stream")
 }
 
 // handleAgentCards serves the A2A agent card discovery endpoint.

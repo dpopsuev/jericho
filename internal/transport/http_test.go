@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -151,6 +153,154 @@ func TestHTTP_AgentCardDiscovery_Empty(t *testing.T) {
 	if len(cards) != 0 {
 		t.Errorf("expected empty, got %d cards", len(cards))
 	}
+}
+
+// TestHTTP_SSE_StreamsAllTransitions proves SSE mode streams submitted → working → completed.
+func TestHTTP_SSE_StreamsAllTransitions(t *testing.T) {
+	tr := NewHTTPTransport()
+	defer tr.Close()
+
+	_ = tr.Register("agent-a", func(_ context.Context, msg Message) (Message, error) {
+		return Message{From: "agent-a", Content: "sse: " + msg.Content}, nil
+	})
+
+	ts := httptest.NewServer(tr.Mux())
+	defer ts.Close()
+
+	body, _ := json.Marshal(map[string]any{
+		"to":      "agent-a",
+		"message": Message{From: "client", Content: "stream me"},
+	})
+
+	req, _ := http.NewRequest(http.MethodPost, ts.URL+"/a2a/send", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "text/event-stream")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("POST: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if ct := resp.Header.Get("Content-Type"); ct != "text/event-stream" {
+		t.Fatalf("Content-Type = %q, want text/event-stream", ct)
+	}
+
+	// Parse SSE events from response body.
+	rawBody, _ := io.ReadAll(resp.Body)
+	events := parseSSEEvents(t, string(rawBody))
+
+	// Expect at least: submitted, working, completed.
+	if len(events) < 2 {
+		t.Fatalf("expected >= 2 SSE events, got %d: %s", len(events), rawBody)
+	}
+
+	// Last event should be completed with data.
+	last := events[len(events)-1]
+	if last.State != TaskCompleted {
+		t.Errorf("last event state = %q, want completed", last.State)
+	}
+	if last.Data == nil || last.Data.Content != "sse: stream me" {
+		t.Errorf("last event data = %v", last.Data)
+	}
+}
+
+// TestHTTP_SSE_Error proves SSE mode streams failed state on handler error.
+func TestHTTP_SSE_Error(t *testing.T) {
+	tr := NewHTTPTransport()
+	defer tr.Close()
+
+	_ = tr.Register("fail-agent", func(_ context.Context, _ Message) (Message, error) {
+		return Message{}, context.Canceled
+	})
+
+	ts := httptest.NewServer(tr.Mux())
+	defer ts.Close()
+
+	body, _ := json.Marshal(map[string]any{
+		"to":      "fail-agent",
+		"message": Message{From: "client", Content: "will fail"},
+	})
+
+	req, _ := http.NewRequest(http.MethodPost, ts.URL+"/a2a/send", bytes.NewReader(body))
+	req.Header.Set("Accept", "text/event-stream")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("POST: %v", err)
+	}
+	defer resp.Body.Close()
+
+	rawBody, _ := io.ReadAll(resp.Body)
+	events := parseSSEEvents(t, string(rawBody))
+
+	// Last event should be failed.
+	last := events[len(events)-1]
+	if last.State != TaskFailed {
+		t.Errorf("last event state = %q, want failed", last.State)
+	}
+}
+
+// TestHTTP_NoAcceptHeader_StillJSON proves default mode is JSON (backward compat).
+func TestHTTP_NoAcceptHeader_StillJSON(t *testing.T) {
+	tr := NewHTTPTransport()
+	defer tr.Close()
+
+	_ = tr.Register("agent-a", func(_ context.Context, msg Message) (Message, error) {
+		return Message{From: "agent-a", Content: "json: " + msg.Content}, nil
+	})
+
+	ts := httptest.NewServer(tr.Mux())
+	defer ts.Close()
+
+	body, _ := json.Marshal(map[string]any{
+		"to":      "agent-a",
+		"message": Message{From: "client", Content: "no sse"},
+	})
+
+	resp, err := http.Post(ts.URL+"/a2a/send", "application/json", bytes.NewReader(body))
+	if err != nil {
+		t.Fatalf("POST: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if ct := resp.Header.Get("Content-Type"); ct != "application/json" {
+		t.Fatalf("Content-Type = %q, want application/json", ct)
+	}
+
+	var result struct {
+		State TaskState `json:"state"`
+		Data  *Message  `json:"data"`
+	}
+	json.NewDecoder(resp.Body).Decode(&result)
+
+	if result.State != TaskCompleted {
+		t.Errorf("state = %q, want completed", result.State)
+	}
+}
+
+// parseSSEEvents parses SSE text into transport Events.
+func parseSSEEvents(t *testing.T, body string) []Event {
+	t.Helper()
+	var events []Event
+	for _, block := range strings.Split(body, "\n\n") {
+		block = strings.TrimSpace(block)
+		if block == "" {
+			continue
+		}
+		for _, line := range strings.Split(block, "\n") {
+			if strings.HasPrefix(line, "data: ") {
+				data := strings.TrimPrefix(line, "data: ")
+				var ev Event
+				if err := json.Unmarshal([]byte(data), &ev); err != nil {
+					t.Logf("skip unparseable SSE data: %s", data)
+					continue
+				}
+				events = append(events, ev)
+			}
+		}
+	}
+	return events
 }
 
 // TestHTTP_CrossProcess proves two separate HTTPTransports on different ports
