@@ -44,5 +44,24 @@ func (g *AgentGatekeeper) Pass(ctx context.Context, content string) (allowed boo
 	return true, resp, nil
 }
 
-// Compile-time check.
-var _ Gatekeeper = (*AgentGatekeeper)(nil)
+// GateKeeper wraps a troupe.Gate as a Gatekeeper. The Gate receives
+// the content string as its subject.
+type GateKeeper struct {
+	gate troupe.Gate
+}
+
+// NewGateKeeper creates a Gatekeeper backed by a Gate predicate.
+func NewGateKeeper(g troupe.Gate) *GateKeeper {
+	return &GateKeeper{gate: g}
+}
+
+// Pass delegates to the underlying Gate with content as subject.
+func (g *GateKeeper) Pass(ctx context.Context, content string) (bool, string, error) {
+	return g.gate(ctx, content)
+}
+
+// Compile-time checks.
+var (
+	_ Gatekeeper = (*AgentGatekeeper)(nil)
+	_ Gatekeeper = (*GateKeeper)(nil)
+)

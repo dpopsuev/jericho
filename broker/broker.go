@@ -77,15 +77,17 @@ func (a *multiDriverAdapter) Healthy(_ context.Context, _ world.EntityID) bool {
 // DefaultBroker is the standard Broker implementation. Wires World, Warden,
 // Transport, Driver, Registry, and Signal Bus internally.
 type DefaultBroker struct {
-	world     *world.World
-	warden    *warden.AgentWarden
-	transport transport.Transport
-	bus       signal.Bus
-	registry  *identity.Registry
-	hooks     []Hook
-	driver    troupe.Driver // default driver (for optional interface checks)
-	adapter   *multiDriverAdapter
-	meter     troupe.Meter
+	world        *world.World
+	warden       *warden.AgentWarden
+	transport    transport.Transport
+	bus          signal.Bus
+	registry     *identity.Registry
+	hooks        []Hook
+	driver       troupe.Driver // default driver (for optional interface checks)
+	adapter      *multiDriverAdapter
+	meter        troupe.Meter
+	spawnGate    troupe.Gate
+	performGate  troupe.Gate
 }
 
 // Option configures a DefaultBroker.
@@ -98,6 +100,8 @@ type config struct {
 	pickStrategy PickStrategy
 	meter        troupe.Meter
 	transport    transport.Transport
+	spawnGates   []troupe.Gate
+	performGates []troupe.Gate
 }
 
 // WithDriver sets the agent driver. Default: ACP (subprocess + JSON-RPC).
@@ -134,6 +138,18 @@ func WithTransport(t transport.Transport) Option {
 // WithMeter sets the resource usage meter. Default: none.
 func WithMeter(m troupe.Meter) Option {
 	return func(c *config) { c.meter = m }
+}
+
+// WithSpawnGate adds a Gate that must pass before Broker.Spawn proceeds.
+// Multiple gates compose with short-circuit AND (first rejection stops).
+func WithSpawnGate(g troupe.Gate) Option {
+	return func(c *config) { c.spawnGates = append(c.spawnGates, g) }
+}
+
+// WithPerformGate adds a Gate that must pass before Actor.Perform proceeds.
+// Multiple gates compose with short-circuit AND (first rejection stops).
+func WithPerformGate(g troupe.Gate) Option {
+	return func(c *config) { c.performGates = append(c.performGates, g) }
 }
 
 // New creates a Broker. If the endpoint is a remote URL (https://),
@@ -179,16 +195,27 @@ func newLocalBroker(opts ...Option) *DefaultBroker {
 	reg := identity.NewRegistry()
 	p.SetRegistry(reg)
 
+	var spawnGate troupe.Gate
+	if len(cfg.spawnGates) > 0 {
+		spawnGate = troupe.ComposeGates(cfg.spawnGates...)
+	}
+	var performGate troupe.Gate
+	if len(cfg.performGates) > 0 {
+		performGate = troupe.ComposeGates(cfg.performGates...)
+	}
+
 	return &DefaultBroker{
-		world:     w,
-		warden:    p,
-		transport: t,
-		bus:       log.Bus(),
-		registry:  reg,
-		hooks:     cfg.hooks,
-		driver:    cfg.driver,
-		adapter:   adapter,
-		meter:     cfg.meter,
+		world:       w,
+		warden:      p,
+		transport:   t,
+		bus:         log.Bus(),
+		registry:    reg,
+		hooks:       cfg.hooks,
+		driver:      cfg.driver,
+		adapter:     adapter,
+		meter:       cfg.meter,
+		spawnGate:   spawnGate,
+		performGate: performGate,
 	}
 }
 
@@ -223,6 +250,17 @@ func (b *DefaultBroker) Spawn(ctx context.Context, cfg troupe.ActorConfig) (trou
 			if err := v.ValidateEnvironment(ctx); err != nil {
 				return nil, fmt.Errorf("driver validate: %w", err)
 			}
+		}
+	}
+
+	// Spawn gate: Gate predicates checked before hooks.
+	if b.spawnGate != nil {
+		allowed, reason, err := b.spawnGate(ctx, cfg)
+		if err != nil {
+			return nil, fmt.Errorf("spawn gate: %w", err)
+		}
+		if !allowed {
+			return nil, fmt.Errorf("spawn gate rejected: %s", reason)
 		}
 	}
 
@@ -261,15 +299,15 @@ func (b *DefaultBroker) Spawn(ctx context.Context, cfg troupe.ActorConfig) (trou
 		return nil, fmt.Errorf("broker spawn: %w", err)
 	}
 
-	// Wrap with perform hooks if any are registered.
+	// Wrap with perform hooks/gates if any are registered.
 	var performHooks []PerformHook
 	for _, h := range b.hooks {
 		if ph, ok := h.(PerformHook); ok {
 			performHooks = append(performHooks, ph)
 		}
 	}
-	if len(performHooks) > 0 {
-		actor = newHookedActor(actor, performHooks)
+	if len(performHooks) > 0 || b.performGate != nil {
+		actor = newHookedActor(actor, performHooks, b.performGate)
 	}
 
 	return actor, nil

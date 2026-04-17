@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+
+	troupe "github.com/dpopsuev/troupe"
 )
 
 type taskEntry struct {
@@ -49,6 +51,21 @@ func (b *baseTransport) SetRouteGuard(guard RouteGuard) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.routeGuard = guard
+}
+
+// SetRouteGate sets a Gate predicate as the route guard.
+// The Gate receives a [2]AgentID{from, to} as its subject.
+func (b *baseTransport) SetRouteGate(gate troupe.Gate) {
+	b.SetRouteGuard(func(from, to AgentID) error {
+		allowed, reason, err := gate(context.Background(), [2]AgentID{from, to})
+		if err != nil {
+			return err
+		}
+		if !allowed {
+			return fmt.Errorf("route gate rejected: %s", reason)
+		}
+		return nil
+	})
 }
 
 func (b *baseTransport) Register(agentID AgentID, handler MsgHandler) error {

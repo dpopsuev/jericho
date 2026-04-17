@@ -6,9 +6,12 @@
 package billing
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
+
+	troupe "github.com/dpopsuev/troupe"
 )
 
 // ErrBudgetExceeded is returned when an agent exceeds its cost limit.
@@ -77,4 +80,15 @@ func (e *BudgetEnforcer) Check(agentID string) error {
 		return fmt.Errorf("%w: agent %s spent $%.4f of $%.4f limit", ErrBudgetExceeded, agentID, spent, limit)
 	}
 	return nil
+}
+
+// AsGate returns a Gate that checks the budget for the given agent.
+// The Gate subject is ignored — the agentID is bound at creation time.
+func (e *BudgetEnforcer) AsGate(agentID string) troupe.Gate {
+	return func(_ context.Context, _ any) (bool, string, error) {
+		if err := e.Check(agentID); err != nil {
+			return false, err.Error(), nil
+		}
+		return true, "", nil
+	}
 }

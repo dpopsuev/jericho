@@ -2,21 +2,31 @@ package broker
 
 import (
 	"context"
+	"fmt"
 
 	troupe "github.com/dpopsuev/troupe"
 )
 
-// hookedActor wraps an Actor with PerformHook interception.
 type hookedActor struct {
 	inner troupe.Actor
 	hooks []PerformHook
+	gate  troupe.Gate
 }
 
-func newHookedActor(inner troupe.Actor, hooks []PerformHook) *hookedActor {
-	return &hookedActor{inner: inner, hooks: hooks}
+func newHookedActor(inner troupe.Actor, hooks []PerformHook, gate troupe.Gate) *hookedActor {
+	return &hookedActor{inner: inner, hooks: hooks, gate: gate}
 }
 
 func (a *hookedActor) Perform(ctx context.Context, prompt string) (string, error) {
+	if a.gate != nil {
+		allowed, reason, err := a.gate(ctx, prompt)
+		if err != nil {
+			return "", fmt.Errorf("perform gate: %w", err)
+		}
+		if !allowed {
+			return "", fmt.Errorf("perform gate rejected: %s", reason)
+		}
+	}
 	for _, h := range a.hooks {
 		if err := h.PrePerform(ctx, prompt); err != nil {
 			return "", err
