@@ -50,6 +50,7 @@ type Supervisor struct {
 	shouldStop       bool
 	budgetTotal      float64
 	budgetUsed       float64
+	replaceThreshold func() bool
 }
 
 // SupervisorOption configures a Supervisor.
@@ -70,6 +71,14 @@ func WithErrorThreshold(n int) SupervisorOption {
 // WithBudgetTotal sets the total budget for budget tracking (arbitrary units).
 func WithBudgetTotal(total float64) SupervisorOption {
 	return func(s *Supervisor) { s.budgetTotal = total }
+}
+
+// WithReplaceThreshold sets a Threshold predicate for custom replacement
+// decisions. When set, a worker is flagged for replacement when the
+// threshold fires, in addition to the default error/silence checks.
+// Accepts troupe.Threshold (which is func() bool) without importing root.
+func WithReplaceThreshold(t func() bool) SupervisorOption {
+	return func(s *Supervisor) { s.replaceThreshold = t }
 }
 
 // NewSupervisor creates a health tracker that watches the given EventLog.
@@ -186,6 +195,14 @@ func (s *Supervisor) Health() HealthSummary {
 			summary.ShouldReplace = append(summary.ShouldReplace, w.WorkerID)
 		case WorkerStatusStopped:
 			summary.TotalStopped++
+		}
+	}
+
+	if s.replaceThreshold != nil && s.replaceThreshold() {
+		for _, w := range s.workers {
+			if w.Status == WorkerStatusActive {
+				summary.ShouldReplace = append(summary.ShouldReplace, w.WorkerID)
+			}
 		}
 	}
 

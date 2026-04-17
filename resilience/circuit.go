@@ -4,6 +4,8 @@ import (
 	"errors"
 	"sync"
 	"time"
+
+	troupe "github.com/dpopsuev/troupe"
 )
 
 // CircuitState represents the current state of a circuit breaker.
@@ -33,9 +35,10 @@ var ErrCircuitOpen = errors.New("circuit breaker is open")
 
 // CircuitConfig configures a CircuitBreaker.
 type CircuitConfig struct {
-	Threshold int           // consecutive failures before opening (default 5)
-	Cooldown  time.Duration // wait before half-open probe (default 30s)
-	OnChange  func(from, to CircuitState)
+	Threshold      int              // consecutive failures before opening (default 5)
+	Cooldown       time.Duration    // wait before half-open probe (default 30s)
+	OnChange       func(from, to CircuitState)
+	OpenThreshold  troupe.Threshold // optional: replaces Threshold int when set
 }
 
 // CircuitBreaker implements the circuit breaker pattern.
@@ -43,9 +46,10 @@ type CircuitConfig struct {
 // with ErrCircuitOpen. After Cooldown elapses, one probe call is allowed
 // (half-open): success closes the circuit, failure re-opens it.
 type CircuitBreaker struct {
-	threshold int
-	cooldown  time.Duration
-	onChange  func(from, to CircuitState)
+	threshold     int
+	cooldown      time.Duration
+	onChange      func(from, to CircuitState)
+	openThreshold troupe.Threshold
 
 	mu       sync.Mutex
 	state    CircuitState
@@ -63,12 +67,16 @@ func NewCircuitBreaker(cfg CircuitConfig) *CircuitBreaker {
 	if cooldown <= 0 {
 		cooldown = 30 * time.Second
 	}
-	return &CircuitBreaker{
+	cb := &CircuitBreaker{
 		threshold: threshold,
 		cooldown:  cooldown,
 		onChange:  cfg.OnChange,
 		state:     CircuitClosed,
 	}
+	if cfg.OpenThreshold != nil {
+		cb.openThreshold = cfg.OpenThreshold
+	}
+	return cb
 }
 
 // State returns the current circuit state.
@@ -102,7 +110,7 @@ func (cb *CircuitBreaker) Call(fn func() error) error {
 		if cb.state == CircuitHalfOpen {
 			cb.transition(CircuitOpen)
 			cb.openedAt = time.Now()
-		} else if cb.failures >= cb.threshold {
+		} else if cb.shouldOpen() {
 			cb.transition(CircuitOpen)
 			cb.openedAt = time.Now()
 		}
@@ -122,6 +130,13 @@ func (cb *CircuitBreaker) Reset() {
 	defer cb.mu.Unlock()
 	cb.transition(CircuitClosed)
 	cb.failures = 0
+}
+
+func (cb *CircuitBreaker) shouldOpen() bool {
+	if cb.openThreshold != nil {
+		return cb.openThreshold()
+	}
+	return cb.failures >= cb.threshold
 }
 
 func (cb *CircuitBreaker) transition(to CircuitState) {
