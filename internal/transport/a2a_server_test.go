@@ -118,6 +118,101 @@ func TestA2AServer_AgentCardDiscovery(t *testing.T) {
 	}
 }
 
+func TestA2AServer_StreamingRoundTrip(t *testing.T) {
+	tr := NewA2ATransport(testCard("http://localhost"))
+	defer tr.Close()
+
+	_ = tr.Register("agent-1", func(_ context.Context, msg Message) (Message, error) {
+		return Message{Content: "streamed: " + msg.Content, Performative: "inform"}, nil
+	})
+
+	ts := httptest.NewServer(tr.Mux())
+	defer ts.Close()
+
+	card := testCard(ts.URL)
+	client, err := a2aclient.NewFromCard(context.Background(), &card, a2aclient.WithJSONRPCTransport(http.DefaultClient))
+	if err != nil {
+		t.Fatalf("NewFromCard: %v", err)
+	}
+
+	var events []a2a.Event
+	for ev, err := range client.SendStreamingMessage(context.Background(), &a2a.MessageSendParams{
+		Message: a2a.NewMessage(a2a.MessageRoleUser, &a2a.TextPart{Text: "stream test"}),
+	}) {
+		if err != nil {
+			t.Fatalf("streaming error: %v", err)
+		}
+		events = append(events, ev)
+	}
+
+	if len(events) == 0 {
+		t.Fatal("no streaming events received")
+	}
+
+	if len(events) == 0 {
+		t.Fatal("no streaming events received")
+	}
+	t.Logf("Streaming: %d events", len(events))
+	for i, ev := range events {
+		t.Logf("  event[%d] type=%T", i, ev)
+	}
+
+	// Final event should be a completed Task.
+	last := events[len(events)-1]
+	task, ok := last.(*a2a.Task)
+	if !ok {
+		t.Fatalf("last event type = %T, want *a2a.Task", last)
+	}
+	if task.Status.State != a2a.TaskStateCompleted {
+		t.Fatalf("state = %s, want completed", task.Status.State)
+	}
+	content := extractText(task.Status.Message.Parts)
+	if content == "" {
+		t.Fatal("streamed response content is empty")
+	}
+	t.Logf("Streaming response: %s", content)
+}
+
+func TestA2AServer_BearerAuth_Rejected(t *testing.T) {
+	tr := NewA2ATransport(testCard("http://localhost"), "secret-token-123")
+	defer tr.Close()
+
+	_ = tr.Register("agent-1", func(_ context.Context, msg Message) (Message, error) {
+		return Message{Content: "secret"}, nil
+	})
+
+	ts := httptest.NewServer(tr.Mux())
+	defer ts.Close()
+
+	// No auth header — should get 401.
+	resp, err := http.Post(ts.URL, "application/json", nil)
+	if err != nil {
+		t.Fatalf("POST: %v", err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want 401", resp.StatusCode)
+	}
+}
+
+func TestA2AServer_BearerAuth_CardIsPublic(t *testing.T) {
+	tr := NewA2ATransport(testCard("http://localhost"), "secret-token-123")
+	defer tr.Close()
+
+	ts := httptest.NewServer(tr.Mux())
+	defer ts.Close()
+
+	// Agent card should be accessible without auth.
+	resolver := agentcard.NewResolver(http.DefaultClient)
+	card, err := resolver.Resolve(context.Background(), ts.URL)
+	if err != nil {
+		t.Fatalf("Resolve without auth: %v", err)
+	}
+	if card.Name != "test-agent" {
+		t.Fatalf("name = %q, want test-agent", card.Name)
+	}
+}
+
 func extractText(parts a2a.ContentParts) string {
 	for _, part := range parts {
 		switch tp := part.(type) {

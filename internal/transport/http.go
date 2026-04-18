@@ -32,13 +32,44 @@ func NewHTTPTransport() *HTTPTransport {
 // NewA2ATransport creates an HTTP transport with A2A v1.0 JSON-RPC
 // endpoints in addition to the legacy /a2a/send. The card is served
 // at /.well-known/agent.json per A2A spec.
-func NewA2ATransport(card a2a.AgentCard) *HTTPTransport {
+// Optional bearerTokens enables auth — empty slice means no auth.
+func NewA2ATransport(card a2a.AgentCard, bearerTokens ...string) *HTTPTransport {
 	t := &HTTPTransport{
 		baseTransport: newBase(),
 	}
-	t.mux = A2AServerMux(&t.baseTransport, card)
-	t.mux.HandleFunc("POST /a2a/send", t.handleSend) // legacy compat
+	a2aMux := A2AServerMux(&t.baseTransport, card)
+
+	if len(bearerTokens) > 0 {
+		tokenSet := make(map[string]bool, len(bearerTokens))
+		for _, tok := range bearerTokens {
+			tokenSet[tok] = true
+		}
+		wrappedMux := http.NewServeMux()
+		wrappedMux.Handle("/.well-known/", a2aMux) // card is public
+		wrappedMux.Handle("/", bearerAuthMiddleware(a2aMux, tokenSet))
+		wrappedMux.HandleFunc("POST /a2a/send", t.handleSend)
+		t.mux = wrappedMux
+	} else {
+		a2aMux.HandleFunc("POST /a2a/send", t.handleSend)
+		t.mux = a2aMux
+	}
 	return t
+}
+
+func bearerAuthMiddleware(next http.Handler, validTokens map[string]bool) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		auth := r.Header.Get("Authorization")
+		if len(auth) < 7 || auth[:7] != "Bearer " {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		token := auth[7:]
+		if !validTokens[token] {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // Mux returns the HTTP handler for mounting on a server.
