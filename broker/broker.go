@@ -3,7 +3,6 @@ package broker
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	troupe "github.com/dpopsuev/troupe"
 	"github.com/dpopsuev/troupe/identity"
@@ -15,71 +14,13 @@ import (
 	"github.com/dpopsuev/troupe/world"
 )
 
-// multiDriverAdapter wraps public Drivers as a warden.AgentSupervisor.
-// Resolves the correct driver at Start() time based on a per-entity provider map.
-type multiDriverAdapter struct {
-	defaultDriver troupe.Driver
-	drivers       map[string]troupe.Driver
-	providers     map[world.EntityID]string // entity → provider, set before Fork
-	mu            sync.Mutex
-}
-
-func (a *multiDriverAdapter) setProvider(id world.EntityID, provider string) {
-	a.mu.Lock()
-	a.providers[id] = provider
-	a.mu.Unlock()
-}
-
-func (a *multiDriverAdapter) resolve(id world.EntityID) troupe.Driver {
-	a.mu.Lock()
-	provider := a.providers[id]
-	a.mu.Unlock()
-	if provider != "" && a.drivers != nil {
-		if d, ok := a.drivers[provider]; ok {
-			return d
-		}
-	}
-	return a.defaultDriver
-}
-
-func (a *multiDriverAdapter) Start(ctx context.Context, id world.EntityID, config warden.AgentConfig) error {
-	// Resolve driver by provider from config, falling back to default.
-	drv := a.defaultDriver
-	if config.Provider != "" && a.drivers != nil {
-		if d, ok := a.drivers[config.Provider]; ok {
-			drv = d
-		}
-	}
-	if drv == nil {
-		return fmt.Errorf("no driver for entity %d: %w", id, troupe.ErrNoDriver)
-	}
-	// Track which driver was used for this entity (for Stop).
-	a.setProvider(id, config.Provider)
-	return drv.Start(ctx, id, troupe.ActorConfig{Model: config.Model, Role: config.Role, Provider: config.Provider})
-}
-
-func (a *multiDriverAdapter) Stop(ctx context.Context, id world.EntityID) error {
-	drv := a.resolve(id)
-	if drv == nil && a.defaultDriver != nil {
-		drv = a.defaultDriver
-	}
-	if drv == nil {
-		return nil
-	}
-	return drv.Stop(ctx, id)
-}
-
-func (a *multiDriverAdapter) Healthy(_ context.Context, _ world.EntityID) bool {
-	return true
-}
-
 // DefaultBroker is the standard Broker implementation. Wires World, Warden,
 // Transport, Driver, Registry, and Signal Bus internally.
 type DefaultBroker struct {
 	world        *world.World
 	warden       *warden.AgentWarden
 	transport    transport.Transport
-	bus          signal.Bus
+	buses        signal.BusSet
 	controlLog   signal.EventLog
 	registry     *identity.Registry
 	hooks        []Hook
@@ -199,8 +140,8 @@ func newLocalBroker(opts ...Option) *DefaultBroker {
 	} else {
 		t = transport.NewLocalTransport()
 	}
-	log := signal.NewMemLog()
-	p := warden.NewWarden(w, t, log, supervisor)
+	buses := signal.NewBusSet()
+	p := warden.NewWarden(w, t, buses.Status, supervisor)
 
 	reg := identity.NewRegistry()
 	p.SetRegistry(reg)
@@ -218,7 +159,7 @@ func newLocalBroker(opts ...Option) *DefaultBroker {
 		world:       w,
 		warden:      p,
 		transport:   t,
-		bus:         log.Bus(),
+		buses:       buses,
 		controlLog:  cfg.controlLog,
 		registry:    reg,
 		hooks:       cfg.hooks,
@@ -386,8 +327,8 @@ func (c *simpleCard) Skills() []string { return c.skills }
 // Meter returns the resource usage meter (nil if none configured).
 func (b *DefaultBroker) Meter() troupe.Meter { return b.meter }
 
-// Signal returns the event bus.
-func (b *DefaultBroker) Signal() signal.Bus { return b.bus }
+// Buses returns the three-bus set (Control, Work, Status).
+func (b *DefaultBroker) Buses() signal.BusSet { return b.buses }
 
 // World returns the underlying ECS world (for advanced consumers).
 func (b *DefaultBroker) World() *world.World { return b.world }
