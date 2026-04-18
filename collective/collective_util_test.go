@@ -1,4 +1,4 @@
-package troupe_test
+package collective_test
 
 import (
 	"context"

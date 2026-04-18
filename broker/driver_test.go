@@ -1,4 +1,4 @@
-package troupe_test
+package broker_test
 
 import (
 	"context"

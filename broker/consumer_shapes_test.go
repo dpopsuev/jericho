@@ -1,4 +1,4 @@
-package troupe_test
+package broker_test
 
 // Consumer shape tests — validate Troupe's API works for Origami's use cases
 // BEFORE updating agentport. Per Lex `integrate-early`: contract tests first.

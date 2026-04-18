@@ -1,4 +1,4 @@
-package broker_test
+package e2e_test
 
 import (
 	"context"
