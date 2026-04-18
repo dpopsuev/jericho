@@ -51,35 +51,6 @@ func TestPushRequest_MarshalRoundTrip(t *testing.T) {
 	}
 }
 
-func TestAndon_Levels(t *testing.T) {
-	levels := []AndonLevel{AndonNominal, AndonDegraded, AndonFailure, AndonBlocked, AndonDead}
-	for _, l := range levels {
-		if l == "" {
-			t.Error("empty andon level")
-		}
-		_, ok := PriorityOf(l)
-		if !ok {
-			t.Errorf("PriorityOf(%s) not found", l)
-		}
-	}
-}
-
-func TestAndon_Worse(t *testing.T) {
-	nom, _ := PriorityOf(AndonNominal)
-	deg, _ := PriorityOf(AndonDegraded)
-	fail, _ := PriorityOf(AndonFailure)
-
-	if !Worse(deg, nom) {
-		t.Error("degraded should be worse than nominal")
-	}
-	if !Worse(fail, deg) {
-		t.Error("failure should be worse than degraded")
-	}
-	if Worse(nom, fail) {
-		t.Error("nominal should not be worse than failure")
-	}
-}
-
 func TestDefaultCapabilities(t *testing.T) {
 	caps := DefaultCapabilities()
 	if caps.Protocol != ProtocolVersion {

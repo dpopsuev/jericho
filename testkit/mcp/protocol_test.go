@@ -7,13 +7,14 @@ import (
 	"testing"
 
 	"github.com/dpopsuev/troupe/internal/protocol"
+	"github.com/dpopsuev/troupe/signal"
 )
 
 // runLoop simulates the protocol loop without MCP transport.
 // This is the testable core of orchestrate.RunWorker.
 //
 //nolint:unparam // sessionID varies in production, fixed in tests for simplicity
-func runLoop(ctx context.Context, server protocol.Server, responder protocol.Responder, sessionID, workerID string, andonFn func() *protocol.Andon, budgetFn func() *protocol.BudgetActual) error {
+func runLoop(ctx context.Context, server protocol.Server, responder protocol.Responder, sessionID, workerID string, andonFn func() *signal.Andon, budgetFn func() *protocol.BudgetActual) error {
 	for {
 		if ctx.Err() != nil {
 			return ctx.Err()
@@ -28,7 +29,7 @@ func runLoop(ctx context.Context, server protocol.Server, responder protocol.Res
 			return err
 		}
 
-		if pullResp.Andon == protocol.AndonDead {
+		if pullResp.Andon == signal.Dead {
 			return nil
 		}
 		if pullResp.Done {
@@ -72,7 +73,7 @@ func runLoop(ctx context.Context, server protocol.Server, responder protocol.Res
 func TestProtocol_WorkerAbortsOnAndonDead(t *testing.T) {
 	server := NewMockServer()
 	server.OnPull(func(_ protocol.PullRequest) (protocol.PullResponse, error) {
-		return protocol.PullResponse{Andon: protocol.AndonDead}, nil
+		return protocol.PullResponse{Andon: signal.Dead}, nil
 	})
 
 	err := runLoop(context.Background(), server, &StaticResponder{Response: "x"}, "s1", "w1", nil, nil)
@@ -137,8 +138,8 @@ func TestProtocol_AndonIncludedWhenFuncSet(t *testing.T) {
 		return protocol.PullResponse{Done: true}, nil
 	})
 
-	andonFn := func() *protocol.Andon {
-		return &protocol.Andon{Level: protocol.AndonDegraded, Priority: protocol.PriorityDegraded, Message: "82% tokens"}
+	andonFn := func() *signal.Andon {
+		return &signal.Andon{Level: signal.Degraded, Priority: signal.PriorityDegraded, Message: "82% tokens"}
 	}
 
 	err := runLoop(context.Background(), server, &StaticResponder{Response: `{"ok":true}`}, "s1", "w1", andonFn, nil)
@@ -146,7 +147,7 @@ func TestProtocol_AndonIncludedWhenFuncSet(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	AssertPushCount(t, server, 1)
-	AssertAndonLevel(t, server, protocol.AndonDegraded)
+	AssertAndonLevel(t, server, signal.Degraded)
 }
 
 func TestProtocol_WorkerIDSentOnEveryPush(t *testing.T) {

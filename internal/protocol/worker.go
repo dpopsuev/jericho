@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/dpopsuev/troupe/signal"
+
 	sdkmcp "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -30,7 +32,7 @@ type WorkerConfig struct {
 	// Session key name in arguments (default: DefaultSessionKey).
 	SessionKey string
 	// AndonFunc is called before push to report worker health. Nil = omit.
-	AndonFunc func() *Andon
+	AndonFunc func() *signal.Andon
 	// BudgetFunc is called before push to report resource consumption. Nil = omit.
 	BudgetFunc func() *BudgetActual
 	// OnPull is called after each pull response with protocol metadata. Nil = no-op.
@@ -100,7 +102,7 @@ func RunWorker(ctx context.Context, session *sdkmcp.ClientSession, responder Res
 		}
 
 		// Andon dead = abort signal.
-		if pullResp.Andon == AndonDead {
+		if pullResp.Andon == signal.Dead {
 			slog.WarnContext(ctx, "abort signal received",
 				slog.String(logKeyWorker, workerID))
 			return nil

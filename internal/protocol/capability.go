@@ -1,5 +1,7 @@
 package protocol
 
+import "github.com/dpopsuev/troupe/signal"
+
 // ProtocolVersion is the current protocol version.
 // Override at build time: -ldflags "-X github.com/dpopsuev/troupe/internal/protocol.ProtocolVersion=custom/v1"
 var ProtocolVersion = "troupe/v1" //nolint:gochecknoglobals // ldflag-settable
@@ -9,7 +11,7 @@ var ProtocolVersion = "troupe/v1" //nolint:gochecknoglobals // ldflag-settable
 type Capabilities struct {
 	Protocol    string          `json:"protocol"`
 	Layers      LayerSupport    `json:"layers"`
-	AndonLevels []AndonLevelDef `json:"andon_levels,omitempty"`
+	AndonLevels []signal.LevelDef `json:"andon_levels,omitempty"`
 }
 
 // LayerSupport indicates which optional layers the server implements.
@@ -25,7 +27,7 @@ type LayerSupport struct {
 func DefaultCapabilities() Capabilities {
 	return Capabilities{
 		Protocol:    ProtocolVersion,
-		AndonLevels: DefaultVocabulary(),
+		AndonLevels: signal.DefaultVocabulary(),
 	}
 }
 
@@ -39,6 +41,6 @@ func FullCapabilities() Capabilities {
 			HITL:   true,
 			Status: true,
 		},
-		AndonLevels: DefaultVocabulary(),
+		AndonLevels: signal.DefaultVocabulary(),
 	}
 }

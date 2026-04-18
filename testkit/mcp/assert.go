@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/dpopsuev/troupe/internal/protocol"
+	"github.com/dpopsuev/troupe/signal"
 )
 
 // AssertPushCount verifies the number of push calls.
@@ -27,7 +28,7 @@ func AssertPushStatus(t *testing.T, server *MockServer, want protocol.SubmitStat
 }
 
 // AssertAndonLevel verifies the last push has the given andon level.
-func AssertAndonLevel(t *testing.T, server *MockServer, want protocol.AndonLevel) {
+func AssertAndonLevel(t *testing.T, server *MockServer, want signal.AndonLevel) {
 	t.Helper()
 	if server.PushCount() == 0 {
 		t.Fatal("no pushes received")
