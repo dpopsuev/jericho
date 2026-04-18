@@ -40,6 +40,7 @@ type AgentWarden struct {
 	world     *world.World
 	transport transport.Transport
 	log       signal.EventLog
+	statusLog signal.EventLog // optional: lifecycle events go here instead of log
 	launcher  AgentSupervisor
 	mu        sync.RWMutex
 	agents    map[world.EntityID]*agentEntry   // running agents
@@ -136,7 +137,7 @@ func (p *AgentWarden) Fork(ctx context.Context, role string, config AgentConfig,
 		meta[signal.MetaKeyShade] = color.Shade
 		meta[signal.MetaKeyColor] = color.Name
 	}
-	p.log.Emit(signal.Event{
+	p.lifecycleLog().Emit(signal.Event{
 		Source: signal.AgentWorker,
 		Kind:   signal.EventWorkerStarted,
 		Data:   signal.Signal{Agent: signal.AgentWorker, Meta: meta},
@@ -195,7 +196,7 @@ func (p *AgentWarden) Kill(ctx context.Context, id world.EntityID) error {
 	world.TryAttach(p.world, id, world.Ready{Ready: false, LastSeen: time.Now(), Reason: world.ReasonTerminated})
 
 	// Emit signal.
-	p.log.Emit(signal.Event{
+	p.lifecycleLog().Emit(signal.Event{
 		Source: signal.AgentWorker,
 		Kind:   signal.EventWorkerStopped,
 		Data: signal.Signal{
@@ -282,7 +283,7 @@ func shouldRestart(entry *agentEntry) bool {
 func (p *AgentWarden) restartAgent(ctx context.Context, entry *agentEntry) {
 	_, err := p.Fork(ctx, entry.Role, entry.Config, entry.ParentID)
 	if err != nil {
-		p.log.Emit(signal.Event{
+		p.lifecycleLog().Emit(signal.Event{
 			Source: signal.AgentSupervisor,
 			Kind:   signal.EventWorkerError,
 			Data: signal.Signal{
@@ -361,6 +362,19 @@ func (p *AgentWarden) SetRegistry(reg *identity.Registry) {
 // 0 means unlimited (default).
 func (p *AgentWarden) SetMaxAgents(n int) {
 	p.maxAgents = n
+}
+
+// SetStatusLog sets an optional StatusLog for lifecycle events.
+// When set, worker_started/stopped emit here instead of the main log.
+func (p *AgentWarden) SetStatusLog(log signal.EventLog) {
+	p.statusLog = log
+}
+
+func (p *AgentWarden) lifecycleLog() signal.EventLog {
+	if p.statusLog != nil {
+		return p.statusLog
+	}
+	return p.log
 }
 
 func agentTransportID(id world.EntityID) transport.AgentID {

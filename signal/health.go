@@ -43,8 +43,8 @@ type HealthSummary struct {
 type Supervisor struct {
 	mu               sync.Mutex
 	workers          map[string]*WorkerState
-	lastProcessed    int
-	log              EventLog
+	lastProcessed    map[EventLog]int
+	logs             []EventLog
 	silenceThreshold time.Duration
 	errorThreshold   int
 	shouldStop       bool
@@ -85,7 +85,8 @@ func WithReplaceThreshold(t func() bool) SupervisorOption {
 func NewSupervisor(log EventLog, opts ...SupervisorOption) *Supervisor {
 	s := &Supervisor{
 		workers:          make(map[string]*WorkerState),
-		log:              log,
+		logs:             []EventLog{log},
+		lastProcessed:    map[EventLog]int{log: 0},
 		silenceThreshold: 2 * time.Minute,
 		errorThreshold:   3,
 	}
@@ -95,20 +96,36 @@ func NewSupervisor(log EventLog, opts ...SupervisorOption) *Supervisor {
 	return s
 }
 
-// Process reads new events from the log and updates worker state.
+// AddLog adds an additional EventLog for the Supervisor to watch.
+// Use this to subscribe to both WorkLog and StatusLog.
+func (s *Supervisor) AddLog(log EventLog) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.logs = append(s.logs, log)
+	s.lastProcessed[log] = 0
+}
+
+// Process reads new events from all watched logs and updates worker state.
 // Safe for concurrent callers -- lastProcessed is read and written
 // under the same lock to prevent double-counting and index overshoot.
 func (s *Supervisor) Process() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	events := s.log.Since(s.lastProcessed)
+	for _, log := range s.logs {
+		s.processLog(log)
+	}
+}
+
+func (s *Supervisor) processLog(log EventLog) {
+	idx := s.lastProcessed[log]
+	events := log.Since(idx)
 	if len(events) == 0 {
 		return
 	}
 
 	for _, evt := range events {
-		s.lastProcessed++
+		s.lastProcessed[log]++
 
 		// Extract Signal payload for Meta access.
 		var meta map[string]string
@@ -209,13 +226,15 @@ func (s *Supervisor) Health() HealthSummary {
 	return summary
 }
 
-// EmitShouldStop emits a should_stop event on the log, instructing workers
-// to finish their current step and exit.
+// EmitShouldStop emits a should_stop event on the first log, instructing
+// workers to finish their current step and exit.
 func (s *Supervisor) EmitShouldStop() {
-	s.log.Emit(Event{
-		Source: AgentSupervisor,
-		Kind:   EventShouldStop,
-	})
+	if len(s.logs) > 0 {
+		s.logs[0].Emit(Event{
+			Source: AgentSupervisor,
+			Kind:   EventShouldStop,
+		})
+	}
 }
 
 // ShouldStop returns true if a should_stop signal has been processed.
