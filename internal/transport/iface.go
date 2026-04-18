@@ -2,40 +2,34 @@ package transport
 
 import "context"
 
-// Transport is the interface for agent-to-agent message passing.
-// LocalTransport implements it in-process via channels.
-// HTTPTransport implements it over HTTP/SSE.
-type Transport interface {
-	// Register associates a MsgHandler with the given agent ID.
+// Registrar handles agent registration and role management.
+type Registrar interface {
 	Register(agentID AgentID, handler MsgHandler) error
-
-	// Unregister removes the handler for the given agent ID.
 	Unregister(agentID AgentID)
-
-	// SendMessage dispatches a message to the named agent.
-	// Returns a Task that tracks the lifecycle.
-	SendMessage(ctx context.Context, to AgentID, msg Message) (*Task, error)
-
-	// Subscribe returns a channel that receives Events for a task.
-	Subscribe(ctx context.Context, taskID string) (<-chan Event, error)
-
-	// Ask sends a message and blocks until the response or context cancellation.
-	Ask(ctx context.Context, to AgentID, msg Message) (Message, error)
-
-	// SendToRole sends a message to one agent with the given role (round-robin).
-	SendToRole(ctx context.Context, role string, msg Message) (*Task, error)
-
-	// AskRole sends to one agent by role and blocks until response.
-	AskRole(ctx context.Context, role string, msg Message) (Message, error)
-
-	// Broadcast sends a message to ALL agents with the given role.
-	Broadcast(ctx context.Context, role string, msg Message) ([]*Task, error)
-
-	// Close shuts down the transport.
-	Close() error
-
-	// Roles returns the role registry for role-based routing.
 	Roles() *RoleRegistry
+}
+
+// Sender dispatches messages to agents.
+type Sender interface {
+	SendMessage(ctx context.Context, to AgentID, msg Message) (*Task, error)
+	Ask(ctx context.Context, to AgentID, msg Message) (Message, error)
+	Broadcast(ctx context.Context, role string, msg Message) ([]*Task, error)
+	SendToRole(ctx context.Context, role string, msg Message) (*Task, error)
+	AskRole(ctx context.Context, role string, msg Message) (Message, error)
+}
+
+// Subscriber observes task lifecycle events.
+type Subscriber interface {
+	Subscribe(ctx context.Context, taskID string) (<-chan Event, error)
+}
+
+// Transport is the full agent-to-agent messaging interface.
+// Composed of Registrar + Sender + Subscriber + Close.
+type Transport interface {
+	Registrar
+	Sender
+	Subscriber
+	Close() error
 }
 
 // Verify both transports implement the interface.
