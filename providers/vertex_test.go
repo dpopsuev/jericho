@@ -195,7 +195,6 @@ func TestOpenRouter_E2E_RealCall(t *testing.T) {
 		t.Skip("OPENROUTER_API_KEY not set")
 	}
 
-	t.Setenv(envUseVertex, "")
 	t.Setenv(envAnthropicKey, "")
 	t.Setenv(envOpenAIKey, "")
 	t.Setenv(envGeminiKey, "")
@@ -225,13 +224,13 @@ func TestOpenRouter_E2E_RealCall(t *testing.T) {
 // TestVertexProvider_E2E_UsageTracking makes a real Vertex call and
 // verifies usage data flows through the UsageRecorder.
 func TestVertexProvider_E2E_UsageTracking(t *testing.T) {
-	if os.Getenv(envUseVertex) != "1" {
-		t.Skip("CLAUDE_CODE_USE_VERTEX not set")
+	if os.Getenv("TROUPE_TEST_LIVE_LLM") == "" {
+		t.Skip("TROUPE_TEST_LIVE_LLM not set")
 	}
 	region := os.Getenv(envVertexRegion)
 	project := os.Getenv(envVertexProject)
 	if region == "" || project == "" {
-		t.Skip("CLOUD_ML_REGION or ANTHROPIC_VERTEX_PROJECT_ID not set")
+		t.Skip("GOOGLE_CLOUD_LOCATION or GOOGLE_CLOUD_PROJECT not set")
 	}
 
 	ctx := context.Background()
@@ -270,13 +269,13 @@ func TestVertexProvider_E2E_UsageTracking(t *testing.T) {
 // Requires: gcloud auth application-default login + env vars set.
 // Skips if env vars not configured.
 func TestVertexProvider_E2E_RealCall(t *testing.T) {
-	if os.Getenv(envUseVertex) != "1" {
-		t.Skip("CLAUDE_CODE_USE_VERTEX not set")
+	if os.Getenv("TROUPE_TEST_LIVE_LLM") == "" {
+		t.Skip("TROUPE_TEST_LIVE_LLM not set")
 	}
 	region := os.Getenv(envVertexRegion)
 	project := os.Getenv(envVertexProject)
 	if region == "" || project == "" {
-		t.Skip("CLOUD_ML_REGION or ANTHROPIC_VERTEX_PROJECT_ID not set")
+		t.Skip("GOOGLE_CLOUD_LOCATION or GOOGLE_CLOUD_PROJECT not set")
 	}
 
 	ctx := context.Background()

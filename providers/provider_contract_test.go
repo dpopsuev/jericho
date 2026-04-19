@@ -254,8 +254,8 @@ func TestProviderContract_Vertex(t *testing.T) {
 	if os.Getenv("TROUPE_TEST_LIVE_LLM") == "" {
 		t.Skip("TROUPE_TEST_LIVE_LLM not set — skipping billable API test")
 	}
-	region := os.Getenv("CLOUD_ML_REGION")
-	project := os.Getenv("ANTHROPIC_VERTEX_PROJECT_ID")
+	region := os.Getenv("GOOGLE_CLOUD_LOCATION")
+	project := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	if region == "" || project == "" {
 		t.Skip("Vertex credentials not configured")
 	}

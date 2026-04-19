@@ -203,6 +203,12 @@ func (a *Arsenal) Select(_ string, prefs *Preferences) (ResolvedAgent, error) {
 				continue
 			}
 
+			// Source provider mask — when a source declares a provider,
+			// only models from that provider are reachable through it.
+			if source.Provider != "" && model.Provider != source.Provider {
+				continue
+			}
+
 			// Provider filter.
 			if !prefs.Providers.matches(model.Provider) {
 				continue

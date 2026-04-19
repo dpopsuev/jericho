@@ -2,7 +2,7 @@
 // retry with exponential backoff, circuit breaker, and rate limiter.
 //
 // These are protocol-agnostic — they wrap any function, not a specific
-// transport interface. Both ACP clients and dispatch.Dispatcher use them.
+// transport interface.
 package resilience
 
 import (

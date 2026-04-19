@@ -31,7 +31,7 @@ func TestA2AProxy_TwoServers_RoundTrip(t *testing.T) {
 	_ = remoteTransport.Register("remote-agent", func(_ context.Context, msg transport.Message) (transport.Message, error) {
 		return transport.Message{
 			Content:      "reviewed: " + msg.Content,
-			Performative: "inform",
+			Role: "agent",
 		}, nil
 	})
 

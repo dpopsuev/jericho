@@ -17,9 +17,8 @@ import (
 // Env var names.
 const (
 	envProvider       = "TROUPE_PROVIDER"
-	envUseVertex      = "CLAUDE_CODE_USE_VERTEX"
-	envVertexRegion   = "CLOUD_ML_REGION"
-	envVertexProject  = "ANTHROPIC_VERTEX_PROJECT_ID"
+	envVertexRegion   = "GOOGLE_CLOUD_LOCATION"
+	envVertexProject  = "GOOGLE_CLOUD_PROJECT"
 	envAnthropicKey   = "ANTHROPIC_API_KEY"
 	envOpenAIKey      = "OPENAI_API_KEY"
 	envGeminiKey      = "GEMINI_API_KEY"
@@ -29,15 +28,15 @@ const (
 
 // providerSpec defines a supported provider and its requirements.
 type providerSpec struct {
-	name     string   // canonical name
-	aliases  []string // alternative names
-	envVars  []string // required env vars (all must be set)
-	envHint  string   // human-readable setup instruction
+	name    string   // canonical name
+	aliases []string // alternative names
+	envVars []string // required env vars (all must be set)
+	envHint string   // human-readable setup instruction
 }
 
 // providers is the single source of truth for supported providers.
 var providers = []providerSpec{
-	{name: "vertex-ai", envVars: []string{envVertexRegion, envVertexProject}, envHint: "set CLOUD_ML_REGION and ANTHROPIC_VERTEX_PROJECT_ID"},
+	{name: "vertex-ai", envVars: []string{envVertexRegion, envVertexProject}, envHint: "set GOOGLE_CLOUD_LOCATION and GOOGLE_CLOUD_PROJECT"},
 	{name: "anthropic-api", aliases: []string{"anthropic", "claude"}, envVars: []string{envAnthropicKey}, envHint: "set ANTHROPIC_API_KEY"},
 	{name: "openai-api", aliases: []string{"openai", "gpt"}, envVars: []string{envOpenAIKey}, envHint: "set OPENAI_API_KEY"},
 	{name: "gemini-api", aliases: []string{"gemini"}, envVars: []string{envGeminiKey}, envHint: "set GEMINI_API_KEY"},

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/dpopsuev/troupe/visual"
-	"github.com/dpopsuev/troupe/signal"
+
 	"github.com/dpopsuev/troupe/world"
 )
 
@@ -328,18 +328,18 @@ func TestAcceptance_LocalRoundTrip(t *testing.T) {
 
 	_ = tr.Register(AgentID("responder"), func(_ context.Context, msg Message) (Message, error) {
 		return Message{
-			From:         "responder",
-			To:           msg.From,
-			Performative: signal.Confirm,
-			Content:      "confirmed: " + msg.Content,
+			From:    "responder",
+			To:      msg.From,
+			Role:    "agent",
+			Content: "confirmed: " + msg.Content,
 		}, nil
 	})
 
 	task, err := tr.SendMessage(context.Background(), "responder", Message{
-		From:         "requester",
-		To:           "responder",
-		Performative: signal.Request,
-		Content:      "analyze this",
+		From:    "requester",
+		To:      "responder",
+		Role:    "user",
+		Content: "analyze this",
 	})
 	if err != nil {
 		t.Fatalf("SendMessage: %v", err)
@@ -366,30 +366,22 @@ func TestAcceptance_LocalRoundTrip(t *testing.T) {
 	}
 }
 
-func TestAcceptance_PerformativeInMessage(t *testing.T) {
-	// Feature: A2A Message Performative
-	// Scenario: Performative propagates through transport
-	//   Given a handler that echoes the performative
-	//   When a Directive message is sent
-	//   Then the handler receives the Directive performative
-	//   And the response carries the echoed performative
-
+func TestAcceptance_RoleInMessage(t *testing.T) {
 	tr := NewLocalTransport()
 	defer tr.Close()
 
 	_ = tr.Register(AgentID("worker"), func(_ context.Context, msg Message) (Message, error) {
-		// Echo the received performative back.
 		return Message{
-			From:         "worker",
-			Performative: msg.Performative,
-			Content:      "echoed",
+			From:    "worker",
+			Role:    msg.Role,
+			Content: "echoed",
 		}, nil
 	})
 
 	task, err := tr.SendMessage(context.Background(), "worker", Message{
-		From:         "supervisor",
-		Performative: signal.Directive,
-		Content:      "do the thing",
+		From:    "supervisor",
+		Role:    "user",
+		Content: "do the thing",
 	})
 	if err != nil {
 		t.Fatalf("SendMessage: %v", err)
@@ -405,8 +397,8 @@ func TestAcceptance_PerformativeInMessage(t *testing.T) {
 			if ev.Data == nil {
 				t.Fatal("expected data in completed event")
 			}
-			if ev.Data.Performative != signal.Directive {
-				t.Errorf("Performative = %q, want %q", ev.Data.Performative, signal.Directive)
+			if ev.Data.Role != "user" {
+				t.Errorf("Role = %q, want user", ev.Data.Role)
 			}
 		}
 	}

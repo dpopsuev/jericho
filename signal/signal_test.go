@@ -650,17 +650,3 @@ func TestSupervisor_MultipleWorkersIndependent(t *testing.T) {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// Performative
-// ---------------------------------------------------------------------------
-
-func TestSignal_Performative(t *testing.T) {
-	s := signal.Signal{
-		Event:        "test",
-		Agent:        "agent1",
-		Performative: signal.Handoff,
-	}
-	if s.Performative != signal.Handoff {
-		t.Errorf("performative: got %q, want %q", s.Performative, signal.Handoff)
-	}
-}

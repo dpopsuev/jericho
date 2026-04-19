@@ -72,7 +72,7 @@ func cliHandler(command string, args []string) transport.MsgHandler {
 		return transport.Message{
 			From:         msg.To,
 			To:           msg.From,
-			Performative: signal.Confirm,
+			Role: "agent",
 			Content:      stdout.String(),
 		}, nil
 	}
@@ -111,7 +111,7 @@ func runPairTest(t *testing.T, p providerSpec) {
 	task, err := tr.SendMessage(ctx, agentB, transport.Message{
 		From:         agentA,
 		To:           agentB,
-		Performative: signal.Request,
+		Role: "user",
 		Content:      "Reply with exactly one word: hello",
 	})
 	if err != nil {
@@ -216,7 +216,7 @@ func TestE2E_MixedQuartet(t *testing.T) {
 		task, err := tr.SendMessage(ctx, to, transport.Message{
 			From:         from,
 			To:           to,
-			Performative: signal.Request,
+			Role: "user",
 			Content:      "Reply with exactly one word: hello",
 		})
 		if err != nil {

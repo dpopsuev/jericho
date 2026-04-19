@@ -48,8 +48,8 @@ func TestSentinel_ProviderUnknown(t *testing.T) {
 }
 
 func TestSentinel_ModelRequired(t *testing.T) {
-	region := os.Getenv("CLOUD_ML_REGION")
-	project := os.Getenv("ANTHROPIC_VERTEX_PROJECT_ID")
+	region := os.Getenv("GOOGLE_CLOUD_LOCATION")
+	project := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	if region == "" || project == "" {
 		t.Skip("Vertex credentials not configured")
 	}

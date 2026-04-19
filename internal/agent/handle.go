@@ -10,7 +10,6 @@ import (
 
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/internal/warden"
-	"github.com/dpopsuev/troupe/signal"
 	"github.com/dpopsuev/troupe/world"
 )
 
@@ -78,10 +77,10 @@ func (a *Solo) Uptime() time.Duration {
 // Implements troupe.Actor.
 func (a *Solo) Perform(ctx context.Context, content string) (string, error) {
 	msg := transport.Message{
-		From:         "agent",
-		To:           a.agentID(),
-		Performative: signal.Request,
-		Content:      content,
+		From:    "agent",
+		To:      a.agentID(),
+		Role:    transport.RoleUser,
+		Content: content,
 	}
 	resp, err := a.transport.Ask(ctx, a.agentID(), msg)
 	if err != nil {
@@ -93,9 +92,9 @@ func (a *Solo) Perform(ctx context.Context, content string) (string, error) {
 // Broadcast sends a message to ALL agents with this agent's role.
 func (a *Solo) Broadcast(ctx context.Context, content string) error {
 	msg := transport.Message{
-		From:         a.agentID(),
-		Performative: signal.Inform,
-		Content:      content,
+		From:    a.agentID(),
+		Role:    transport.RoleAgent,
+		Content: content,
 	}
 	_, err := a.transport.Broadcast(ctx, a.role, msg)
 	return err

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/a2aproject/a2a-go/a2a"
-	"github.com/dpopsuev/troupe/signal"
 )
 
 func TestFromA2AMessage_TextPart(t *testing.T) {
@@ -19,8 +18,8 @@ func TestFromA2AMessage_TextPart(t *testing.T) {
 	if msg.Content != "hello world" {
 		t.Fatalf("Content = %q, want hello world", msg.Content)
 	}
-	if msg.Performative != signal.Request {
-		t.Fatalf("Performative = %q, want request", msg.Performative)
+	if msg.Role != "user" {
+		t.Fatalf("Role = %q, want user", msg.Role)
 	}
 	if msg.To != "agent-1" {
 		t.Fatalf("To = %q, want agent-1", msg.To)
@@ -36,15 +35,15 @@ func TestFromA2AMessage_AgentRole(t *testing.T) {
 	}
 
 	msg := FromA2AMessage(a2aMsg, "agent-2")
-	if msg.Performative != signal.Inform {
-		t.Fatalf("Performative = %q, want inform for agent role", msg.Performative)
+	if msg.Role != "agent" {
+		t.Fatalf("Role = %q, want agent", msg.Role)
 	}
 }
 
-func TestToA2AMessage_Request(t *testing.T) {
+func TestToA2AMessage_UserRole(t *testing.T) {
 	msg := Message{
-		Content:      "analyze this",
-		Performative: signal.Request,
+		Content: "analyze this",
+		Role:    "user",
 	}
 
 	a2aMsg := ToA2AMessage(msg)
@@ -63,10 +62,10 @@ func TestToA2AMessage_Request(t *testing.T) {
 	}
 }
 
-func TestToA2AMessage_Inform(t *testing.T) {
+func TestToA2AMessage_AgentRole(t *testing.T) {
 	msg := Message{
-		Content:      "result",
-		Performative: signal.Inform,
+		Content: "result",
+		Role:    "agent",
 	}
 
 	a2aMsg := ToA2AMessage(msg)
@@ -77,9 +76,9 @@ func TestToA2AMessage_Inform(t *testing.T) {
 
 func TestRoundTrip_FromToFrom(t *testing.T) {
 	original := Message{
-		Content:      "round trip test",
-		Performative: signal.Request,
-		To:           "target",
+		Content: "round trip test",
+		Role:    "user",
+		To:      "target",
 	}
 
 	a2aMsg := ToA2AMessage(original)
@@ -88,8 +87,8 @@ func TestRoundTrip_FromToFrom(t *testing.T) {
 	if recovered.Content != original.Content {
 		t.Fatalf("Content = %q, want %q", recovered.Content, original.Content)
 	}
-	if recovered.Performative != original.Performative {
-		t.Fatalf("Performative = %q, want %q", recovered.Performative, original.Performative)
+	if recovered.Role != original.Role {
+		t.Fatalf("Role = %q, want %q", recovered.Role, original.Role)
 	}
 }
 

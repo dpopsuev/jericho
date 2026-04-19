@@ -10,9 +10,10 @@ import (
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 
 	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/troupe/arsenal"
 	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/providers"
 	"github.com/dpopsuev/troupe/internal/transport"
+	"github.com/dpopsuev/troupe/providers"
 	"github.com/dpopsuev/troupe/referee"
 	"github.com/dpopsuev/troupe/signal"
 	"github.com/dpopsuev/troupe/testkit"
@@ -28,15 +29,29 @@ const (
 	eventAdmitError     = "admit_error"
 )
 
-func TestE2E_RealLLM_TwoVertexAgents_SameAdmission(t *testing.T) {
+func TestE2E_RealLLM_TwoAgents_SameAdmission(t *testing.T) {
 	if os.Getenv("TROUPE_TEST_LIVE_LLM") == "" {
 		t.Skip("TROUPE_TEST_LIVE_LLM not set — skipping billable API test")
 	}
-	region := os.Getenv("CLOUD_ML_REGION")
-	project := os.Getenv("ANTHROPIC_VERTEX_PROJECT_ID")
-	if region == "" || project == "" {
-		t.Skip("Vertex credentials not configured")
+
+	provider, err := providers.NewProviderFromEnv("")
+	if err != nil {
+		t.Fatalf("NewProviderFromEnv: %v", err)
 	}
+
+	a, err := arsenal.NewArsenal("")
+	if err != nil {
+		t.Fatalf("NewArsenal: %v", err)
+	}
+	source := os.Getenv("TROUPE_PROVIDER")
+	picked, err := a.Select("", &arsenal.Preferences{
+		Sources: arsenal.Filter{Allow: []string{source}},
+	})
+	if err != nil {
+		t.Fatalf("Arsenal.Select (source=%s): %v", source, err)
+	}
+	model := picked.Model
+	t.Logf("source: %s, model: %s (provider: %s)", source, model, picked.Provider)
 
 	sc := referee.Scorecard{
 		Name:      "real_llm_e2e",
@@ -57,11 +72,6 @@ func TestE2E_RealLLM_TwoVertexAgents_SameAdmission(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-
-	provider, err := providers.NewVertexProvider(ctx, region, project)
-	if err != nil {
-		t.Fatalf("NewVertexProvider: %v", err)
-	}
 
 	w := world.NewWorld()
 	tr := transport.NewLocalTransport()
@@ -89,10 +99,10 @@ func TestE2E_RealLLM_TwoVertexAgents_SameAdmission(t *testing.T) {
 	}
 	statusLog.Emit(signal.Event{Kind: eventAdmitSuccess, Source: "agent-b"})
 
-	// 3. Agent A calls Vertex Claude.
+	// 3. Agent A calls the LLM.
 	maxTokens := 128
 	respA, err := provider.Completion(ctx, anyllm.CompletionParams{
-		Model: "claude-sonnet-4-6",
+		Model: model,
 		Messages: []anyllm.Message{
 			{Role: "user", Content: "Respond with exactly three words: HELLO FROM ALPHA"},
 		},
@@ -118,9 +128,9 @@ func TestE2E_RealLLM_TwoVertexAgents_SameAdmission(t *testing.T) {
 	}
 	statusLog.Emit(signal.Event{Kind: eventTransportSend, Source: "agent-a"})
 
-	// 5. Agent B calls Vertex Claude.
+	// 5. Agent B calls the LLM.
 	respB, err := provider.Completion(ctx, anyllm.CompletionParams{
-		Model: "claude-sonnet-4-6",
+		Model: model,
 		Messages: []anyllm.Message{
 			{Role: "user", Content: "Respond with exactly three words: HELLO FROM BRAVO"},
 		},
@@ -135,9 +145,9 @@ func TestE2E_RealLLM_TwoVertexAgents_SameAdmission(t *testing.T) {
 	statusLog.Emit(signal.Event{Kind: eventLLMResponse, Source: "agent-b"})
 
 	// 6. Dismiss both.
-	lobby.Dismiss(ctx, idA) //nolint:errcheck
+	lobby.Dismiss(ctx, idA) //nolint:errcheck // test cleanup
 	statusLog.Emit(signal.Event{Kind: eventDismissSuccess, Source: "agent-a"})
-	lobby.Dismiss(ctx, idB) //nolint:errcheck
+	lobby.Dismiss(ctx, idB) //nolint:errcheck // test cleanup
 	statusLog.Emit(signal.Event{Kind: eventDismissSuccess, Source: "agent-b"})
 
 	// 7. Referee verdict.

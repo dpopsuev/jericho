@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/world"
 )
 
@@ -32,9 +31,6 @@ func TestQuickWorld_CreatesNAgents(t *testing.T) {
 func TestQuickWorld_UniqueIdentities(t *testing.T) {
 	_, agents := QuickWorld(10, "UniqueTeam")
 
-	// QuickWorld uses DefaultStrategy which assigns unique colors via Registry.
-	// We just need to verify the count is correct; Registry guarantees uniqueness
-	// and would panic on collision.
 	if len(agents) != 10 {
 		t.Fatalf("len(agents) = %d, want 10", len(agents))
 	}
@@ -45,14 +41,13 @@ func TestQuickTransport_RegistersHandlers(t *testing.T) {
 	tr := QuickTransport(w, agents)
 	defer tr.Close()
 
-	// Each agent's Short() (color name) should be registered as a handler.
 	for _, id := range agents {
 		color := world.Get[visual.Color](w, id)
 		task, err := tr.SendMessage(context.Background(), transport.AgentID(color.Short()), transport.Message{
-			From:         "test-sender",
-			To:           transport.AgentID(color.Short()),
-			Performative: signal.Request,
-			Content:      "ping",
+			From:    "test-sender",
+			To:      transport.AgentID(color.Short()),
+			Role:    "user",
+			Content: "ping",
 		})
 		if err != nil {
 			t.Fatalf("SendMessage to %s: %v", transport.AgentID(color.Short()), err)
@@ -72,22 +67,6 @@ func TestQuickTransport_RegistersHandlers(t *testing.T) {
 		if !completed {
 			t.Errorf("handler for %s did not complete", transport.AgentID(color.Short()))
 		}
-	}
-}
-
-func TestStubHandler_RepliesWithPerformative(t *testing.T) {
-	handler := StubHandler(signal.Refuse)
-	resp, err := handler(context.Background(), transport.Message{
-		From:         "sender",
-		To:           "receiver",
-		Performative: signal.Request,
-		Content:      "test",
-	})
-	if err != nil {
-		t.Fatalf("StubHandler returned error: %v", err)
-	}
-	if resp.Performative != signal.Refuse {
-		t.Errorf("Performative = %q, want %q", resp.Performative, signal.Refuse)
 	}
 }
 

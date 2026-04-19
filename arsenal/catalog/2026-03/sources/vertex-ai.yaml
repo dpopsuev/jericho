@@ -1,6 +1,5 @@
 source: vertex-ai
 kind: api
-env_key: CLAUDE_CODE_USE_VERTEX
 provider: anthropic
 mods:
   pipeline: vertex
@@ -8,3 +7,4 @@ access:
   - claude-opus-4-6
   - claude-sonnet-4-6
   - claude-haiku-4-5
+  - gemini-2.5-pro

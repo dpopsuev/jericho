@@ -35,7 +35,7 @@ type AgentConfig struct {
 }
 
 // AgentSupervisor is the process-agnostic interface for starting/stopping agents.
-// Djinn implements this with ACP. Origami implements with CLI subprocesses.
+// Consumers inject their own implementation (e.g. A2A registration, CLI subprocess).
 type AgentSupervisor interface {
 	// Start launches an agent process for the given entity.
 	Start(ctx context.Context, id world.EntityID, config AgentConfig) error

@@ -27,7 +27,7 @@ func TestE2E_TwoAgents_RequestConfirm(t *testing.T) {
 	task, err := tr.SendMessage(ctx, color1.Short(), transport.Message{
 		From:         color0.Short(),
 		To:           color1.Short(),
-		Performative: signal.Request,
+		Role: "user",
 		Content:      "please review this code",
 	})
 	if err != nil {
@@ -46,8 +46,8 @@ func TestE2E_TwoAgents_RequestConfirm(t *testing.T) {
 			if ev.Data == nil {
 				t.Fatal("completed event should carry data")
 			}
-			if ev.Data.Performative != signal.Confirm {
-				t.Errorf("Performative = %q, want %q", ev.Data.Performative, signal.Confirm)
+			if ev.Data.Role != "agent" {
+				t.Errorf("Role = %q, want agent", ev.Data.Role)
 			}
 			if ev.Data.Content != "please review this code" {
 				t.Errorf("Content = %q, want echo", ev.Data.Content)
@@ -91,7 +91,7 @@ func TestE2E_MixedElements_Collaborate(t *testing.T) {
 	task, err := tr.SendMessage(ctx, water.Short(), transport.Message{
 		From:         fire.Short(),
 		To:           water.Short(),
-		Performative: signal.Request,
+		Role: "user",
 		Content:      "review patch",
 	})
 	if err != nil {
@@ -110,8 +110,8 @@ func TestE2E_MixedElements_Collaborate(t *testing.T) {
 			if ev.Data == nil {
 				t.Fatal("completed event should carry data")
 			}
-			if ev.Data.Performative != signal.Confirm {
-				t.Errorf("Performative = %q, want %q", ev.Data.Performative, signal.Confirm)
+			if ev.Data.Role != "agent" {
+				t.Errorf("Role = %q, want agent", ev.Data.Role)
 			}
 		}
 	}
@@ -141,7 +141,7 @@ func TestE2E_FullStack_WorldIdentityTransportSignalView(t *testing.T) {
 	task01, err := tr.SendMessage(ctx, color1.Short(), transport.Message{
 		From:         color0.Short(),
 		To:           color1.Short(),
-		Performative: signal.Request,
+		Role: "user",
 		Content:      "step-1",
 	})
 	if err != nil {
@@ -153,7 +153,7 @@ func TestE2E_FullStack_WorldIdentityTransportSignalView(t *testing.T) {
 	task12, err := tr.SendMessage(ctx, color2.Short(), transport.Message{
 		From:         color1.Short(),
 		To:           color2.Short(),
-		Performative: signal.Request,
+		Role: "user",
 		Content:      "step-2",
 	})
 	if err != nil {
@@ -165,7 +165,7 @@ func TestE2E_FullStack_WorldIdentityTransportSignalView(t *testing.T) {
 	task20, err := tr.SendMessage(ctx, color0.Short(), transport.Message{
 		From:         color2.Short(),
 		To:           color0.Short(),
-		Performative: signal.Confirm,
+		Role: "agent",
 		Content:      "step-3",
 	})
 	if err != nil {

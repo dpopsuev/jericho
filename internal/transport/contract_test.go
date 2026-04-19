@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/dpopsuev/troupe/signal"
+
 )
 
 // RunTransportContract runs the full transport contract test suite against
@@ -130,10 +130,10 @@ func RunTransportContract(t *testing.T, factory func() Transport) {
 		defer tr.Close()
 
 		_ = tr.Register("agent-a", func(_ context.Context, msg Message) (Message, error) {
-			return Message{From: "agent-a", Performative: signal.Confirm, Content: "ack: " + msg.Content}, nil
+			return Message{From: "agent-a", Role: "agent", Content: "ack: " + msg.Content}, nil
 		})
 
-		resp, err := tr.Ask(context.Background(), "agent-a", Message{From: "b", Performative: signal.Request, Content: "ping"})
+		resp, err := tr.Ask(context.Background(), "agent-a", Message{From: "b", Role: "user", Content: "ping"})
 		if err != nil {
 			t.Fatalf("Ask: %v", err)
 		}

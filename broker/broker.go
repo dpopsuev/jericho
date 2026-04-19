@@ -6,7 +6,6 @@ import (
 
 	troupe "github.com/dpopsuev/troupe"
 	"github.com/dpopsuev/troupe/visual"
-	"github.com/dpopsuev/troupe/internal/acp"
 	"github.com/dpopsuev/troupe/internal/agent"
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/internal/warden"
@@ -48,7 +47,7 @@ type config struct {
 	admission    troupe.Admission
 }
 
-// WithDriver sets the agent driver. Default: ACP (subprocess + JSON-RPC).
+// WithDriver sets the agent driver.
 func WithDriver(d troupe.Driver) Option {
 	return func(c *config) { c.driver = d }
 }
@@ -120,18 +119,12 @@ func newLocalBroker(opts ...Option) *DefaultBroker {
 		o(cfg)
 	}
 
-	// Resolve the warden supervisor: multi-driver adapter or default ACP.
 	adapter := &multiDriverAdapter{
 		defaultDriver: cfg.driver,
 		drivers:       cfg.drivers,
 		providers:     make(map[world.EntityID]string),
 	}
-	var supervisor warden.AgentSupervisor
-	if cfg.driver != nil || len(cfg.drivers) > 0 {
-		supervisor = adapter
-	} else {
-		supervisor = acp.NewACPLauncher()
-	}
+	var supervisor warden.AgentSupervisor = adapter
 
 	w := world.NewWorld()
 	var t transport.Transport

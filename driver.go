@@ -14,9 +14,7 @@ var ErrNoDriver = errors.New("no driver configured")
 // agent lifecycle to a Driver. Each Driver implementation handles a
 // different transport protocol.
 //
-// Implementations:
-//   - ACP Driver (internal/acp) — subprocess + stdio JSON-RPC
-//   - HTTP Driver (planned) — REST/SSE to API endpoints
+// Consumers provide their own Driver implementations.
 type Driver interface {
 	// Start provisions an agent for the given entity.
 	Start(ctx context.Context, id world.EntityID, config ActorConfig) error

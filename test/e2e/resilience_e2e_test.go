@@ -9,13 +9,11 @@ package e2e_test
 import (
 	"context"
 	"errors"
-	"os/exec"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/dpopsuev/troupe/billing"
-	"github.com/dpopsuev/troupe/internal/acp"
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/resilience"
 )
@@ -114,54 +112,6 @@ func TestResilienceE2E_RateLimiterThrottles(t *testing.T) {
 	}
 }
 
-// TestResilienceE2E_ACPClientWithResilience proves the ACP client
-// works with all resilience options enabled.
-func TestResilienceE2E_ACPClientWithResilience(t *testing.T) {
-	client, err := acp.NewClient("cursor",
-		acp.WithCommandFactory(mockCmdFactory),
-		acp.WithRetry(resilience.RetryConfig{
-			MaxAttempts: 2,
-			BaseDelay:   1 * time.Millisecond,
-		}),
-		acp.WithCircuitBreaker(resilience.CircuitConfig{
-			Threshold: 3,
-			Cooldown:  1 * time.Second,
-		}),
-		acp.WithRateLimiter(resilience.RateLimitConfig{
-			Rate:  100,
-			Burst: 10,
-		}),
-		acp.WithHandshakeTimeout(5*time.Second),
-		acp.WithSessionTimeout(5*time.Second),
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := context.Background()
-	if err := client.Start(ctx); err != nil {
-		t.Fatalf("Start: %v", err)
-	}
-
-	client.Send(acp.Message{Role: acp.RoleUser, Content: "test"})
-	ch, err := client.Chat(ctx)
-	if err != nil {
-		t.Fatalf("Chat: %v", err)
-	}
-
-	var gotDone bool
-	for evt := range ch {
-		if evt.Type == acp.EventDone {
-			gotDone = true
-		}
-	}
-	if !gotDone {
-		t.Fatal("missing done event")
-	}
-
-	client.Stop(ctx) //nolint:errcheck // test cleanup, error irrelevant
-}
-
 // TestResilienceE2E_BudgetEnforcerBlocksOverLimit proves the budget
 // enforcer rejects agents that exceed their cost ceiling.
 func TestResilienceE2E_BudgetEnforcerBlocksOverLimit(t *testing.T) {
@@ -254,30 +204,3 @@ func TestResilienceE2E_AgentLookupDiscovery(t *testing.T) {
 	}
 }
 
-// TestResilienceE2E_ProcessAlive proves the health check detects
-// process state via ProcessAlive().
-func TestResilienceE2E_ProcessAlive(t *testing.T) {
-	client, _ := acp.NewClient("cursor",
-		acp.WithCommandFactory(func(ctx context.Context, name string, args ...string) *exec.Cmd {
-			return exec.CommandContext(ctx, "bash", "-c", mockACPServer)
-		}),
-	)
-
-	ctx := context.Background()
-	if err := client.Start(ctx); err != nil {
-		t.Fatalf("Start: %v", err)
-	}
-
-	if !client.ProcessAlive() {
-		t.Fatal("process should be alive after Start")
-	}
-
-	client.Stop(ctx) //nolint:errcheck // test cleanup, error irrelevant
-
-	// After stop, process should not be alive.
-	// Give it a moment to register the exit.
-	time.Sleep(50 * time.Millisecond)
-	if client.ProcessAlive() {
-		t.Fatal("process should not be alive after Stop")
-	}
-}

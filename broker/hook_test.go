@@ -8,7 +8,13 @@ import (
 
 	"github.com/dpopsuev/troupe"
 	"github.com/dpopsuev/troupe/broker"
+	"github.com/dpopsuev/troupe/world"
 )
+
+type noopDriver struct{}
+
+func (noopDriver) Start(_ context.Context, _ world.EntityID, _ troupe.ActorConfig) error { return nil }
+func (noopDriver) Stop(_ context.Context, _ world.EntityID) error                        { return nil }
 
 // --- test helpers ---
 
@@ -52,7 +58,7 @@ func (h *testPerformHook) PostPerform(_ context.Context, _, response string, _ e
 
 func TestHook_PreSpawn_Reject(t *testing.T) {
 	rejectHook := &testSpawnHook{preErr: errors.New("budget exceeded")}
-	b := broker.New("", broker.WithHook(rejectHook))
+	b := broker.New("", broker.WithDriver(noopDriver{}), broker.WithHook(rejectHook))
 	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Role: "test"})
 	if err == nil {
 		t.Fatal("expected PreSpawn rejection")
@@ -64,7 +70,7 @@ func TestHook_PreSpawn_Reject(t *testing.T) {
 
 func TestHook_PostSpawn_Called(t *testing.T) {
 	obs := &testSpawnHook{}
-	b := broker.New("", broker.WithHook(obs))
+	b := broker.New("", broker.WithDriver(noopDriver{}), broker.WithHook(obs))
 	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Role: "test"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
@@ -76,7 +82,7 @@ func TestHook_PostSpawn_Called(t *testing.T) {
 
 func TestHook_NilHook_NoPanic(t *testing.T) {
 	// WithHook(nil) must not panic or register anything.
-	b := broker.New("", broker.WithHook(nil))
+	b := broker.New("", broker.WithDriver(noopDriver{}), broker.WithHook(nil))
 	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Role: "test"})
 	if err != nil {
 		t.Fatalf("Spawn with nil hook: %v", err)

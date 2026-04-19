@@ -38,7 +38,7 @@ func TestStress_10Agents_50Messages(t *testing.T) {
 				task, err := tr.SendMessage(ctx, targetColor.Short(), transport.Message{
 					From:         senderColor.Short(),
 					To:           targetColor.Short(),
-					Performative: signal.Request,
+					Role: "user",
 					Content:      fmt.Sprintf("msg-%d-%d", sender, j),
 				})
 				if err != nil {

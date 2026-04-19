@@ -32,7 +32,7 @@ func TestA2AServer_MessageSendRoundTrip(t *testing.T) {
 	defer tr.Close()
 
 	_ = tr.Register("agent-1", func(_ context.Context, msg Message) (Message, error) {
-		return Message{Content: "echo: " + msg.Content, Performative: "inform"}, nil
+		return Message{Content: "echo: " + msg.Content, Role: "agent"}, nil
 	})
 
 	ts := httptest.NewServer(tr.Mux())
@@ -123,7 +123,7 @@ func TestA2AServer_StreamingRoundTrip(t *testing.T) {
 	defer tr.Close()
 
 	_ = tr.Register("agent-1", func(_ context.Context, msg Message) (Message, error) {
-		return Message{Content: "streamed: " + msg.Content, Performative: "inform"}, nil
+		return Message{Content: "streamed: " + msg.Content, Role: "agent"}, nil
 	})
 
 	ts := httptest.NewServer(tr.Mux())
