@@ -61,7 +61,7 @@ testkit/       — Test fixtures (MockActor, MockBroker, LinearDirector, FanOutD
 ```
 internal/acp/       — Agent Context Protocol launcher (JSON-RPC over stdio, process spawning)
 internal/agent/     — Solo agent implementation (Actor wrapper)
-internal/auth/      — Authentication abstraction (Bearer, Identity) — to be promoted to public auth/
+auth/               — Authentication abstraction (Bearer, Identity, Authenticator)
 internal/transport/ — A2A messaging (LocalTransport, HTTPTransport, A2A server/proxy) — core types to be promoted
 internal/warden/    — Agent process supervision (Fork/Kill/Wait, restart, zombie reaping)
 ```
