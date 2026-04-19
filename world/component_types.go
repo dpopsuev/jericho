@@ -4,14 +4,14 @@ import "time"
 
 // Component type constants for core components.
 const (
-	AliveType     ComponentType = "alive"
-	ReadyType     ComponentType = "ready"
-	BudgetType    ComponentType = "budget"
-	ProgressType  ComponentType = "progress"
-	DisplayType      ComponentType = "display"
-	SpanContextType  ComponentType = "span_context"
-	ToolCardType     ComponentType = "tool_card"
-	AnnotationType   ComponentType = "annotation"
+	AliveType       ComponentType = "alive"
+	ReadyType       ComponentType = "ready"
+	BudgetType      ComponentType = "budget"
+	ProgressType    ComponentType = "progress"
+	DisplayType     ComponentType = "display"
+	SpanContextType ComponentType = "span_context"
+	ToolCardType    ComponentType = "tool_card"
+	AnnotationType  ComponentType = "annotation"
 )
 
 // Alive tracks whether the agent process exists (liveness probe).
@@ -29,7 +29,8 @@ func (Alive) ComponentType() ComponentType { return AliveType }
 type AliveState string
 
 const (
-	AliveRunning    AliveState = "running"    // process exists
+	AliveStarting   AliveState = "starting"   // process spawned, not yet ready
+	AliveRunning    AliveState = "running"    // process exists and has been ready at least once
 	AliveTerminated AliveState = "terminated" // process exited
 )
 
