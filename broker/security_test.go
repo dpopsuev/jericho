@@ -66,6 +66,6 @@ func TestFQDN_NoDots_InShadeName(t *testing.T) {
 	// A shade name with dots would break FQDN parsing
 	// shade.color.director.broker — 4 segments expected
 	c := troupe.ActorConfig{Role: "test"}
-	_ = c // The FQDN is on identity.Color, not ActorConfig
+	_ = c // The FQDN is on visual.Color, not ActorConfig
 	// This test validates that the palette has no dots in shade names
 }

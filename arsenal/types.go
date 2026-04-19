@@ -7,11 +7,7 @@
 // Zero Jericho imports — stdlib + yaml.v3 only.
 package arsenal
 
-import (
-	"errors"
-
-	"github.com/dpopsuev/troupe/identity"
-)
+import "errors"
 
 // Sentinel errors.
 var (
@@ -20,9 +16,6 @@ var (
 	ErrBadPin       = errors.New("arsenal: unknown snapshot pin")
 	ErrEmptyCatalog = errors.New("arsenal: no snapshots found in embedded catalog")
 )
-
-// TraitVector is defined in identity/. Type alias for backward compat.
-type TraitVector = identity.TraitVector
 
 // CostEntry holds per-million-token pricing.
 type CostEntry struct {

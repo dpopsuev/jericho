@@ -1,4 +1,4 @@
-package identity
+package arsenal
 
 // FromVector converts a TraitVector to a trait.Set ECS component.
 func FromVector(v TraitVector) Set {

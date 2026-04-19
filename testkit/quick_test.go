@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/signal"
 	"github.com/dpopsuev/troupe/world"
@@ -24,7 +24,7 @@ func TestQuickWorld_CreatesNAgents(t *testing.T) {
 		if !w.Alive(id) {
 			t.Errorf("agent %d (id=%d) should be alive", i, id)
 		}
-		AssertEntityHas[identity.Color](t, w, id)
+		AssertEntityHas[visual.Color](t, w, id)
 		AssertEntityHas[world.Alive](t, w, id)
 	}
 }
@@ -47,7 +47,7 @@ func TestQuickTransport_RegistersHandlers(t *testing.T) {
 
 	// Each agent's Short() (color name) should be registered as a handler.
 	for _, id := range agents {
-		color := world.Get[identity.Color](w, id)
+		color := world.Get[visual.Color](w, id)
 		task, err := tr.SendMessage(context.Background(), transport.AgentID(color.Short()), transport.Message{
 			From:         "test-sender",
 			To:           transport.AgentID(color.Short()),

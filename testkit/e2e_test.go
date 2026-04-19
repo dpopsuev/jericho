@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/signal"
 	"github.com/dpopsuev/troupe/world"
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 )
 
 // Feature: 2 same-provider agents.
@@ -21,8 +21,8 @@ func TestE2E_TwoAgents_RequestConfirm(t *testing.T) {
 	defer tr.Close()
 
 	ctx := context.Background()
-	color0 := world.Get[identity.Color](w, agents[0])
-	color1 := world.Get[identity.Color](w, agents[1])
+	color0 := world.Get[visual.Color](w, agents[0])
+	color1 := world.Get[visual.Color](w, agents[1])
 
 	task, err := tr.SendMessage(ctx, color1.Short(), transport.Message{
 		From:         color0.Short(),
@@ -62,7 +62,7 @@ func TestE2E_TwoAgents_RequestConfirm(t *testing.T) {
 // Feature: Mixed elements collaborate.
 func TestE2E_MixedElements_Collaborate(t *testing.T) {
 	w := world.NewWorld()
-	reg := identity.NewRegistry()
+	reg := visual.NewRegistry()
 
 	fire, err := reg.AssignInGroup("Crimson", "Coder", "Team")
 	if err != nil {
@@ -127,15 +127,15 @@ func TestE2E_FullStack_WorldIdentityTransportSignalView(t *testing.T) {
 	defer tr.Close()
 
 	bus := signal.NewMemBus()
-	view := identity.NewView(w)
+	view := visual.NewView(w)
 
 	// 1. Subscribe for health changes.
 	diffs := view.Subscribe(world.AliveType)
 
 	ctx := context.Background()
-	color0 := world.Get[identity.Color](w, agents[0])
-	color1 := world.Get[identity.Color](w, agents[1])
-	color2 := world.Get[identity.Color](w, agents[2])
+	color0 := world.Get[visual.Color](w, agents[0])
+	color1 := world.Get[visual.Color](w, agents[1])
+	color2 := world.Get[visual.Color](w, agents[2])
 
 	// 2. Agent 0 sends to Agent 1.
 	task01, err := tr.SendMessage(ctx, color1.Short(), transport.Message{

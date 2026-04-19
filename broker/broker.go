@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	troupe "github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/acp"
 	"github.com/dpopsuev/troupe/internal/agent"
 	"github.com/dpopsuev/troupe/internal/transport"
@@ -22,7 +22,7 @@ type DefaultBroker struct {
 	transport    transport.Transport
 	buses        signal.BusSet
 	controlLog   signal.EventLog
-	registry     *identity.Registry
+	registry     *visual.Registry
 	hooks        []Hook
 	driver       troupe.Driver // default driver (for optional interface checks)
 	adapter      *multiDriverAdapter
@@ -143,7 +143,7 @@ func newLocalBroker(opts ...Option) *DefaultBroker {
 	buses := signal.NewBusSet()
 	p := warden.NewWarden(w, t, buses.Status, supervisor)
 
-	reg := identity.NewRegistry()
+	reg := visual.NewRegistry()
 	p.SetRegistry(reg)
 
 	var spawnGate troupe.Gate
@@ -299,10 +299,10 @@ func (b *DefaultBroker) emitControl(kind string, meta map[string]string) {
 
 // Discover returns agent cards for live agents, optionally filtered by role.
 func (b *DefaultBroker) Discover(role string) []troupe.AgentCard {
-	ids := world.Query[identity.Color](b.world)
+	ids := world.Query[visual.Color](b.world)
 	cards := make([]troupe.AgentCard, 0, len(ids))
 	for _, id := range ids {
-		color, _ := world.TryGet[identity.Color](b.world, id)
+		color, _ := world.TryGet[visual.Color](b.world, id)
 		if role != "" && color.Role != role {
 			continue
 		}

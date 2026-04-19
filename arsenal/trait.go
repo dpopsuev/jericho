@@ -1,7 +1,7 @@
 // Package trait provides behavioral trait primitives for agents.
 // TraitVector axes map to industry LLM benchmarks — not personality types.
 // Arsenal scores models by dot-product of preferences against model benchmarks.
-package identity
+package arsenal
 
 import "github.com/dpopsuev/troupe/world"
 

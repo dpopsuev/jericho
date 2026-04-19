@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/signal"
 	"github.com/dpopsuev/troupe/world"
@@ -30,10 +30,10 @@ func TestStress_10Agents_50Messages(t *testing.T) {
 		wg.Add(1)
 		go func(sender int) {
 			defer wg.Done()
-			senderColor := world.Get[identity.Color](w, agents[sender])
+			senderColor := world.Get[visual.Color](w, agents[sender])
 			for j := range messagesPerAgent {
 				target := (sender + j + 1) % len(agents)
-				targetColor := world.Get[identity.Color](w, agents[target])
+				targetColor := world.Get[visual.Color](w, agents[target])
 				task, err := tr.SendMessage(ctx, targetColor.Short(), transport.Message{
 					From:         senderColor.Short(),
 					To:           targetColor.Short(),

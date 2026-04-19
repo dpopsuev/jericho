@@ -3,7 +3,7 @@ package testkit
 import (
 	"fmt"
 
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/world"
 )
@@ -12,8 +12,8 @@ import (
 // Returns the World and slice of EntityIDs.
 func QuickWorld(n int, collective string) (*world.World, []world.EntityID) {
 	w := world.NewWorld()
-	reg := identity.NewRegistry()
-	strategy := identity.NewDefaultStrategy(w, reg)
+	reg := visual.NewRegistry()
+	strategy := visual.NewDefaultStrategy(w, reg)
 
 	agents := make([]world.EntityID, 0, n)
 	for i := range n {
@@ -30,7 +30,7 @@ func QuickWorld(n int, collective string) (*world.World, []world.EntityID) {
 func QuickTransport(w *world.World, agents []world.EntityID) *transport.LocalTransport {
 	tr := transport.NewLocalTransport()
 	for _, id := range agents {
-		color := world.Get[identity.Color](w, id)
+		color := world.Get[visual.Color](w, id)
 		tr.Register(transport.AgentID(color.Short()), EchoHandler())
 	}
 	return tr

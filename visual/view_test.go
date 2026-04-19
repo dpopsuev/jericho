@@ -1,10 +1,10 @@
-package identity_test
+package visual_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/world"
 )
 
@@ -19,17 +19,17 @@ func TestSnapshot_MatchesComponentTypes(t *testing.T) {
 	c := w.Spawn()
 
 	world.Attach(w, a, world.Alive{State: world.AliveRunning, Since: time.Now()})
-	world.Attach(w, a, identity.Color{Name: "Denim", Collective: "Refactor"})
+	world.Attach(w, a, visual.Color{Name: "Denim", Collective: "Refactor"})
 
 	world.Attach(w, b, world.Alive{State: world.AliveRunning, Since: time.Now()})
 	world.Attach(w, b, world.Ready{Ready: false, LastSeen: time.Now(), Reason: world.ReasonIdle})
-	world.Attach(w, b, identity.Color{Name: "Scarlet", Collective: "Triage"})
+	world.Attach(w, b, visual.Color{Name: "Scarlet", Collective: "Triage"})
 
 	// c has only Health — should NOT match a 2-type query.
 	world.Attach(w, c, world.Alive{State: world.AliveTerminated, ExitedAt: time.Now()})
 
-	v := identity.NewView(w)
-	snaps := v.Snapshot(world.AliveType, identity.ColorType)
+	v := visual.NewView(w)
+	snaps := v.Snapshot(world.AliveType, visual.ColorType)
 
 	if len(snaps) != 2 {
 		t.Fatalf("Snapshot returned %d entities, want 2", len(snaps))
@@ -54,7 +54,7 @@ func TestSnapshot_NoMatches(t *testing.T) {
 	w := world.NewWorld()
 	w.Spawn() // entity with no components
 
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 	snaps := v.Snapshot(world.BudgetType)
 
 	if len(snaps) != 0 {
@@ -67,7 +67,7 @@ func TestSnapshot_ReflectsLatestState(t *testing.T) {
 	id := w.Spawn()
 	world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
 
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 
 	// First snapshot.
 	snaps := v.Snapshot(world.AliveType)
@@ -95,7 +95,7 @@ func TestSnapshot_ReflectsLatestState(t *testing.T) {
 
 func TestSubscribe_AttachEmitsDiff(t *testing.T) {
 	w := world.NewWorld()
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 	ch := v.Subscribe()
 
 	id := w.Spawn()
@@ -125,7 +125,7 @@ func TestSubscribe_AttachEmitsDiff(t *testing.T) {
 
 func TestSubscribe_UpdateEmitsDiff(t *testing.T) {
 	w := world.NewWorld()
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 
 	id := w.Spawn()
 	world.Attach(w, id, world.Ready{Ready: true, LastSeen: time.Now()})
@@ -158,7 +158,7 @@ func TestSubscribe_UpdateEmitsDiff(t *testing.T) {
 
 func TestSubscribe_DetachEmitsDiff(t *testing.T) {
 	w := world.NewWorld()
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 
 	id := w.Spawn()
 	world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
@@ -184,14 +184,14 @@ func TestSubscribe_DetachEmitsDiff(t *testing.T) {
 
 func TestSubscribe_FiltersByType(t *testing.T) {
 	w := world.NewWorld()
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 
 	// Subscribe to Health only.
 	ch := v.Subscribe(world.AliveType)
 
 	id := w.Spawn()
 	// Attach a ColorIdentity (should NOT trigger diff on this channel).
-	world.Attach(w, id, identity.Color{Name: "Denim"})
+	world.Attach(w, id, visual.Color{Name: "Denim"})
 
 	select {
 	case d := <-ch:
@@ -215,7 +215,7 @@ func TestSubscribe_FiltersByType(t *testing.T) {
 
 func TestSubscribe_Unsubscribe(t *testing.T) {
 	w := world.NewWorld()
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 
 	ch := v.Subscribe()
 	v.Unsubscribe(ch)
@@ -233,7 +233,7 @@ func TestSubscribe_Unsubscribe(t *testing.T) {
 
 func TestSubscribe_MultipleSubs(t *testing.T) {
 	w := world.NewWorld()
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 
 	ch1 := v.Subscribe()
 	ch2 := v.Subscribe()
@@ -241,7 +241,7 @@ func TestSubscribe_MultipleSubs(t *testing.T) {
 	id := w.Spawn()
 	world.Attach(w, id, world.Alive{State: world.AliveRunning, Since: time.Now()})
 
-	for i, ch := range []<-chan identity.Diff{ch1, ch2} {
+	for i, ch := range []<-chan visual.Diff{ch1, ch2} {
 		select {
 		case d := <-ch:
 			if d.Kind != world.DiffAttached {
@@ -266,7 +266,7 @@ func TestHierarchy_BuildsTree(t *testing.T) {
 	_ = w.Link(parent, world.Supervises, child)
 	_ = w.Link(child, world.Supervises, grandchild)
 
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 	tree := v.Hierarchy()
 
 	if len(tree) != 1 {
@@ -300,7 +300,7 @@ func TestHierarchy_RootsHaveNoParent(t *testing.T) {
 	// a and b are roots (no inbound supervises), c is child of a.
 	_ = w.Link(a, world.Supervises, c)
 
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 	tree := v.Hierarchy()
 
 	if len(tree) != 2 {
@@ -340,7 +340,7 @@ func TestStats_CountsByAliveAndReady(t *testing.T) {
 		world.Attach(w, id, world.Ready{Ready: false, LastSeen: time.Now(), Reason: world.ReasonTerminated})
 	}
 
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 	s := v.Stats()
 
 	if s.TotalEntities != 6 {
@@ -366,14 +366,14 @@ func TestStats_CountsCollectives(t *testing.T) {
 	// 3 in "Refactor", 2 in "Triage".
 	for range 3 {
 		id := w.Spawn()
-		world.Attach(w, id, identity.Color{Name: "A", Collective: "Refactor"})
+		world.Attach(w, id, visual.Color{Name: "A", Collective: "Refactor"})
 	}
 	for range 2 {
 		id := w.Spawn()
-		world.Attach(w, id, identity.Color{Name: "B", Collective: "Triage"})
+		world.Attach(w, id, visual.Color{Name: "B", Collective: "Triage"})
 	}
 
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 	s := v.Stats()
 
 	if s.Collectives != 2 {
@@ -404,7 +404,7 @@ func TestAcceptance_MinimapPattern(t *testing.T) {
 
 	for _, a := range agents {
 		id := w.Spawn()
-		world.Attach(w, id, identity.Color{
+		world.Attach(w, id, visual.Color{
 			Shade:      a.shade,
 			Name:       a.color,
 			Role:       a.role,
@@ -414,17 +414,17 @@ func TestAcceptance_MinimapPattern(t *testing.T) {
 		world.Attach(w, id, world.Ready{Ready: a.ready, LastSeen: time.Now()})
 	}
 
-	v := identity.NewView(w)
+	v := visual.NewView(w)
 
 	// Snapshot all agents with both components.
-	snaps := v.Snapshot(identity.ColorType, world.AliveType)
+	snaps := v.Snapshot(visual.ColorType, world.AliveType)
 	if len(snaps) != 3 {
 		t.Fatalf("expected 3 snapshots, got %d", len(snaps))
 	}
 
 	// Verify each snapshot has readable data.
 	for _, s := range snaps {
-		ci := s.Components[identity.ColorType].(identity.Color)
+		ci := s.Components[visual.ColorType].(visual.Color)
 		alive := s.Components[world.AliveType].(world.Alive)
 		if ci.Name == "" {
 			t.Errorf("entity %d: empty Color", s.ID)

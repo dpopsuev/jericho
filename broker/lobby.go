@@ -8,7 +8,7 @@ import (
 	"time"
 
 	troupe "github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/signal"
 	"github.com/dpopsuev/troupe/world"
@@ -22,7 +22,7 @@ type Lobby struct {
 	world        *world.World
 	transport    transport.Transport
 	controlLog   signal.EventLog
-	registry     *identity.Registry
+	registry     *visual.Registry
 	gate         troupe.Gate
 	proxyFactory ProxyFactory
 
@@ -45,7 +45,7 @@ type LobbyConfig struct {
 	World        *world.World
 	Transport    transport.Transport
 	ControlLog   signal.EventLog
-	Registry     *identity.Registry
+	Registry     *visual.Registry
 	Gates        []troupe.Gate
 	ProxyFactory ProxyFactory
 }

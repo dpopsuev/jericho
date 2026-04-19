@@ -1,7 +1,7 @@
 // Package symbol provides visual identity primitives for agents.
 // Color, Element, Persona — the cosmetic layer, always rendered.
 // Absorbs palette/, element/, identity/ from pre-v0.2.0.
-package identity
+package visual
 
 import (
 	"errors"

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/signal"
 	"github.com/dpopsuev/troupe/world"
 )
@@ -249,7 +249,7 @@ func TestLocal_Close(t *testing.T) {
 func TestCardFromEntity_ColorIdentity(t *testing.T) {
 	w := world.NewWorld()
 	agent := w.Spawn()
-	world.Attach(w, agent, identity.Color{
+	world.Attach(w, agent, visual.Color{
 		Shade: "Indigo", Name: "Denim", Role: "Writer", Collective: "Refactor",
 	})
 
@@ -272,7 +272,7 @@ func TestCardFromEntity_ColorIdentity(t *testing.T) {
 func TestCardFromEntity_WithHealth(t *testing.T) {
 	w := world.NewWorld()
 	agent := w.Spawn()
-	world.Attach(w, agent, identity.Color{
+	world.Attach(w, agent, visual.Color{
 		Shade: "Azure", Name: "Cerulean", Role: "Reviewer", Collective: "QA",
 	})
 	world.Attach(w, agent, world.Alive{State: world.AliveRunning, Since: time.Now()})

@@ -1,4 +1,4 @@
-package identity
+package visual
 
 // palette defines the 12×12 color matrix for agent FQDN addressing.
 // 12 color families × 12 shades = 144 unique agent addresses.

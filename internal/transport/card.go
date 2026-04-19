@@ -3,7 +3,7 @@ package transport
 import (
 	"fmt"
 
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/world"
 )
 
@@ -33,7 +33,7 @@ func CardFromEntity(w *world.World, id world.EntityID) AgentCard {
 		Metadata:  make(map[string]string),
 	}
 
-	if color, ok := world.TryGet[identity.Color](w, id); ok {
+	if color, ok := world.TryGet[visual.Color](w, id); ok {
 		card.Name = color.Title()
 		card.Role = color.Role
 	}

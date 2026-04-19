@@ -1,4 +1,4 @@
-package identity
+package visual
 
 // Element represents a visual identity archetype — cosmetic only.
 // Does not drive model selection or behavioral config.

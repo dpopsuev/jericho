@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/signal"
 	"github.com/dpopsuev/troupe/world"
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 )
 
 // providerSpec defines how to invoke a CLI provider in non-interactive mode.
@@ -80,7 +80,7 @@ func cliHandler(command string, args []string) transport.MsgHandler {
 
 // spawnAgent creates an entity with ColorIdentity + Health, registers it on
 // the transport with a CLI-backed handler, and returns the agent ID string.
-func spawnAgent(t *testing.T, w *world.World, reg *identity.Registry, tr *transport.LocalTransport, role, collective string, p providerSpec) string {
+func spawnAgent(t *testing.T, w *world.World, reg *visual.Registry, tr *transport.LocalTransport, role, collective string, p providerSpec) string {
 	t.Helper()
 	color, err := reg.Assign(role, collective)
 	if err != nil {
@@ -99,10 +99,10 @@ func spawnAgent(t *testing.T, w *world.World, reg *identity.Registry, tr *transp
 func runPairTest(t *testing.T, p providerSpec) {
 	t.Helper()
 	w := world.NewWorld()
-	reg := identity.NewRegistry()
+	reg := visual.NewRegistry()
 	tr := transport.NewLocalTransport()
 	defer tr.Close()
-	view := identity.NewView(w)
+	view := visual.NewView(w)
 
 	agentA := spawnAgent(t, w, reg, tr, "Writer", "Pair", p)
 	agentB := spawnAgent(t, w, reg, tr, "Reviewer", "Pair", p)
@@ -193,11 +193,11 @@ func TestE2E_MixedQuartet(t *testing.T) {
 	}
 
 	w := world.NewWorld()
-	reg := identity.NewRegistry()
+	reg := visual.NewRegistry()
 	tr := transport.NewLocalTransport()
 	defer tr.Close()
 	bus := signal.NewMemBus()
-	view := identity.NewView(w)
+	view := visual.NewView(w)
 
 	roles := []string{"Writer", "Reviewer", "Analyst", "Architect"}
 	agents := make([]string, len(allProviders))

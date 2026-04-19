@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dpopsuev/troupe/identity"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/signal"
 	"github.com/dpopsuev/troupe/world"
@@ -48,7 +48,7 @@ type AgentWarden struct {
 	subreaper world.EntityID                   // orphan adopter (0 = pool-level)
 	autoReap  map[world.EntityID]bool          // parents with auto-reap enabled
 	waitCh    map[world.EntityID]chan struct{} // notify Wait() callers
-	registry  *identity.Registry               // optional color registry (nil = no color assignment)
+	registry  *visual.Registry               // optional color registry (nil = no color assignment)
 	maxAgents int                              // 0 = unlimited
 }
 
@@ -168,7 +168,7 @@ func (p *AgentWarden) Fork(ctx context.Context, role string, config AgentConfig,
 	if parentID > 0 {
 		meta["parent"] = string(agentTransportID(parentID))
 	}
-	if color, ok := world.TryGet[identity.Color](p.world, id); ok {
+	if color, ok := world.TryGet[visual.Color](p.world, id); ok {
 		meta[signal.MetaKeyShade] = color.Shade
 		meta[signal.MetaKeyColor] = color.Name
 	}
@@ -389,7 +389,7 @@ func (p *AgentWarden) get(id world.EntityID) (*agentEntry, bool) {
 }
 
 // SetRegistry sets the color registry for automatic color assignment on Fork.
-func (p *AgentWarden) SetRegistry(reg *identity.Registry) {
+func (p *AgentWarden) SetRegistry(reg *visual.Registry) {
 	p.registry = reg
 }
 
