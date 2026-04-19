@@ -3,22 +3,14 @@
 // Arsenal scores models by dot-product of preferences against model benchmarks.
 package arsenal
 
-import "github.com/dpopsuev/troupe/world"
-
-// TraitType is the ComponentType for a trait Set.
-const TraitType world.ComponentType = "trait"
-
 // Trait is a single behavioral trait with a value between 0.0 and 1.0.
 type Trait struct {
 	Name  string  `json:"name"`
 	Value float64 `json:"value"`
 }
 
-// Set is a collection of traits, attached as an ECS component.
+// Set is a collection of traits for model selection scoring.
 type Set []Trait
-
-// ComponentType implements world.Component.
-func (Set) ComponentType() world.ComponentType { return TraitType }
 
 // Get returns the value for a named trait, or 0.0 if not present.
 func (s Set) Get(name string) float64 {

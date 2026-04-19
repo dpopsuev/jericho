@@ -1,19 +1,19 @@
-package billing
+package broker
 
 import (
 	"context"
 
 	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
+	"github.com/dpopsuev/troupe/billing"
 )
 
-// BudgetHook implements broker.SpawnHook to enforce budget limits before spawning.
+// BudgetHook implements SpawnHook to enforce budget limits before spawning.
 type BudgetHook struct {
-	enforcer *BudgetEnforcer
+	enforcer *billing.BudgetEnforcer
 }
 
 // NewBudgetHook creates a hook that checks budget before each spawn.
-func NewBudgetHook(e *BudgetEnforcer) *BudgetHook {
+func NewBudgetHook(e *billing.BudgetEnforcer) *BudgetHook {
 	return &BudgetHook{enforcer: e}
 }
 
@@ -28,4 +28,4 @@ func (h *BudgetHook) PreSpawn(_ context.Context, config troupe.ActorConfig) erro
 // PostSpawn is a no-op observer.
 func (h *BudgetHook) PostSpawn(_ context.Context, _ troupe.ActorConfig, _ troupe.Actor, _ error) {}
 
-var _ broker.SpawnHook = (*BudgetHook)(nil)
+var _ SpawnHook = (*BudgetHook)(nil)
