@@ -11,6 +11,7 @@ import (
 var (
 	ErrNoAdmission = errors.New("troupe: no admission configured")
 	ErrNoBroker    = errors.New("troupe: no broker configured")
+	ErrNotFound    = errors.New("troupe: not found")
 )
 
 // Troupe is the unified Facade over Broker, Admission, and the agent
