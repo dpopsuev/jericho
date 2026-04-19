@@ -115,3 +115,32 @@ func (t *Troupe) Discover(role string) []AgentCard {
 func (t *Troupe) Perform(ctx context.Context, actor Actor, prompt string) (string, error) {
 	return actor.Perform(ctx, prompt)
 }
+
+// Embed creates an in-process Troupe with broker.Default() and a local
+// Lobby. Everything runs in the same process — no network, no daemon.
+// This is how Origami embeds Troupe as a library.
+func Embed(opts ...TroupeOption) (*Troupe, error) {
+	b, err := embeddedBroker()
+	if err != nil {
+		return nil, err
+	}
+	t := &Troupe{broker: b}
+	for _, o := range opts {
+		o(t)
+	}
+	return t, nil
+}
+
+// Connect creates a Troupe facade backed by a remote trouped server.
+// Pick, Spawn, Discover, Admit, Kick all go over HTTP to the server.
+// This is the client mode — the daemon runs the World, agents connect.
+func Connect(serverURL string, opts ...TroupeOption) *Troupe {
+	t := &Troupe{
+		broker:    &remoteBroker{serverURL: serverURL},
+		admission: &remoteAdmission{serverURL: serverURL},
+	}
+	for _, o := range opts {
+		o(t)
+	}
+	return t
+}

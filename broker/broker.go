@@ -162,6 +162,12 @@ func WithPerformGate(g troupe.Gate) Option {
 	return func(c *config) { c.performGates = append(c.performGates, g) }
 }
 
+func init() {
+	troupe.EmbeddedBrokerFactory = func() (troupe.Broker, error) {
+		return Default()
+	}
+}
+
 // New creates a bare Broker. No Arsenal, no billing, no resilience —
 // the consumer wires what they need via With* options.
 func New(endpoint string, opts ...Option) troupe.Broker {
