@@ -48,8 +48,9 @@ type AgentWarden struct {
 	subreaper world.EntityID                   // orphan adopter (0 = pool-level)
 	autoReap  map[world.EntityID]bool          // parents with auto-reap enabled
 	waitCh    map[world.EntityID]chan struct{} // notify Wait() callers
-	registry  *visual.Registry               // optional color registry (nil = no color assignment)
-	maxAgents int                              // 0 = unlimited
+	registry       *visual.Registry               // optional color registry (nil = no color assignment)
+	handlerFactory func(world.EntityID, AgentConfig) transport.MsgHandler
+	maxAgents      int // 0 = unlimited
 }
 
 // New creates an AgentWarden.
@@ -138,9 +139,15 @@ func (p *AgentWarden) Fork(ctx context.Context, role string, config AgentConfig,
 
 	// 4. Register in transport.
 	agentID := agentTransportID(id)
-	if err := p.transport.Register(agentID, func(ctx context.Context, msg transport.Message) (transport.Message, error) {
-		return transport.Message{From: agentID, Content: "ack"}, nil
-	}); err != nil {
+	var handler transport.MsgHandler
+	if p.handlerFactory != nil {
+		handler = p.handlerFactory(id, config)
+	} else {
+		handler = func(_ context.Context, _ transport.Message) (transport.Message, error) {
+			return transport.Message{From: agentID, Content: "ack"}, nil
+		}
+	}
+	if err := p.transport.Register(agentID, handler); err != nil {
 		p.launcher.Stop(ctx, id) //nolint:errcheck // best-effort on registration failure
 		p.world.Despawn(id)
 		return 0, fmt.Errorf("fork %s transport register: %w", role, err)
@@ -391,6 +398,13 @@ func (p *AgentWarden) get(id world.EntityID) (*agentEntry, bool) {
 // SetRegistry sets the color registry for automatic color assignment on Fork.
 func (p *AgentWarden) SetRegistry(reg *visual.Registry) {
 	p.registry = reg
+}
+
+// SetHandlerFactory sets the function that builds transport handlers for
+// spawned agents. When set, Fork registers the factory-built handler
+// instead of the default ack stub.
+func (p *AgentWarden) SetHandlerFactory(f func(world.EntityID, AgentConfig) transport.MsgHandler) {
+	p.handlerFactory = f
 }
 
 // SetMaxAgents sets the maximum number of agents this pool can manage.

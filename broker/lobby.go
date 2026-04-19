@@ -23,8 +23,9 @@ type Lobby struct {
 	transport    transport.Transport
 	controlLog   signal.EventLog
 	registry     *visual.Registry
-	gate         troupe.Gate
-	proxyFactory ProxyFactory
+	gate           troupe.Gate
+	proxyFactory   ProxyFactory
+	handlerFactory HandlerFactory
 
 	mu      sync.RWMutex
 	entries map[world.EntityID]*lobbyEntry
@@ -40,14 +41,20 @@ type lobbyEntry struct {
 // The callbackURL is the agent's A2A endpoint for forwarding messages.
 type ProxyFactory func(callbackURL string) transport.MsgHandler
 
+// HandlerFactory builds a transport message handler for an internal agent.
+// Called during Admit when the agent is not external. If nil, a default
+// ack handler is registered.
+type HandlerFactory func(id world.EntityID, config troupe.ActorConfig) transport.MsgHandler
+
 // LobbyConfig configures a Lobby.
 type LobbyConfig struct {
-	World        *world.World
-	Transport    transport.Transport
-	ControlLog   signal.EventLog
-	Registry     *visual.Registry
-	Gates        []troupe.Gate
-	ProxyFactory ProxyFactory
+	World          *world.World
+	Transport      transport.Transport
+	ControlLog     signal.EventLog
+	Registry       *visual.Registry
+	Gates          []troupe.Gate
+	ProxyFactory   ProxyFactory
+	HandlerFactory HandlerFactory
 }
 
 // NewLobby creates an Admission implementation.
@@ -61,9 +68,10 @@ func NewLobby(cfg LobbyConfig) *Lobby {
 		transport:    cfg.Transport,
 		controlLog:   cfg.ControlLog,
 		registry:     cfg.Registry,
-		gate:         gate,
-		proxyFactory: cfg.ProxyFactory,
-		entries:      make(map[world.EntityID]*lobbyEntry),
+		gate:           gate,
+		proxyFactory:   cfg.ProxyFactory,
+		handlerFactory: cfg.HandlerFactory,
+		entries:        make(map[world.EntityID]*lobbyEntry),
 	}
 }
 
@@ -128,9 +136,15 @@ func (l *Lobby) Admit(ctx context.Context, config troupe.ActorConfig) (world.Ent
 			return 0, fmt.Errorf("admission transport register: %w", err)
 		}
 	} else {
-		if err := l.transport.Register(agentID, func(_ context.Context, msg transport.Message) (transport.Message, error) {
-			return transport.Message{From: agentID, Content: "ack"}, nil
-		}); err != nil {
+		var handler transport.MsgHandler
+		if l.handlerFactory != nil {
+			handler = l.handlerFactory(id, config)
+		} else {
+			handler = func(_ context.Context, _ transport.Message) (transport.Message, error) {
+				return transport.Message{From: agentID, Content: "ack"}, nil
+			}
+		}
+		if err := l.transport.Register(agentID, handler); err != nil {
 			slog.WarnContext(ctx, "admission transport register failed",
 				slog.String("role", role),
 				slog.String("agent_id", string(agentID)),
