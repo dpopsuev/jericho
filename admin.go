@@ -55,6 +55,29 @@ type Admin interface {
 
 	// KillAll terminates all agents. Nuclear option.
 	KillAll(ctx context.Context, reason string) error
+
+	// --- Streaming ---
+
+	// --- Metadata ---
+
+	// Annotate attaches operator metadata to an agent.
+	Annotate(ctx context.Context, id world.EntityID, key, value string) error
+
+	// Annotations returns all operator metadata for an agent.
+	Annotations(ctx context.Context, id world.EntityID) map[string]string
+
+	// --- Streaming ---
+
+	// Watch returns a channel that emits agent state change events.
+	// Closes when ctx is canceled.
+	Watch(ctx context.Context) <-chan AgentEvent
+}
+
+// AgentEvent is a state change notification for the Watch stream.
+type AgentEvent struct {
+	Kind     string         `json:"kind"`
+	EntityID world.EntityID `json:"entity_id"`
+	Source   string         `json:"source"`
 }
 
 // AgentFilter selects agents for the Agents query.

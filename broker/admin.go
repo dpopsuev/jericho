@@ -169,6 +169,53 @@ func (a *DefaultAdmin) CordonGate() troupe.Gate {
 	}
 }
 
+func (a *DefaultAdmin) Annotate(_ context.Context, id world.EntityID, key, value string) error {
+	ann, ok := world.TryGet[world.Annotation](a.world, id)
+	if !ok {
+		ann = world.Annotation{Data: make(map[string]string)}
+	}
+	if ann.Data == nil {
+		ann.Data = make(map[string]string)
+	}
+	ann.Data[key] = value
+	world.TryAttach(a.world, id, ann)
+	return nil
+}
+
+func (a *DefaultAdmin) Annotations(_ context.Context, id world.EntityID) map[string]string {
+	ann, ok := world.TryGet[world.Annotation](a.world, id)
+	if !ok || ann.Data == nil {
+		return nil
+	}
+	out := make(map[string]string, len(ann.Data))
+	for k, v := range ann.Data {
+		out[k] = v
+	}
+	return out
+}
+
+func (a *DefaultAdmin) Watch(ctx context.Context) <-chan troupe.AgentEvent {
+	ch := make(chan troupe.AgentEvent, 64)
+	if a.control != nil {
+		a.control.OnEmit(func(e signal.Event) {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- troupe.AgentEvent{
+				Kind:   e.Kind,
+				Source: e.Source,
+			}:
+			default:
+			}
+		})
+	}
+	go func() {
+		<-ctx.Done()
+		close(ch)
+	}()
+	return ch
+}
+
 func (a *DefaultAdmin) KillAll(ctx context.Context, reason string) error {
 	a.emitAudit(ctx, "kill_all", 0, reason)
 	a.warden.KillAll(ctx)
