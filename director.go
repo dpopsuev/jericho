@@ -1,6 +1,9 @@
 package troupe
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // EventKind classifies what happened. String for OCP — consumers can
 // define domain-specific kinds without modifying Troupe.
@@ -43,4 +46,10 @@ type Event struct {
 // Recursive: a Detail can wrap an inner Detail (protocol layer pattern).
 type EventDetail interface {
 	String() string
+}
+
+// Director is the consumer contract for orchestration strategies.
+// Origami implements CircuitDirector. Djinn implements LocalDirector.
+type Director interface {
+	Direct(ctx context.Context, broker Broker) (<-chan Event, error)
 }
