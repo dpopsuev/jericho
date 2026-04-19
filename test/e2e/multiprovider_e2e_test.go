@@ -1,6 +1,6 @@
 //go:build e2e
 
-package testkit
+package e2e_test
 
 import (
 	"bytes"
@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/troupe/testkit"
 	"github.com/dpopsuev/troupe/visual"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // providerSpec defines how to invoke a CLI provider in non-interactive mode.
@@ -243,7 +243,7 @@ func TestE2E_MixedQuartet(t *testing.T) {
 		bus.Emit(&signal.Signal{Event: "message_sent", Agent: from})
 	}
 
-	AssertSignalCount(t, bus, "message_sent", len(agents)-1)
+	testkit.AssertSignalCount(t, bus, "message_sent", len(agents)-1)
 
 	stats := view.Stats()
 	if stats.TotalEntities != len(agents) {
@@ -256,5 +256,5 @@ func TestE2E_MixedQuartet(t *testing.T) {
 		t.Errorf("collectives = %d, want 1", stats.Collectives)
 	}
 
-	t.Log("mixed quartet complete — all 4 providers communicated through Bugle A2A")
+	t.Log("mixed quartet complete — all 4 providers communicated through Troupe A2A")
 }

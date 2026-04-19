@@ -4,7 +4,7 @@
 // vectors over normalized traits. Declarative selection resolves down to
 // imperative map lookup.
 //
-// Zero Jericho imports — stdlib + yaml.v3 only.
+// Zero upstream imports — stdlib + yaml.v3 only.
 package arsenal
 
 import "errors"

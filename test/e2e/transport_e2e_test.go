@@ -1,23 +1,23 @@
 //go:build e2e
 
-package testkit
+package e2e_test
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/troupe/testkit"
 	"github.com/dpopsuev/troupe/visual"
+	"github.com/dpopsuev/troupe/world"
 )
 
 // Feature: 2 same-provider agents.
 func TestE2E_TwoAgents_RequestConfirm(t *testing.T) {
-	w, agents := QuickWorld(2, "Refactor")
-	tr := QuickTransport(w, agents)
+	w, agents := testkit.QuickWorld(2, "Refactor")
+	tr := testkit.QuickTransport(w, agents)
 	defer tr.Close()
 
 	ctx := context.Background()
@@ -83,8 +83,8 @@ func TestE2E_MixedElements_Collaborate(t *testing.T) {
 
 	tr := transport.NewLocalTransport()
 	defer tr.Close()
-	_ = tr.Register(fire.Short(), EchoHandler())
-	_ = tr.Register(water.Short(), EchoHandler())
+	_ = tr.Register(fire.Short(), testkit.EchoHandler())
+	_ = tr.Register(water.Short(), testkit.EchoHandler())
 
 	// fire sends to water, verify round-trip.
 	ctx := context.Background()
@@ -122,8 +122,8 @@ func TestE2E_MixedElements_Collaborate(t *testing.T) {
 
 // Feature: Full stack — World + Identity + Transport + Signal + WorldView.
 func TestE2E_FullStack_WorldIdentityTransportSignalView(t *testing.T) {
-	w, agents := QuickWorld(3, "Calibration")
-	tr := QuickTransport(w, agents)
+	w, agents := testkit.QuickWorld(3, "Calibration")
+	tr := testkit.QuickTransport(w, agents)
 	defer tr.Close()
 
 	bus := signal.NewMemBus()
@@ -214,7 +214,7 @@ func TestE2E_FullStack_WorldIdentityTransportSignalView(t *testing.T) {
 	}
 
 	// 9. Verify signal bus recorded messages.
-	AssertSignalCount(t, bus, "message_sent", 3)
+	testkit.AssertSignalCount(t, bus, "message_sent", 3)
 
 	view.Unsubscribe(diffs)
 

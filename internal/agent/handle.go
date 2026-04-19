@@ -1,4 +1,4 @@
-// Package agent provides a human-readable API over Bugle's internal
+// Package agent provides a human-readable API over Troupe's internal
 // subsystems (pool, transport, world, signal). Solo wraps a
 // single agent handle — internal Actor implementation.
 package agent

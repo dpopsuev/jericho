@@ -4,9 +4,11 @@
 
 # Troupe
 
-**AI Agent Broker** — the contract library that makes multi-agent orchestration possible without vendor lock-in.
+**AI Agent Platform** — infrastructure + harness components for multi-agent orchestration without vendor lock-in.
 
-Troupe does not orchestrate. Directors bring orchestration strategies. Troupe provides the actors.
+Troupe has two faces:
+1. **Server** — authoritative ECS World managing agent lifecycle, admission, and communication via A2A
+2. **Library** — exportable harness components (LLM drivers, billing, resilience, model selection, scoring)
 
 ## Install
 
@@ -14,46 +16,14 @@ Troupe does not orchestrate. Directors bring orchestration strategies. Troupe pr
 go get github.com/dpopsuev/troupe@latest
 ```
 
-## Quick Start
-
-```go
-package main
-
-import (
-    "context"
-    "fmt"
-
-    "github.com/dpopsuev/troupe"
-)
-
-func main() {
-    ctx := context.Background()
-    broker := troupe.NewBroker("")
-
-    // Spawn an actor
-    actor, _ := broker.Spawn(ctx, troupe.ActorConfig{
-        Model: "sonnet",
-        Role:  "analyst",
-    })
-
-    // Perform work
-    response, _ := actor.Perform(ctx, "Analyze this codebase")
-    fmt.Println(response)
-
-    // Cleanup
-    actor.Kill(ctx)
-}
-```
-
 ## Core API
-
-3 interfaces, 6 methods:
 
 ```go
 // Broker casts and hires actors for Directors.
 type Broker interface {
     Pick(ctx context.Context, prefs Preferences) ([]ActorConfig, error)
     Spawn(ctx context.Context, config ActorConfig) (Actor, error)
+    Discover(role string) []AgentCard
 }
 
 // Actor is what the Broker gives back — an agent ready to perform.
@@ -72,65 +42,45 @@ type Director interface {
 ## Architecture
 
 ```
-Consumer (Origami, Djinn, custom)
+Djinn (operator frontend)
     |
     v
- Director  ──>  Broker  ──>  Actor
-                   |
-                   v
-                Driver (ACP, HTTP, custom)
+Origami (orchestration + tools)
+    |
+    v
+ Troupe (infrastructure)
+    |
+    ├── Server: World, Broker, Admission, Signal, Transport
+    └── Library: execution/, billing/, resilience/, arsenal/, referee/
 ```
 
-- **Broker** — casts actors, manages lifecycle
-- **Actor** — performs work, reports readiness
-- **Director** — orchestrates actors via Broker (consumer-defined)
-- **Driver** — provisions agents (ACP subprocess, HTTP API, custom)
-
-## Packages
+## Server Packages
 
 | Package | Purpose |
 |---------|---------|
-| `troupe` | Core interfaces: Broker, Actor, Director, Driver, Event |
-| `identity/` | Agent identity: Color, Archetype, TraitVector, Mission |
-| `arsenal/` | Model catalog and selection |
-| `signal/` | Event bus for agent lifecycle signals |
-| `collective/` | N agents behind one Actor interface (strategies: Dialectic, Race, RoundRobin, Scatter) |
-| `world/` | ECS (Entity Component System) — Broker's internal state |
-| `worldview/` | Read-only World projections |
-| `resilience/` | CircuitBreaker, Retry, RateLimiter |
+| `broker/` | Broker implementation, Lobby admission, multi-driver adapter |
+| `signal/` | Three-bus architecture (ControlLog, WorkLog, StatusLog), Andon health |
+| `world/` | ECS entity-component store |
+| `collective/` | Multi-agent primitives (Race, RoundRobin, Scatter, Dialectic, Arbiter) |
+
+## Library Packages
+
+| Package | Purpose |
+|---------|---------|
+| `execution/` | LLM provider abstraction (Anthropic, OpenAI, Gemini, Vertex, OpenRouter) |
 | `billing/` | Token tracking and budget enforcement |
-| `testkit/` | MockBroker, MockActor, LinearDirector, FanOutDirector |
+| `resilience/` | CircuitBreaker, Retry, RateLimiter, Timeout |
+| `arsenal/` | Trait-scored model catalog and selection |
+| `referee/` | YAML-defined weighted scoring engine |
+| `visual/` | Cosmetic identity (Color, Palette, Element) |
+| `testkit/` | MockBroker, MockActor, test directors |
 
 ## Consumers
 
-| Consumer | Role | Import Path |
-|----------|------|-------------|
-| [Origami](https://github.com/dpopsuev/origami) | Circuit Director — YAML DAG orchestration | `agentport/` adapter |
-| Djinn | Local Director — task orchestration | `jerichoport/` adapter |
-| Olympiad | Agent Mesh — distributed broker service | shared World |
-
-## Driver
-
-Troupe ships with ACP (Agent Communication Protocol) as the default driver — subprocess agents over stdio JSON-RPC. Custom drivers implement two methods:
-
-```go
-type Driver interface {
-    Start(ctx context.Context, id world.EntityID, config ActorConfig) error
-    Stop(ctx context.Context, id world.EntityID) error
-}
-
-broker := troupe.NewBroker("", troupe.WithDriver(myDriver))
-```
-
-## Remote Broker
-
-```go
-// Local: in-process ACP
-broker := troupe.NewBroker("")
-
-// Remote: HTTP proxy to a running Troupe service
-broker := troupe.NewBroker("https://cluster:8080")
-```
+| Consumer | Role |
+|----------|------|
+| [Origami](https://github.com/dpopsuev/origami) | Circuit orchestration, instruments, Virtuoso agent harness |
+| [Djinn](https://github.com/dpopsuev/djinn) | Operator frontend, REPL, HITL, context engineering |
 
 ## License
 

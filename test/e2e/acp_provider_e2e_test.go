@@ -5,8 +5,8 @@
 // Each test connects to a REAL ACP agent (Cursor, Claude, Gemini, Codex).
 // Costs real money. Requires the agent binary on PATH.
 //
-// Run: go test ./testkit/ -tags=e2e -run TestRealACP -v -timeout 120s
-package testkit
+// Run: go test ./test/e2e/ -tags=e2e -run TestRealACP -v -timeout 120s
+package e2e_test
 
 import (
 	"context"
@@ -32,7 +32,7 @@ func runRealACPTest(t *testing.T, agentName, binary string) {
 	defer cancel()
 
 	client, err := acp.NewClient(agentName,
-		acp.WithClientInfo(acp.ClientInfo{Name: "bugle-e2e", Version: "test"}),
+		acp.WithClientInfo(acp.ClientInfo{Name: "troupe-e2e", Version: "test"}),
 	)
 	if err != nil {
 		t.Fatalf("NewClient(%q): %v", agentName, err)
@@ -50,7 +50,7 @@ func runRealACPTest(t *testing.T, agentName, binary string) {
 	// Send a deterministic prompt.
 	client.Send(acp.Message{
 		Role:    acp.RoleUser,
-		Content: "Respond with exactly the text: BUGLE_ACP_E2E_OK. Nothing else.",
+		Content: "Respond with exactly the text: TROUPE_ACP_E2E_OK. Nothing else.",
 	})
 
 	ch, err := client.Chat(ctx)
@@ -83,8 +83,8 @@ func runRealACPTest(t *testing.T, agentName, binary string) {
 
 	t.Logf("agent %s response: %s", agentName, response)
 
-	if !strings.Contains(response, "BUGLE_ACP_E2E_OK") {
-		t.Errorf("response doesn't contain BUGLE_ACP_E2E_OK: %s", response)
+	if !strings.Contains(response, "TROUPE_ACP_E2E_OK") {
+		t.Errorf("response doesn't contain TROUPE_ACP_E2E_OK: %s", response)
 	}
 
 	// Verify conversation history.

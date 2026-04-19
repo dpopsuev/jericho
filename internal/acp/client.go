@@ -141,7 +141,7 @@ func NewClient(agentName string, opts ...Option) (*Client, error) {
 		agentArgs:        args[1:],
 		log:              slog.Default(),
 		cmdFactory:       exec.CommandContext,
-		clientInfo:       ClientInfo{Name: "bugle", Version: "0.11.0"},
+		clientInfo:       ClientInfo{Name: "troupe", Version: "0.14.0"},
 		handshakeTimeout: 10 * time.Second,
 		sessionTimeout:   10 * time.Second,
 		promptTimeout:    60 * time.Second,

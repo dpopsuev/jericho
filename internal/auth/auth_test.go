@@ -7,7 +7,7 @@ import (
 )
 
 func TestBearer_Authenticate(t *testing.T) {
-	const envVar = "TEST_BUGLE_AUTH_TOKEN"
+	const envVar = "TEST_TROUPE_AUTH_TOKEN"
 	t.Setenv(envVar, "secret-123")
 
 	b := NewBearer(envVar)

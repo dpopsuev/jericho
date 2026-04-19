@@ -1,16 +1,17 @@
-package testkit
+package e2e_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/troupe/testkit"
 )
 
 func TestDirector_LinearPipeline(t *testing.T) {
-	broker := NewMockBroker(1)
-	director := &LinearDirector{
-		Steps: []Step{
+	broker := testkit.NewMockBroker(1)
+	director := &testkit.LinearDirector{
+		Steps: []testkit.Step{
 			{Name: "classify", Prompt: "classify this incident"},
 			{Name: "investigate", Prompt: "investigate root cause"},
 			{Name: "report", Prompt: "write the report"},
@@ -55,13 +56,13 @@ func TestDirector_LinearPipeline(t *testing.T) {
 }
 
 func TestDirector_LinearPipeline_FailureMidway(t *testing.T) {
-	broker := NewMockBroker(1)
+	broker := testkit.NewMockBroker(1)
 	broker.Actors[0].SetFailNext() // second Perform will work, but we set fail on first
 
 	// Actually, SetFailNext fails the NEXT call. Let's make step 2 fail.
-	broker2 := NewMockBroker(1)
-	director := &LinearDirector{
-		Steps: []Step{
+	broker2 := testkit.NewMockBroker(1)
+	director := &testkit.LinearDirector{
+		Steps: []testkit.Step{
 			{Name: "step-1", Prompt: "first"},
 			{Name: "step-2", Prompt: "second"},
 			{Name: "step-3", Prompt: "third"},
@@ -88,8 +89,8 @@ func TestDirector_LinearPipeline_FailureMidway(t *testing.T) {
 }
 
 func TestDirector_FanOut(t *testing.T) {
-	broker := NewMockBroker(3)
-	director := &FanOutDirector{
+	broker := testkit.NewMockBroker(3)
+	director := &testkit.FanOutDirector{
 		Prompt: "analyze this code",
 		Count:  3,
 	}
@@ -134,10 +135,10 @@ func TestDirector_FanOut(t *testing.T) {
 }
 
 func TestDirector_FanOut_PartialFailure(t *testing.T) {
-	broker := NewMockBroker(3)
+	broker := testkit.NewMockBroker(3)
 	broker.Actors[1].SetFailNext() // actor-2 will fail
 
-	director := &FanOutDirector{
+	director := &testkit.FanOutDirector{
 		Prompt: "analyze",
 		Count:  3,
 	}
@@ -172,9 +173,9 @@ func TestDirector_FanOut_PartialFailure(t *testing.T) {
 }
 
 func TestDirector_ContextCancellation(t *testing.T) {
-	broker := NewMockBroker(1)
-	director := &LinearDirector{
-		Steps: []Step{
+	broker := testkit.NewMockBroker(1)
+	director := &testkit.LinearDirector{
+		Steps: []testkit.Step{
 			{Name: "step-1", Prompt: "first"},
 			{Name: "step-2", Prompt: "second"},
 		},

@@ -3,8 +3,8 @@ package testkit
 import (
 	"fmt"
 
-	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/transport"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/world"
 )
 

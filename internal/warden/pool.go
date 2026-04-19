@@ -1,6 +1,6 @@
 // Package pool manages agent process lifecycles with Linux-inspired
 // process supervision: parent-child tracking, zombie reaping, orphan
-// adoption. Maps Bugle World entities to running processes via the
+// adoption. Maps World entities to running processes via the
 // AgentSupervisor interface. Process-agnostic: consumers inject their own AgentSupervisor.
 package warden
 

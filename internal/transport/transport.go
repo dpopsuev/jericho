@@ -3,7 +3,6 @@
 // HTTPTransport is deferred.
 //
 // HTTPTransport connects to remote A2A agents via a2a-go SDK.
-// Deferred to BGL-TSK-16b — requires github.com/a2aproject/a2a-go dependency.
 package transport
 
 import (

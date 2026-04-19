@@ -4,7 +4,7 @@
 // concurrent prompts, retry recovers from transient failure,
 // budget enforcer blocks over-limit agents, agent lookup
 // discovers and evicts stale agents.
-package testkit
+package e2e_test
 
 import (
 	"context"

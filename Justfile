@@ -1,4 +1,4 @@
-# Bugle — ECS Agent Framework with A2A Protocol
+# Troupe — AI Agent Platform with A2A Protocol
 # Flywheel: build → lint → test before every commit
 
 default: check

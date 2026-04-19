@@ -1,6 +1,6 @@
 //go:build e2e
 
-package testkit
+package e2e_test
 
 import (
 	"context"
@@ -9,15 +9,16 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/internal/transport"
 	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/troupe/visual"
 	"github.com/dpopsuev/troupe/world"
 )
 
 func TestStress_10Agents_50Messages(t *testing.T) {
-	w, agents := QuickWorld(10, "Stress")
-	tr := QuickTransport(w, agents)
+	w, agents := testkit.QuickWorld(10, "Stress")
+	tr := testkit.QuickTransport(w, agents)
 	defer tr.Close()
 
 	ctx := context.Background()

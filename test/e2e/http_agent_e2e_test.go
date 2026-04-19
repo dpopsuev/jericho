@@ -2,9 +2,7 @@
 //
 // Proves the full stack: HTTPTransport → ACP agent → real LLM → response.
 // Skips if no agent CLI is available in PATH.
-//
-// TRP-TSK-99, TRP-GOL-15
-package testkit
+package e2e_test
 
 import (
 	"bytes"

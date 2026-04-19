@@ -2,10 +2,27 @@
 
 ## What is Troupe
 
-Troupe is an AI agent broker — ECS framework for multi-agent orchestration without vendor lock-in. Three core interfaces (Broker, Actor, Director) compose agents, strategies, and drivers into collectives.
+Troupe is a dual-face AI agent platform:
+1. **Server**: Authoritative ECS World for multi-agent orchestration — lifecycle, A2A, admission, buses, scheduling
+2. **Library**: Exportable harness components for agent builders — LLM drivers, billing, resilience, model selection, scoring, predicates
+
+Three core interfaces (Broker, Actor, Director) compose agents, strategies, and drivers into collectives.
 
 - Repo: github.com/dpopsuev/troupe
-- Scribe scope: troupe (legacy artifacts may use BGL- or JRC- prefixes)
+- Scribe scope: troupe
+
+## Platform Boundaries
+
+Troupe is part of a three-project platform. Each project owns specific boundaries:
+
+| Boundary | Owner | What |
+|---|---|---|
+| World ↔ Agent | **Troupe** | A2A, Admission, lifecycle, ECS, buses, resilience, billing, scoring |
+| Agent ↔ Tools | **Origami** | Workbench instruments, normalized tool I/O, strict mode |
+| Agent Orchestration | **Origami** | Circuits, graph-walking, Virtuoso harness |
+| Human ↔ Agent | **Djinn** | Operator frontend, REPL, HITL, Cortex, context engineering |
+
+Dependency direction: `Djinn -> Origami -> Troupe`
 
 ## Ecosystem Dependency Rules
 
@@ -13,45 +30,57 @@ Troupe is an AI agent broker — ECS framework for multi-agent orchestration wit
 
 - Troupe NEVER imports origami/ or djinn/ or hegemony/
 - Troupe defines interfaces (Actor, Broker, Director, Driver, Meter), consumers implement them
-- Consumer-to-consumer communication goes through the protocol layer, not Go imports
+- Consumer-to-consumer communication goes through A2A protocol, not Go imports
 
-Dependency direction: `Origami -> Troupe <- Djinn`
+## Architecture: Server + Library
 
-## Package Map
+### Server packages (authoritative multi-agent world)
 
 ```
-Root package   — Broker, Actor, Director, Driver, Meter interfaces
-arsenal/       — Embedded model catalog (trait-scored selection, snapshot pinning)
-billing/       — Token/cost tracking (CostBill, period management, enforcement)
-broker/        — Broker implementation, multi-driver adapter, hooked actors
-collective/    — Multi-agent collectives (Dialectic, Arbiter, pluggable Selector/Executor)
-director/      — Director interface (orchestration contract)
-execution/     — Provider config wrapper (ConfiguredProvider, any-llm integration)
-identity/      — Agent archetypes (4 Thesis + 1 Antithesis), Color, Shade, Palette
-referee/       — Event-driven scoring engine (YAML-defined weighted Scorecard rules)
-resilience/    — Circuit breaker, retry, timeout (pure algorithms)
-signal/        — Event bus (Bus, DurableBus), Andon health probes, tracing, EventStore
+Root package   — Broker, Actor, Director, Driver, Meter, Gate, Pick, Threshold, Admission, AgentCard interfaces
+broker/        — Broker implementation, Lobby (admission), multi-driver adapter, hooked actors
+signal/        — Three-bus architecture (ControlLog, WorkLog, StatusLog), Andon health, EventStore
 world/         — ECS entity-component store (Alive/Ready, ComponentType, hierarchy edges)
-testkit/       — Test fixtures (MockActor, StubActor, LinearDirector, FanoutDirector)
+collective/    — Multi-agent primitives (Race, RoundRobin, Scatter, Scale, Dialectic, Arbiter, Fallback)
+```
+
+### Library packages (exportable harness components)
+
+```
+execution/     — LLM provider abstraction (any-llm-go: Anthropic, OpenAI, Gemini, Vertex, OpenRouter)
+billing/       — Token/cost tracking (CostBill, period management, BudgetEnforcer) — dual-homed: server + agent
+referee/       — Event-driven scoring engine (YAML Scorecards, weighted rules) — dual-homed: server + agent
+arsenal/       — Embedded model catalog (trait-scored selection, TraitVector, snapshot pinning)
+resilience/    — Circuit breaker, retry, timeout, rate limiter (pure algorithms)
+visual/        — Cosmetic identity (Color, Palette, Element, View)
+testkit/       — Test fixtures (MockActor, MockBroker, LinearDirector, FanOutDirector, BusSet helpers)
 ```
 
 ### Internal packages
 
 ```
-internal/acp/       — Agent Context Protocol launcher (JSON-RPC over stdio)
+internal/acp/       — Agent Context Protocol launcher (JSON-RPC over stdio, process spawning)
 internal/agent/     — Solo agent implementation (Actor wrapper)
-internal/auth/      — Authentication abstraction (Authenticate interface)
-internal/protocol/  — Wire protocol types (message envelopes, contracts)
-internal/transport/ — A2A messaging (LocalTransport, in-process channels)
+internal/auth/      — Authentication abstraction (Bearer, Identity) — to be promoted to public auth/
+internal/transport/ — A2A messaging (LocalTransport, HTTPTransport, A2A server/proxy) — core types to be promoted
 internal/warden/    — Agent process supervision (Fork/Kill/Wait, restart, zombie reaping)
 ```
+
+## Protocol Decisions
+
+- **Uniform A2A**: Server uses A2A (HTTP JSON-RPC) for ALL agent communication — local or remote. No bifurcated transport.
+- **ACP**: Remains as process launcher. Agents register back via A2A through Admission/Lobby.
+- **Heartbeat vs Andon**: Heartbeat = control plane liveness (transport-level lastSeen). Andon = data plane readiness (StatusLog: Nominal/Degraded/Failure/Blocked/Dead).
+- **Three buses**: ControlLog (routing), WorkLog (task lifecycle), StatusLog (health/observability). All durable.
 
 ## Naming Conventions
 
 - **Core interfaces**: Actor (Perform/Ready/Kill), Broker, Director, Driver, Meter
+- **Predicates**: Gate (allow/deny), Pick[T] (selection), Threshold (numeric condition)
 - **Health signals**: Andon (IEC 60073 stack light). NOT horn.
 - **Events**: EventKind (Started, Completed, Failed, Transition, Done)
-- **Archetypes**: Thesis (Sorter, Seeker, etc.) + Antithesis in identity/
+- **Identity**: AgentCard (public interface), ActorConfig (input/job spec), Actor (running instance)
+- **Visual**: Color, Palette, Element — cosmetic only, in visual/ package
 - **Project name**: Troupe. NOT Jericho or Bugle.
 
 ## Go Conventions

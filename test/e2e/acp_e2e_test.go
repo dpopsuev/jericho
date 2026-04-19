@@ -1,9 +1,9 @@
-// acp_e2e_test.go — E2E tests for bugle/acp through the agent.
+// acp_e2e_test.go — E2E tests for ACP through the agent.
 //
 // Proves: ACPLauncher plugs into Staff → Spawn starts a mock ACP agent →
 // Client.Send + Client.Chat streams events → Kill shuts down cleanly.
 // Uses a mock bash ACP server — no real LLM, no cost.
-package testkit
+package e2e_test
 
 import (
 	"context"
@@ -49,7 +49,7 @@ func mockCmdFactory(ctx context.Context, name string, args ...string) *exec.Cmd 
 func TestACPE2E_ClientLifecycle(t *testing.T) {
 	client, err := acp.NewClient("cursor",
 		acp.WithCommandFactory(mockCmdFactory),
-		acp.WithClientInfo(acp.ClientInfo{Name: "bugle-e2e", Version: "test"}),
+		acp.WithClientInfo(acp.ClientInfo{Name: "troupe-e2e", Version: "test"}),
 	)
 	if err != nil {
 		t.Fatal(err)
