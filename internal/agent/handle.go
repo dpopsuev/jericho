@@ -1,6 +1,6 @@
 // Package agent provides a human-readable API over Troupe's internal
 // subsystems (pool, transport, world, signal). Solo wraps a
-// single agent handle — internal Actor implementation.
+// single agent handle — internal Agent implementation.
 package agent
 
 import (
@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/internal/warden"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/internal/warden"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // Solo wraps all subsystems into one human-readable object for a
@@ -48,7 +48,7 @@ func (a *Solo) String() string {
 // ---------------------------------------------------------------------------
 
 // Ready returns true if the agent can accept work (readiness probe).
-// Implements troupe.Actor.
+// Implements troupe.Agent.
 func (a *Solo) Ready() bool {
 	ready, ok := world.TryGet[world.Ready](a.world, a.id)
 	return ok && ready.Ready
@@ -74,7 +74,7 @@ func (a *Solo) Uptime() time.Duration {
 // ---------------------------------------------------------------------------
 
 // Perform sends a prompt to this agent and blocks until a response is received.
-// Implements troupe.Actor.
+// Implements troupe.Agent.
 func (a *Solo) Perform(ctx context.Context, content string) (string, error) {
 	msg := transport.Message{
 		From:    "agent",

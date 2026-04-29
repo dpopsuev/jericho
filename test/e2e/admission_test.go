@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/referee"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/testkit"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/referee"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/testkit"
+	"github.com/dpopsuev/tangle/world"
 )
 
 func TestE2E_TwoAgents_SameAdmission_ThreeBuses(t *testing.T) {
@@ -41,13 +41,13 @@ func TestE2E_TwoAgents_SameAdmission_ThreeBuses(t *testing.T) {
 	})
 
 	// 1. Admit internal agent.
-	internalID, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "analyzer"})
+	internalID, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "analyzer"})
 	if err != nil {
 		t.Fatalf("Admit internal: %v", err)
 	}
 
 	// 2. Admit external agent.
-	externalID, err := lobby.Admit(context.Background(), troupe.ActorConfig{
+	externalID, err := lobby.Admit(context.Background(), troupe.AgentConfig{
 		Role:        "reviewer",
 		CallbackURL: "https://remote.example.com",
 	})

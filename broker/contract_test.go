@@ -4,17 +4,17 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
-	brokerpkg "github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/collective"
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle"
+	brokerpkg "github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/collective"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 // --- Compile-time interface checks ---
 
 var _ troupe.Broker = (*brokerpkg.DefaultBroker)(nil)
 var _ troupe.Caster = (*brokerpkg.DefaultBroker)(nil)
-var _ troupe.Actor = (*collective.Collective)(nil)
+var _ troupe.Agent = (*collective.Collective)(nil)
 var _ brokerpkg.PickStrategy = brokerpkg.FirstMatch{}
 var _ troupe.Meter = (*brokerpkg.InMemoryMeter)(nil)
 

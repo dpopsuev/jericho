@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	troupe "github.com/dpopsuev/troupe"
+	troupe "github.com/dpopsuev/tangle"
 )
 
 // CircuitState represents the current state of a circuit breaker.

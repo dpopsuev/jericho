@@ -5,9 +5,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // mockLauncher tracks Start/Stop calls for testing.

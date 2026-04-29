@@ -5,9 +5,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // RED: Driver must be a proper public interface, not a type alias.
@@ -24,7 +24,7 @@ func newTestDriver() *testDriver {
 	}
 }
 
-func (d *testDriver) Start(_ context.Context, id world.EntityID, _ troupe.ActorConfig) error {
+func (d *testDriver) Start(_ context.Context, id world.EntityID, _ troupe.AgentConfig) error {
 	d.started[id] = true
 	return nil
 }
@@ -39,7 +39,7 @@ func TestDriver_Interface(t *testing.T) {
 	driver := newTestDriver()
 	b := broker.New("", broker.WithDriver(driver))
 
-	actor, err := b.Spawn(context.Background(), troupe.ActorConfig{Role: "test"})
+	actor, err := b.Spawn(context.Background(), troupe.AgentConfig{Role: "test"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
@@ -49,7 +49,7 @@ func TestDriver_Interface(t *testing.T) {
 		t.Error("Driver.Start was not called")
 	}
 
-	// Actor should be usable
+	// Agent should be usable
 	if !actor.Ready() {
 		t.Error("actor not ready after spawn")
 	}
@@ -96,7 +96,7 @@ func TestDriverValidator_RejectsInvalidEnv(t *testing.T) {
 		envErr:     errMissing,
 	}
 	b := broker.New("", broker.WithDriver(driver))
-	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Role: "test"})
+	_, err := b.Spawn(context.Background(), troupe.AgentConfig{Role: "test"})
 	if err == nil {
 		t.Fatal("expected env validation error")
 	}
@@ -108,7 +108,7 @@ func TestDriverValidator_RejectsInvalidEnv(t *testing.T) {
 func TestDriverValidator_PassesValidEnv(t *testing.T) {
 	driver := &validatingDriver{testDriver: *newTestDriver()}
 	b := broker.New("", broker.WithDriver(driver))
-	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Role: "test"})
+	_, err := b.Spawn(context.Background(), troupe.AgentConfig{Role: "test"})
 	if err != nil {
 		t.Fatalf("Spawn with valid env: %v", err)
 	}

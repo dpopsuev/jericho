@@ -6,20 +6,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 
-	"github.com/dpopsuev/troupe/arsenal"
-	"github.com/dpopsuev/troupe/billing"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/collective"
-	"github.com/dpopsuev/troupe/referee"
-	"github.com/dpopsuev/troupe/resilience"
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle/arsenal"
+	"github.com/dpopsuev/tangle/billing"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/collective"
+	"github.com/dpopsuev/tangle/referee"
+	"github.com/dpopsuev/tangle/resilience"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 func TestFirstMatch_ReturnsRequestedCount(t *testing.T) {
-	candidates := []troupe.ActorConfig{{Role: "a"}, {Role: "b"}, {Role: "c"}}
+	candidates := []troupe.AgentConfig{{Role: "a"}, {Role: "b"}, {Role: "c"}}
 	result := broker.FirstMatch{}.Choose(context.Background(), candidates, troupe.Preferences{Count: 2})
 	if len(result) != 2 {
 		t.Fatalf("got %d, want 2", len(result))
@@ -27,7 +27,7 @@ func TestFirstMatch_ReturnsRequestedCount(t *testing.T) {
 }
 
 func TestFirstMatch_ClampsToAvailable(t *testing.T) {
-	candidates := []troupe.ActorConfig{{Role: "a"}}
+	candidates := []troupe.AgentConfig{{Role: "a"}}
 	result := broker.FirstMatch{}.Choose(context.Background(), candidates, troupe.Preferences{Count: 5})
 	if len(result) != 1 {
 		t.Fatalf("got %d, want 1", len(result))
@@ -35,7 +35,7 @@ func TestFirstMatch_ClampsToAvailable(t *testing.T) {
 }
 
 func TestFirstMatch_DefaultCountOne(t *testing.T) {
-	candidates := []troupe.ActorConfig{{Role: "a"}, {Role: "b"}}
+	candidates := []troupe.AgentConfig{{Role: "a"}, {Role: "b"}}
 	result := broker.FirstMatch{}.Choose(context.Background(), candidates, troupe.Preferences{})
 	if len(result) != 1 {
 		t.Fatalf("got %d, want 1 (default)", len(result))
@@ -92,7 +92,7 @@ func TestSpawn_WithProviderResolver_CallsLLM(t *testing.T) {
 		broker.WithProviderResolver(resolver),
 	)
 
-	actor, err := b.Spawn(context.Background(), troupe.ActorConfig{
+	actor, err := b.Spawn(context.Background(), troupe.AgentConfig{
 		Model:    "test-model",
 		Provider: "test-provider",
 		Role:     "worker",
@@ -123,7 +123,7 @@ func TestSpawn_WithTracker_RecordsTokens(t *testing.T) {
 		broker.WithTracker(tracker),
 	)
 
-	actor, err := b.Spawn(context.Background(), troupe.ActorConfig{
+	actor, err := b.Spawn(context.Background(), troupe.AgentConfig{
 		Model: "test-model", Provider: "test", Role: "worker",
 	})
 	if err != nil {
@@ -222,7 +222,7 @@ func TestSpawn_WithReferee_ScoresEvents(t *testing.T) {
 		broker.WithReferee(ref),
 	)
 
-	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Role: "scorer"})
+	_, err := b.Spawn(context.Background(), troupe.AgentConfig{Role: "scorer"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
@@ -259,7 +259,7 @@ func TestSpawn_WithRetry_RecoversTransient(t *testing.T) {
 		}),
 	)
 
-	actor, err := b.Spawn(context.Background(), troupe.ActorConfig{
+	actor, err := b.Spawn(context.Background(), troupe.AgentConfig{
 		Model: "test", Provider: "test", Role: "retrier",
 	})
 	if err != nil {

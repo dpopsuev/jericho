@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 // Sentinel errors for dialectic pair.
@@ -28,7 +28,7 @@ type DialecticPair struct {
 }
 
 // Select returns exactly 2 agents (driver + navigator).
-func (*DialecticPair) Select(_ context.Context, agents []troupe.Actor) []troupe.Actor {
+func (*DialecticPair) Select(_ context.Context, agents []troupe.Agent) []troupe.Agent {
 	if len(agents) < 2 { //nolint:mnd // pair requires exactly 2
 		return agents
 	}
@@ -36,7 +36,7 @@ func (*DialecticPair) Select(_ context.Context, agents []troupe.Actor) []troupe.
 }
 
 // Execute runs dialectic convergence then pair execution on the selected agents.
-func (dp *DialecticPair) Execute(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
+func (dp *DialecticPair) Execute(ctx context.Context, prompt string, agents []troupe.Agent) (string, error) {
 	if len(agents) != 2 { //nolint:mnd // exactly 2 agents required by design
 		return "", fmt.Errorf("%w, got %d", ErrDialecticPairRequiresTwo, len(agents))
 	}
@@ -91,7 +91,7 @@ func (dp *DialecticPair) Execute(ctx context.Context, prompt string, agents []tr
 }
 
 // Orchestrate runs dialectic convergence then pair execution. Composes Select + Execute.
-func (dp *DialecticPair) Orchestrate(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
+func (dp *DialecticPair) Orchestrate(ctx context.Context, prompt string, agents []troupe.Agent) (string, error) {
 	selected := dp.Select(ctx, agents)
 	return dp.Execute(ctx, prompt, selected)
 }

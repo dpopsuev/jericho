@@ -9,15 +9,15 @@ import (
 
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/arsenal"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/providers"
-	"github.com/dpopsuev/troupe/referee"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/testkit"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/arsenal"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/providers"
+	"github.com/dpopsuev/tangle/referee"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/testkit"
+	"github.com/dpopsuev/tangle/world"
 )
 
 const (
@@ -84,7 +84,7 @@ func TestE2E_RealLLM_TwoAgents_SameAdmission(t *testing.T) {
 	})
 
 	// 1. Admit Agent A.
-	idA, err := lobby.Admit(ctx, troupe.ActorConfig{Role: "summarizer"})
+	idA, err := lobby.Admit(ctx, troupe.AgentConfig{Role: "summarizer"})
 	if err != nil {
 		statusLog.Emit(signal.Event{Kind: eventAdmitError, Source: "test"})
 		t.Fatalf("Admit summarizer: %v", err)
@@ -92,7 +92,7 @@ func TestE2E_RealLLM_TwoAgents_SameAdmission(t *testing.T) {
 	statusLog.Emit(signal.Event{Kind: eventAdmitSuccess, Source: "agent-a"})
 
 	// 2. Admit Agent B.
-	idB, err := lobby.Admit(ctx, troupe.ActorConfig{Role: "reviewer"})
+	idB, err := lobby.Admit(ctx, troupe.AgentConfig{Role: "reviewer"})
 	if err != nil {
 		statusLog.Emit(signal.Event{Kind: eventAdmitError, Source: "test"})
 		t.Fatalf("Admit reviewer: %v", err)

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/broker"
 )
 
 type tokenDetail struct{ In, Out int }
@@ -19,9 +19,9 @@ func (d computeDetail) String() string { return fmt.Sprintf("gpu: %.1fs", d.GPUS
 
 func TestInMemoryMeter_RecordAndQuery(t *testing.T) {
 	m := broker.NewInMemoryMeter()
-	m.Record(troupe.Usage{Actor: "a1", Step: "classify", Duration: time.Second})
-	m.Record(troupe.Usage{Actor: "a2", Step: "review", Duration: 2 * time.Second})
-	m.Record(troupe.Usage{Actor: "a1", Step: "summarize", Duration: 500 * time.Millisecond})
+	m.Record(troupe.Usage{Agent: "a1", Step: "classify", Duration: time.Second})
+	m.Record(troupe.Usage{Agent: "a2", Step: "review", Duration: 2 * time.Second})
+	m.Record(troupe.Usage{Agent: "a1", Step: "summarize", Duration: 500 * time.Millisecond})
 
 	a1 := m.Query("a1")
 	if len(a1) != 2 {
@@ -47,8 +47,8 @@ func TestInMemoryMeter_QueryEmpty(t *testing.T) {
 
 func TestMeter_ProviderAgnostic(t *testing.T) {
 	m := broker.NewInMemoryMeter()
-	m.Record(troupe.Usage{Actor: "cloud", Detail: tokenDetail{In: 100, Out: 50}})
-	m.Record(troupe.Usage{Actor: "onprem", Detail: computeDetail{GPUSec: 3.5}})
+	m.Record(troupe.Usage{Agent: "cloud", Detail: tokenDetail{In: 100, Out: 50}})
+	m.Record(troupe.Usage{Agent: "onprem", Detail: computeDetail{GPUSec: 3.5}})
 
 	cloud := m.Query("cloud")
 	if cloud[0].Detail.String() != "tokens: in=100 out=50" {

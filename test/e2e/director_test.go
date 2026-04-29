@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 func TestDirector_LinearPipeline(t *testing.T) {

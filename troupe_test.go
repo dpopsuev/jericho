@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 var _ troupe.Caster = (*troupe.Troupe)(nil)
@@ -20,7 +20,7 @@ func TestTroupe_FullWorkflow(t *testing.T) {
 	ctx := context.Background()
 
 	// Spawn.
-	actor, err := tr.Spawn(ctx, troupe.ActorConfig{Role: "worker"})
+	actor, err := tr.Spawn(ctx, troupe.AgentConfig{Role: "worker"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
@@ -46,7 +46,7 @@ func TestTroupe_FullWorkflow(t *testing.T) {
 func TestTroupe_NoBroker_ReturnsError(t *testing.T) {
 	tr := troupe.New()
 
-	_, err := tr.Spawn(context.Background(), troupe.ActorConfig{Role: "test"})
+	_, err := tr.Spawn(context.Background(), troupe.AgentConfig{Role: "test"})
 	if err == nil {
 		t.Fatal("Spawn without broker should error")
 	}
@@ -55,7 +55,7 @@ func TestTroupe_NoBroker_ReturnsError(t *testing.T) {
 func TestTroupe_NoAdmission_ReturnsError(t *testing.T) {
 	tr := troupe.New()
 
-	_, err := tr.Admit(context.Background(), troupe.ActorConfig{Role: "test"})
+	_, err := tr.Admit(context.Background(), troupe.AgentConfig{Role: "test"})
 	if err == nil {
 		t.Fatal("Admit without admission should error")
 	}

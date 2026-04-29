@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 // SpawnCollective composes Pick + Spawn + Collective.
 // The Caster spawns individual actors, then wraps them in a Collective
 // with the given strategy.
-func SpawnCollective(ctx context.Context, caster troupe.Caster, count int, strategy CollectiveStrategy) (troupe.Actor, error) {
+func SpawnCollective(ctx context.Context, caster troupe.Caster, count int, strategy CollectiveStrategy) (troupe.Agent, error) {
 	if count <= 0 {
 		count = 1
 	}
@@ -20,7 +20,7 @@ func SpawnCollective(ctx context.Context, caster troupe.Caster, count int, strat
 		return nil, fmt.Errorf("spawn collective: pick: %w", err)
 	}
 
-	actors := make([]troupe.Actor, 0, len(configs))
+	actors := make([]troupe.Agent, 0, len(configs))
 	for _, cfg := range configs {
 		actor, err := caster.Spawn(ctx, cfg)
 		if err != nil {

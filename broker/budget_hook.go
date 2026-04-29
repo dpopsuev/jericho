@@ -3,8 +3,8 @@ package broker
 import (
 	"context"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/billing"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/billing"
 )
 
 // BudgetHook implements SpawnHook to enforce budget limits before spawning.
@@ -21,11 +21,11 @@ func NewBudgetHook(e *billing.BudgetEnforcer) *BudgetHook {
 func (h *BudgetHook) Name() string { return "budget" }
 
 // PreSpawn checks the budget enforcer for the actor's role.
-func (h *BudgetHook) PreSpawn(_ context.Context, config troupe.ActorConfig) error {
+func (h *BudgetHook) PreSpawn(_ context.Context, config troupe.AgentConfig) error {
 	return h.enforcer.Check(config.Role)
 }
 
 // PostSpawn is a no-op observer.
-func (h *BudgetHook) PostSpawn(_ context.Context, _ troupe.ActorConfig, _ troupe.Actor, _ error) {}
+func (h *BudgetHook) PostSpawn(_ context.Context, _ troupe.AgentConfig, _ troupe.Agent, _ error) {}
 
 var _ SpawnHook = (*BudgetHook)(nil)

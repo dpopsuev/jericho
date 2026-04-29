@@ -3,8 +3,8 @@ package testkit_test
 import (
 	"testing"
 
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 func TestNewTestBusSet_Independent(t *testing.T) {

@@ -1,6 +1,6 @@
 package providers
 
-import "github.com/dpopsuev/troupe/resilience"
+import "github.com/dpopsuev/tangle/resilience"
 
 // LLMClassifier returns an ErrorClassifier that knows provider error semantics.
 // Rate limits and transient failures are retryable. Auth, model not found,

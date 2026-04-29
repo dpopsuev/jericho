@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/a2aproject/a2a-go/a2a"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/world"
 )
 
 const a2aProtocolVersion = "1.0"

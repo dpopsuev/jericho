@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/providers"
+	"github.com/dpopsuev/tangle/providers"
 )
 
 // testWorkItem implements WorkItem for pool tests.

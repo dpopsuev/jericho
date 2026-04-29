@@ -8,13 +8,13 @@ import (
 
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/billing"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/resilience"
-	"github.com/dpopsuev/troupe/testkit"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/billing"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/resilience"
+	"github.com/dpopsuev/tangle/testkit"
+	"github.com/dpopsuev/tangle/world"
 )
 
 func TestUnhappy_KilledActor_NotReady(t *testing.T) {
@@ -25,7 +25,7 @@ func TestUnhappy_KilledActor_NotReady(t *testing.T) {
 		broker.WithProviderResolver(func(_ string) (anyllm.Provider, error) { return stub, nil }),
 	)
 
-	actor, err := b.Spawn(context.Background(), troupe.ActorConfig{
+	actor, err := b.Spawn(context.Background(), troupe.AgentConfig{
 		Model: "test", Provider: "test", Role: "victim",
 	})
 	if err != nil {
@@ -54,7 +54,7 @@ func TestUnhappy_ContextTimeout(t *testing.T) {
 		broker.WithProviderResolver(func(_ string) (anyllm.Provider, error) { return slowProvider, nil }),
 	)
 
-	actor, err := b.Spawn(context.Background(), troupe.ActorConfig{
+	actor, err := b.Spawn(context.Background(), troupe.AgentConfig{
 		Model: "test", Provider: "test", Role: "slow",
 	})
 	if err != nil {
@@ -84,7 +84,7 @@ func TestUnhappy_BudgetExceeded_BlocksNextSpawn(t *testing.T) {
 		broker.WithSpawnGate(billing.NewBudgetEnforcer(tracker, nil).AsGate("global")),
 	)
 
-	actor, err := b.Spawn(context.Background(), troupe.ActorConfig{
+	actor, err := b.Spawn(context.Background(), troupe.AgentConfig{
 		Model: "test", Provider: "test", Role: "spender",
 	})
 	if err != nil {
@@ -93,7 +93,7 @@ func TestUnhappy_BudgetExceeded_BlocksNextSpawn(t *testing.T) {
 
 	_, _ = actor.Perform(context.Background(), "burn tokens")
 
-	_, err = b.Spawn(context.Background(), troupe.ActorConfig{
+	_, err = b.Spawn(context.Background(), troupe.AgentConfig{
 		Model: "test", Provider: "test", Role: "blocked",
 	})
 	t.Logf("second Spawn after budget burn: err=%v", err)
@@ -112,7 +112,7 @@ func TestUnhappy_Cordon_RejectsNewAdmits(t *testing.T) {
 		Gates:     []troupe.Gate{gate},
 	})
 
-	id, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "before-cordon"})
+	id, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "before-cordon"})
 	if err != nil {
 		t.Fatalf("Admit before cordon: %v", err)
 	}
@@ -120,7 +120,7 @@ func TestUnhappy_Cordon_RejectsNewAdmits(t *testing.T) {
 
 	admin.Cordon(context.Background(), "maintenance window") //nolint:errcheck // test
 
-	_, err = lobby.Admit(context.Background(), troupe.ActorConfig{Role: "during-cordon"})
+	_, err = lobby.Admit(context.Background(), troupe.AgentConfig{Role: "during-cordon"})
 	if err == nil {
 		t.Fatal("Admit during cordon should be rejected")
 	}
@@ -128,7 +128,7 @@ func TestUnhappy_Cordon_RejectsNewAdmits(t *testing.T) {
 
 	admin.Uncordon(context.Background()) //nolint:errcheck // test
 
-	id2, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "after-uncordon"})
+	id2, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "after-uncordon"})
 	if err != nil {
 		t.Fatalf("Admit after uncordon: %v", err)
 	}
@@ -144,7 +144,7 @@ func TestUnhappy_Ban_PreventsReadmission(t *testing.T) {
 		Transport: tr,
 	})
 
-	id, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "suspect"})
+	id, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "suspect"})
 	if err != nil {
 		t.Fatalf("Admit: %v", err)
 	}
@@ -173,8 +173,8 @@ func TestUnhappy_EvictStale_ReapsDisconnected(t *testing.T) {
 		Transport: tr,
 	})
 
-	id1, _ := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "active"})
-	id2, _ := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "stale"})
+	id1, _ := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "active"})
+	id2, _ := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "stale"})
 
 	lobby.Heartbeat(id1) //nolint:errcheck // test
 
@@ -203,7 +203,7 @@ func TestUnhappy_RetryExhaustion_AllAttemptsFail(t *testing.T) {
 		}),
 	)
 
-	actor, err := b.Spawn(context.Background(), troupe.ActorConfig{
+	actor, err := b.Spawn(context.Background(), troupe.AgentConfig{
 		Model: "test", Provider: "test", Role: "doomed",
 	})
 	if err != nil {

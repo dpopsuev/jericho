@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/internal/warden"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/internal/warden"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // ---------------------------------------------------------------------------

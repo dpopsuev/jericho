@@ -6,7 +6,7 @@ import (
 	"errors"
 	"sync/atomic"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 // ErrNoHealthyAgents is returned when all agents are not ready.
@@ -19,7 +19,7 @@ type RoundRobin struct {
 }
 
 // Select picks the next healthy agent via round-robin index.
-func (r *RoundRobin) Select(_ context.Context, agents []troupe.Actor) []troupe.Actor {
+func (r *RoundRobin) Select(_ context.Context, agents []troupe.Agent) []troupe.Agent {
 	if len(agents) == 0 {
 		return nil
 	}
@@ -30,7 +30,7 @@ func (r *RoundRobin) Select(_ context.Context, agents []troupe.Actor) []troupe.A
 	for i := range uint64(len(agents)) {
 		candidate := agents[(start+i)%n]
 		if candidate.Ready() {
-			return []troupe.Actor{candidate}
+			return []troupe.Agent{candidate}
 		}
 	}
 
@@ -38,7 +38,7 @@ func (r *RoundRobin) Select(_ context.Context, agents []troupe.Actor) []troupe.A
 }
 
 // Execute forwards the prompt to the selected agent.
-func (*RoundRobin) Execute(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
+func (*RoundRobin) Execute(ctx context.Context, prompt string, agents []troupe.Agent) (string, error) {
 	if len(agents) == 0 {
 		return "", ErrNoHealthyAgents
 	}
@@ -46,7 +46,7 @@ func (*RoundRobin) Execute(ctx context.Context, prompt string, agents []troupe.A
 }
 
 // Orchestrate picks the next healthy agent and forwards the prompt.
-func (r *RoundRobin) Orchestrate(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
+func (r *RoundRobin) Orchestrate(ctx context.Context, prompt string, agents []troupe.Agent) (string, error) {
 	selected := r.Select(ctx, agents)
 	if len(selected) == 0 {
 		return "", ErrNoHealthyAgents

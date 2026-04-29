@@ -9,11 +9,11 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/testkit"
-	"github.com/dpopsuev/troupe/visual"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/testkit"
+	"github.com/dpopsuev/tangle/visual"
+	"github.com/dpopsuev/tangle/world"
 )
 
 func TestStress_10Agents_50Messages(t *testing.T) {

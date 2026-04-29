@@ -1,144 +1,92 @@
-# Claude Code Instructions for Troupe Development
+# Claude Code Instructions for Tangle Development
 
-## What is Troupe
+## What is Tangle
 
-Troupe is a dual-face AI agent platform:
-1. **Server**: Authoritative ECS World for multi-agent orchestration — lifecycle, A2A, admission, buses, scheduling
-2. **Library**: Exportable harness components for agent builders — LLM drivers, billing, resilience, model selection, scoring, predicates
+Tangle is the Federated Agent Runtime (FAR) — infrastructure for agent platforms. Tako is a Factory, Tangle is the Utilities (electricity, water, railway, security, inspectors). The factory doesn't build its own power plant, it plugs in. Tangle serves any factory, doesn't know what's manufactured inside. Tangle can run standalone.
 
-Core interfaces: Caster (Pick+Spawn), Actor, Director, Admin. Consumer flow: `troupe.Pick → troupe.Spawn → troupe.Perform`.
+- Repo: github.com/dpopsuev/tangle (renamed from troupe)
+- Scribe scope: `tangled`
+- Campaign: CMP-44 (Tangle Reform)
 
-- Repo: github.com/dpopsuev/troupe
-- Scribe scope: troupe
+## ISA-95 Alignment (5-Level Automation Pyramid)
 
-## Platform Boundaries
+- L4 Coordination (Tako): Director → Collectives hierarchy. HITL aggregation.
+- L3 Services (Tako): Kanban, Andon, Discourse, Sleep. Stigmergic coordination.
+- L2 Routing (Tangle): Switchboard (TangleD). Wire routing. Star topology.
+- L1 Connectivity (Tangle): Tangle client/server. Embed/Connect. VersionGate.
+- L0 Execution (Tangle): AXI. Mirage enclosure. Instrument execution. LLM calls.
 
-Troupe is part of a three-project platform. Each project owns specific boundaries:
+Tangle owns L0-L2. Tako owns L3-L4. Clean boundary.
 
-| Boundary | Owner | What |
-|---|---|---|
-| World ↔ Agent | **Troupe** | A2A, Admission, lifecycle, ECS, buses, resilience, billing, scoring |
-| Agent ↔ Tools | **Origami** | Workbench instruments, normalized tool I/O, strict mode |
-| Agent Orchestration | **Origami** | Circuits, graph-walking, Virtuoso harness |
-| Human ↔ Agent | **Djinn** | Operator frontend, REPL, HITL, Cortex, context engineering |
+## 6 Interface Families (TNG-DOC-1)
 
-Dependency direction: `Djinn -> Origami -> Troupe`
+- **AAI** — Agent Auth Interface (DEFINES trust: Identity, Capability, Audit)
+- **ARI** — Agent Runtime Interface (exist: Probe, Lifecycle, Caster)
+- **ANI** — Agent Network Interface (connect: Admission, Gate, Registry)
+- **ASI** — Agent State Interface (persist: Stateful seam, StateStore, Config, Meter)
+- **AOI** — Agent Observability Interface (watch: Health events, Admin, OTel shape)
+- **AXI** — Agent Execution Interface (execute: Executor, Sandbox, ResourceLimit, Policy)
 
-## Ecosystem Dependency Rules
-
-**CRITICAL: Troupe is the bottom of the dependency stack.**
-
-- Troupe NEVER imports origami/ or djinn/ or hegemony/
-- Troupe defines interfaces (Caster, Actor, Director, Driver, Meter, Admin), consumers implement them
-- Consumer-to-consumer communication goes through A2A protocol, not Go imports
+AAI defines contracts. Other families enforce at their boundary. Defense-in-depth.
 
 ## Public API
 
 ```go
-// Caster is the narrow factory interface. Troupe facade satisfies it.
-// Directors and Collectives take Caster, not the full facade.
 type Caster interface {
     Pick(ctx, Preferences) ([]ActorConfig, error)
     Spawn(ctx, ActorConfig) (Actor, error)
 }
 
-// Broker = Caster + Discover. Internal engine, not consumer-facing.
 type Broker interface {
     Caster
     Discover(role string) []AgentCard
 }
-
-// Troupe facade: Admit, Kick, Ban, Pick, Spawn, Discover, Perform
-// Satisfies Caster — can be passed directly to Directors/Collectives.
 ```
 
 ## Architecture: Server + Library
 
-### Server packages (authoritative multi-agent world)
-
+### Server packages
 ```
 Root package   — Caster, Broker, Actor, Director, Driver, Meter, Gate, Pick, Threshold, Admission, Admin, AgentCard
-broker/        — DefaultBroker, Lobby (admission), DefaultAdmin, multi-driver adapter, hooked actors
-                 broker.New() = bare, broker.Default() = batteries-included (Arsenal wired)
-                 AdmissionHandler() = HTTP endpoint for external agent registration
-signal/        — Three-bus architecture (ControlLog, WorkLog, StatusLog), Andon health, EventStore
-world/         — ECS entity-component store (Alive/Ready/Budget/Annotation, ComponentType, hierarchy edges)
+broker/        — DefaultBroker, Lobby (admission), DefaultAdmin, multi-driver adapter
+signal/        — Three-bus architecture (ControlLog, WorkLog, StatusLog), Andon health
+world/         — ECS entity-component store
 collective/    — Multi-agent primitives (Race, RoundRobin, Scatter, Scale, Dialectic, Arbiter, Fallback)
-                 Add/Remove for per-agent join/leave. SpawnCollective takes Caster.
-client/        — Go SDK for external agents (Register via POST /admission)
+client/        — Go SDK for external agents
 ```
 
-### Library packages (all wired into Broker via With* options)
-
+### Library packages
 ```
-providers/     — LLM provider abstraction (any-llm-go: Anthropic, OpenAI, Gemini, Vertex, OpenRouter)
-                 Wired via WithProviderResolver()
-billing/       — Token/cost tracking (CostBill, BudgetEnforcer) — wired via WithTracker()
-referee/       — Event-driven scoring engine (YAML Scorecards) — wired via WithReferee()
-arsenal/       — Embedded model catalog (trait-scored selection, TraitVector) — wired via WithArsenal()
-                 OpenRouter discoverer for free model catalog enrichment
-resilience/    — Circuit breaker, retry, timeout, rate limiter (pure algorithms)
+providers/     — LLM provider abstraction (any-llm-go)
+billing/       — Token/cost tracking
+referee/       — Event-driven scoring engine (YAML Scorecards)
+arsenal/       — Embedded model catalog (trait-scored selection)
+resilience/    — Circuit breaker, retry, timeout, rate limiter
 visual/        — Cosmetic identity (Color, Palette, Element, View)
-testkit/       — Test fixtures (MockActor, MockBroker, toy agents, BusSet helpers)
+testkit/       — Test fixtures
 ```
 
-### Internal packages
+## Key Principles
 
-```
-internal/agent/     — Solo agent implementation (Actor wrapper)
-auth/               — Authentication abstraction (Bearer, Identity, Authenticator)
-                      Wired into transport via NewA2ATransportWithAuth()
-internal/transport/ — A2A messaging types, LocalTransport, HTTPTransport, A2A server
-internal/warden/    — Agent process supervision (Fork/Kill/Wait, restart, zombie reaping)
-```
-
-## Protocol Decisions
-
-- **A2A is the protocol**: A2A (HTTP JSON-RPC via a2a-go) is the sole wire protocol. Types live in internal/transport/.
-- **A2A roles**: Messages use A2A roles (user/agent) directly. RoleUser/RoleAgent constants.
-- **Heartbeat vs Andon**: Heartbeat = control plane liveness (transport-level lastSeen). Andon = data plane readiness (StatusLog).
-- **Three buses**: ControlLog (routing), WorkLog (task lifecycle), StatusLog (health/observability). All durable.
-- **Vertex env vars**: Use Google standard (GOOGLE_CLOUD_LOCATION, GOOGLE_CLOUD_PROJECT).
-- **Arsenal source provider mask**: vertex-ai.yaml `provider` field filters models to what the implementation can reach.
-
-## Admin Control Plane
-
-`Admin` interface (admin.go) — privileged operator API, separate from Caster (agent-facing):
-- Query: Agents(), Inspect(), Tree(), Annotations()
-- Lifecycle: Kill(), Drain(), Undrain()
-- Policy: SetBudget(), SetQuota(), Annotate()
-- Emergency: Cordon(), Uncordon(), KillAll()
-- Streaming: Watch()
-
-Implemented in `broker/admin.go`. CordonGate() returns a Gate for Lobby admission blocking.
-
-## Admission
-
-- **Admit**: register agent into World (gates, entity, transport, events)
-- **Kick**: forceful removal (hooks can block via KickHook)
-- **Ban**: Kick + deny list (hooks can block via BanHook)
-- **Unban**: remove from deny list
-- External agents register via `POST /admission` (broker/admission_endpoint.go)
-- Go SDK: `client.New(serverURL).Register(ctx, role, callbackURL)`
+- Tangle NEVER imports tako/ or mirage/ — bottom of the dependency stack
+- Tangle defines interfaces, consumers implement them
+- Tangle emits facts (HealthEvents, ResourceBreachEvents), Tako interprets (Andon, OAE)
+- OTel: Tangle owns shape (context propagation, metric registry), Tako owns content (span names)
+- PDP-PEP: Tangle is PDP (Policy Decision Point, decides), Tako is PEP (enforces)
 
 ## Naming Conventions
 
-- **Core interfaces**: Caster (Pick+Spawn), Actor (Perform/Ready/Kill), Director, Admin
+- **Project name**: Tangle (was Troupe). NOT Jericho or Bugle.
+- **Core interfaces**: Caster (Pick+Spawn), Actor, Director, Admin
 - **Internal**: Broker (Caster+Discover), Driver, Meter
-- **Predicates**: Gate (allow/deny), Pick[T] (selection), Threshold (numeric condition)
-- **Health signals**: Andon (IEC 60073 stack light). NOT horn.
-- **Events**: EventKind (Started, Completed, Failed, Transition, Done)
-- **Identity**: AgentCard (public interface), ActorConfig (input/job spec), Actor (running instance)
-- **Visual**: Color, Palette, Element — cosmetic only, in visual/ package
-- **Admission**: Admit (enter), Kick (forceful removal), Ban (Kick + deny list)
-- **Project name**: Troupe. NOT Jericho or Bugle.
+- **Health**: Andon (IEC 60073 stack light)
+- **Identity**: AgentCard (public), ActorConfig (input/job), Actor (running)
+- **Admission**: Admit (enter), Kick (remove), Ban (Kick + deny list)
 
 ## Go Conventions
 
 - Go 1.25+
 - golangci-lint enforced via pre-commit hook
-- American English spelling (canceled, not cancelled)
-- Sentinel errors with descriptive names
-- slog for structured logging with constant key names
+- American English spelling
+- Sentinel errors, slog structured logging
 - broker.New() = bare, broker.Default() = batteries-included
-- integrate-early: no package without a production caller

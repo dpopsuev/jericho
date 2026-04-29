@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/billing"
+	"github.com/dpopsuev/tangle/billing"
 )
 
 func TestBudgetEnforcer_UnlimitedPasses(t *testing.T) {

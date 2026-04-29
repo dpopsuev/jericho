@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/tangle/signal"
 )
 
 func TestOTelLog_ImplementsEventLog(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/tangle/signal"
 )
 
 // Referee scores agent behavior by watching the event stream.

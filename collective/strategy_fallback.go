@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 // Fallback wraps a Primary strategy with a Fallback. If Primary fails,
@@ -16,7 +16,7 @@ type Fallback struct {
 }
 
 // Select delegates to Primary's Selector.
-func (f *Fallback) Select(ctx context.Context, agents []troupe.Actor) []troupe.Actor {
+func (f *Fallback) Select(ctx context.Context, agents []troupe.Agent) []troupe.Agent {
 	if sel, ok := f.Primary.(Selector); ok {
 		return sel.Select(ctx, agents)
 	}
@@ -24,7 +24,7 @@ func (f *Fallback) Select(ctx context.Context, agents []troupe.Actor) []troupe.A
 }
 
 // Execute tries Primary, falls back on failure.
-func (f *Fallback) Execute(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
+func (f *Fallback) Execute(ctx context.Context, prompt string, agents []troupe.Agent) (string, error) {
 	if exec, ok := f.Primary.(Executor); ok {
 		result, err := exec.Execute(ctx, prompt, agents)
 		if err == nil {
@@ -38,7 +38,7 @@ func (f *Fallback) Execute(ctx context.Context, prompt string, agents []troupe.A
 }
 
 // Orchestrate tries Primary.Orchestrate, falls back on failure.
-func (f *Fallback) Orchestrate(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
+func (f *Fallback) Orchestrate(ctx context.Context, prompt string, agents []troupe.Agent) (string, error) {
 	result, err := f.Primary.Orchestrate(ctx, prompt, agents)
 	if err == nil {
 		return result, nil

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // ErrRemoteNotImplemented is returned by Connect stubs until HTTP client is built.
@@ -14,11 +14,11 @@ type remoteBroker struct {
 	serverURL string
 }
 
-func (r *remoteBroker) Pick(_ context.Context, _ Preferences) ([]ActorConfig, error) {
+func (r *remoteBroker) Pick(_ context.Context, _ Preferences) ([]AgentConfig, error) {
 	return nil, ErrRemoteNotImplemented
 }
 
-func (r *remoteBroker) Spawn(_ context.Context, _ ActorConfig) (Actor, error) {
+func (r *remoteBroker) Spawn(_ context.Context, _ AgentConfig) (Agent, error) {
 	return nil, ErrRemoteNotImplemented
 }
 
@@ -30,7 +30,7 @@ type remoteAdmission struct {
 	serverURL string
 }
 
-func (r *remoteAdmission) Admit(_ context.Context, _ ActorConfig) (world.EntityID, error) {
+func (r *remoteAdmission) Admit(_ context.Context, _ AgentConfig) (world.EntityID, error) {
 	return 0, ErrRemoteNotImplemented
 }
 

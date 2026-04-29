@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 // P1 Security: malformed SSE messages should not panic or corrupt state.
@@ -65,7 +65,7 @@ func TestEvent_JSONRoundTrip(t *testing.T) {
 func TestFQDN_NoDots_InShadeName(t *testing.T) {
 	// A shade name with dots would break FQDN parsing
 	// shade.color.director.broker — 4 segments expected
-	c := troupe.ActorConfig{Role: "test"}
-	_ = c // The FQDN is on visual.Color, not ActorConfig
+	c := troupe.AgentConfig{Role: "test"}
+	_ = c // The FQDN is on visual.Color, not AgentConfig
 	// This test validates that the palette has no dots in shade names
 }

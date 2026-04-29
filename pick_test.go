@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 func TestPickAll(t *testing.T) {

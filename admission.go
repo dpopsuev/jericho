@@ -3,7 +3,7 @@ package troupe
 import (
 	"context"
 
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // Admission is the single entry point for all agents into the World.
@@ -14,7 +14,7 @@ type Admission interface {
 	// Admit registers an agent into the World. Runs admission gates,
 	// creates an ECS entity, attaches components, registers in Transport,
 	// and emits to ControlLog. Returns the entity ID.
-	Admit(ctx context.Context, config ActorConfig) (world.EntityID, error)
+	Admit(ctx context.Context, config AgentConfig) (world.EntityID, error)
 
 	// Kick forcefully removes an agent from the World. Unregisters from
 	// Transport, marks entity terminated, emits to ControlLog.

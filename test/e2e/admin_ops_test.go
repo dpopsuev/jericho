@@ -6,13 +6,13 @@ import (
 
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/internal/warden"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/testkit"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/internal/warden"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/testkit"
+	"github.com/dpopsuev/tangle/world"
 )
 
 type noopSupervisor struct{}
@@ -39,11 +39,11 @@ func TestAdmin_E2E_FullLifecycle(t *testing.T) {
 	ctx := context.Background()
 
 	// 1. Admit agents via Lobby.
-	id1, err := lobby.Admit(ctx, troupe.ActorConfig{Role: "worker"})
+	id1, err := lobby.Admit(ctx, troupe.AgentConfig{Role: "worker"})
 	if err != nil {
 		t.Fatalf("Admit worker: %v", err)
 	}
-	id2, err := lobby.Admit(ctx, troupe.ActorConfig{Role: "reviewer"})
+	id2, err := lobby.Admit(ctx, troupe.AgentConfig{Role: "reviewer"})
 	if err != nil {
 		t.Fatalf("Admit reviewer: %v", err)
 	}
@@ -135,7 +135,7 @@ func TestAdmin_E2E_Cordon_BlocksSpawn(t *testing.T) {
 	ctx := context.Background()
 
 	// Spawn works before cordon.
-	_, err := b.Spawn(ctx, troupe.ActorConfig{Role: "pre-cordon"})
+	_, err := b.Spawn(ctx, troupe.AgentConfig{Role: "pre-cordon"})
 	if err != nil {
 		t.Fatalf("Spawn before cordon: %v", err)
 	}
@@ -144,7 +144,7 @@ func TestAdmin_E2E_Cordon_BlocksSpawn(t *testing.T) {
 	admin.Cordon(ctx, "deploy in progress") //nolint:errcheck // test
 
 	// Spawn rejected during cordon.
-	_, err = b.Spawn(ctx, troupe.ActorConfig{Role: "during-cordon"})
+	_, err = b.Spawn(ctx, troupe.AgentConfig{Role: "during-cordon"})
 	if err == nil {
 		t.Fatal("Spawn during cordon should be rejected")
 	}
@@ -154,7 +154,7 @@ func TestAdmin_E2E_Cordon_BlocksSpawn(t *testing.T) {
 	admin.Uncordon(ctx) //nolint:errcheck // test
 
 	// Spawn works after uncordon.
-	_, err = b.Spawn(ctx, troupe.ActorConfig{Role: "post-cordon"})
+	_, err = b.Spawn(ctx, troupe.AgentConfig{Role: "post-cordon"})
 	if err != nil {
 		t.Fatalf("Spawn after uncordon: %v", err)
 	}

@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/visual"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/visual"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // ---------------------------------------------------------------------------

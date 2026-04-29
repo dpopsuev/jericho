@@ -2,9 +2,9 @@ package troupe
 
 import "context"
 
-// Actor is what the Broker gives back — an agent ready to perform.
+// Agent is what the Broker gives back — an agent ready to perform.
 // 3 methods. ISP: consumers see only what they need.
-type Actor interface {
+type Agent interface {
 	// Perform sends a prompt to the actor and returns the response.
 	Perform(ctx context.Context, prompt string) (string, error)
 

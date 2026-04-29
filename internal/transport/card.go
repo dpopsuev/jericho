@@ -3,8 +3,8 @@ package transport
 import (
 	"fmt"
 
-	"github.com/dpopsuev/troupe/visual"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/visual"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // AgentCard is the A2A-compatible agent descriptor published for discovery.

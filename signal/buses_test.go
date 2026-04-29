@@ -3,7 +3,7 @@ package signal_test
 import (
 	"testing"
 
-	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/tangle/signal"
 )
 
 func TestBusSet_TypeIsolation(t *testing.T) {

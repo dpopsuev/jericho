@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 // ErrTooFewAgentsDialectic is returned when dialectic has fewer than 2 agents.
@@ -36,7 +36,7 @@ func (d *Dialectic) defaults() (maxRounds int, convergenceWord string) {
 }
 
 // Select returns the first two agents (thesis + antithesis).
-func (*Dialectic) Select(_ context.Context, agents []troupe.Actor) []troupe.Actor {
+func (*Dialectic) Select(_ context.Context, agents []troupe.Agent) []troupe.Agent {
 	if len(agents) < 2 { //nolint:mnd // dialectic requires at least 2
 		return agents
 	}
@@ -45,7 +45,7 @@ func (*Dialectic) Select(_ context.Context, agents []troupe.Actor) []troupe.Acto
 
 // Execute runs the dialectic debate between agents[0] (thesis) and
 // agents[1] (antithesis). Returns the thesis's last response as synthesis.
-func (d *Dialectic) Execute(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
+func (d *Dialectic) Execute(ctx context.Context, prompt string, agents []troupe.Agent) (string, error) {
 	if len(agents) < 2 { //nolint:mnd // dialectic requires at least 2
 		return "", fmt.Errorf("%w, got %d", ErrTooFewAgentsDialectic, len(agents))
 	}
@@ -92,7 +92,7 @@ func (d *Dialectic) Execute(ctx context.Context, prompt string, agents []troupe.
 }
 
 // Orchestrate runs the dialectic debate. Composes Select + Execute.
-func (d *Dialectic) Orchestrate(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
+func (d *Dialectic) Orchestrate(ctx context.Context, prompt string, agents []troupe.Agent) (string, error) {
 	selected := d.Select(ctx, agents)
 	return d.Execute(ctx, prompt, selected)
 }

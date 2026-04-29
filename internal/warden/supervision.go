@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // Wait blocks until the specified child finishes, returns its exit status,

@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/internal/warden"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/internal/warden"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/world"
 )
 
 func TestWatch_DeliversEventsOnAdmit(t *testing.T) {
@@ -32,7 +32,7 @@ func TestWatch_DeliversEventsOnAdmit(t *testing.T) {
 
 	ch := admin.Watch(ctx)
 
-	lobby.Admit(context.Background(), troupe.ActorConfig{Role: "watched"}) //nolint:errcheck // test
+	lobby.Admit(context.Background(), troupe.AgentConfig{Role: "watched"}) //nolint:errcheck // test
 
 	select {
 	case evt := <-ch:

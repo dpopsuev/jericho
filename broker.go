@@ -15,8 +15,8 @@ type AgentInfo struct {
 // and Collectives — they need a factory, not the full Troupe facade.
 // Troupe facade satisfies this. So does the internal Broker.
 type Caster interface {
-	Pick(ctx context.Context, prefs Preferences) ([]ActorConfig, error)
-	Spawn(ctx context.Context, config ActorConfig) (Actor, error)
+	Pick(ctx context.Context, prefs Preferences) ([]AgentConfig, error)
+	Spawn(ctx context.Context, config AgentConfig) (Agent, error)
 }
 
 // Broker extends Caster with agent discovery. Used internally by the
@@ -33,8 +33,8 @@ type Preferences struct {
 	Count int    `json:"count,omitempty"`
 }
 
-// ActorConfig is the resolved configuration for spawning an actor.
-type ActorConfig struct {
+// AgentConfig is the resolved configuration for spawning an actor.
+type AgentConfig struct {
 	Model       string   `json:"model"`
 	Provider    string   `json:"provider,omitempty"`
 	Role        string   `json:"role,omitempty"`
@@ -46,4 +46,4 @@ type ActorConfig struct {
 }
 
 // IsExternal returns true if this config represents an external agent.
-func (c ActorConfig) IsExternal() bool { return c.CallbackURL != "" }
+func (c AgentConfig) IsExternal() bool { return c.CallbackURL != "" }

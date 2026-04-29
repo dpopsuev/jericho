@@ -8,7 +8,7 @@ import (
 
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 func TestStubProvider_Name(t *testing.T) {

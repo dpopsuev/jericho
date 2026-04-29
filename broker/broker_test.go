@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/testkit"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/testkit"
+	"github.com/dpopsuev/tangle/world"
 )
 
 func TestNew_EmptyEndpoint_ReturnsLocal(t *testing.T) {
@@ -48,7 +48,7 @@ func TestDefaultBroker_Pick_ExplicitCount(t *testing.T) {
 
 func TestDefaultBroker_Spawn_NoLauncher(t *testing.T) {
 	b := broker.New("")
-	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Model: "sonnet"})
+	_, err := b.Spawn(context.Background(), troupe.AgentConfig{Model: "sonnet"})
 	if err == nil {
 		t.Fatal("expected error for spawn without launcher")
 	}
@@ -64,7 +64,7 @@ func newProviderDriver() *providerDriver {
 	return &providerDriver{started: make(map[world.EntityID]bool)}
 }
 
-func (d *providerDriver) Start(_ context.Context, id world.EntityID, _ troupe.ActorConfig) error {
+func (d *providerDriver) Start(_ context.Context, id world.EntityID, _ troupe.AgentConfig) error {
 	d.started[id] = true
 	return nil
 }
@@ -79,7 +79,7 @@ func TestBroker_MultiDriver_RoutesToProvider(t *testing.T) {
 		broker.WithDriverFor("openai", openai),
 	)
 
-	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Provider: "anthropic", Role: "test"})
+	_, err := b.Spawn(context.Background(), troupe.AgentConfig{Provider: "anthropic", Role: "test"})
 	if err != nil {
 		t.Fatalf("Spawn anthropic: %v", err)
 	}
@@ -103,11 +103,11 @@ func TestDefaultBroker_Discover_WithSpawnedAgents(t *testing.T) {
 	drv := newProviderDriver()
 	b := broker.New("", broker.WithDriver(drv))
 
-	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Role: "reviewer", Provider: "anthropic"})
+	_, err := b.Spawn(context.Background(), troupe.AgentConfig{Role: "reviewer", Provider: "anthropic"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
-	_, err = b.Spawn(context.Background(), troupe.ActorConfig{Role: "coder", Provider: "anthropic"})
+	_, err = b.Spawn(context.Background(), troupe.AgentConfig{Role: "coder", Provider: "anthropic"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
@@ -138,7 +138,7 @@ func TestBroker_MultiDriver_FallbackToDefault(t *testing.T) {
 	defaultD := newProviderDriver()
 	b := broker.New("", broker.WithDriver(defaultD))
 
-	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Provider: "unknown", Role: "test"})
+	_, err := b.Spawn(context.Background(), troupe.AgentConfig{Provider: "unknown", Role: "test"})
 	if err != nil {
 		t.Fatalf("Spawn with fallback: %v", err)
 	}
@@ -157,7 +157,7 @@ func TestBroker_ControlLog_DispatchRouted(t *testing.T) {
 		broker.WithControlLog(log),
 	)
 
-	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Role: "worker"})
+	_, err := b.Spawn(context.Background(), troupe.AgentConfig{Role: "worker"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
@@ -179,7 +179,7 @@ func TestBroker_ControlLog_VetoApplied(t *testing.T) {
 		broker.WithSpawnGate(troupe.AlwaysDeny),
 	)
 
-	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Role: "worker"})
+	_, err := b.Spawn(context.Background(), troupe.AgentConfig{Role: "worker"})
 	if err == nil {
 		t.Fatal("spawn should have been rejected by gate")
 	}
@@ -195,7 +195,7 @@ func TestBroker_ControlLog_VetoApplied(t *testing.T) {
 
 func TestBroker_NoControlLog_NoPanic(t *testing.T) {
 	b := broker.New("", broker.WithDriver(newProviderDriver()))
-	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Role: "worker"})
+	_, err := b.Spawn(context.Background(), troupe.AgentConfig{Role: "worker"})
 	if err != nil {
 		t.Fatalf("Spawn without ControlLog: %v", err)
 	}

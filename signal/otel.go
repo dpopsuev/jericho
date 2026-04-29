@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const instrumentationName = "github.com/dpopsuev/troupe/signal"
+const instrumentationName = "github.com/dpopsuev/tangle/signal"
 
 var _ EventLog = (*OTelLog)(nil)
 

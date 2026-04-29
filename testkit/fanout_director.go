@@ -5,11 +5,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 // FanOutDirector sends one prompt to multiple actors concurrently.
-// Validates concurrent Actor.Perform + event streaming.
+// Validates concurrent Agent.Perform + event streaming.
 type FanOutDirector struct {
 	Prompt string
 	Count  int // how many actors to fan out to
@@ -26,7 +26,7 @@ func (d *FanOutDirector) Direct(ctx context.Context, caster troupe.Caster) (<-ch
 		return nil, err
 	}
 
-	actors := make([]troupe.Actor, len(configs))
+	actors := make([]troupe.Agent, len(configs))
 	for i, cfg := range configs {
 		a, err := caster.Spawn(ctx, cfg)
 		if err != nil {
@@ -43,7 +43,7 @@ func (d *FanOutDirector) Direct(ctx context.Context, caster troupe.Caster) (<-ch
 		var wg sync.WaitGroup
 		for i, actor := range actors {
 			wg.Add(1)
-			go func(a troupe.Actor, cfg troupe.ActorConfig) {
+			go func(a troupe.Agent, cfg troupe.AgentConfig) {
 				defer wg.Done()
 
 				ch <- troupe.Event{Kind: troupe.Started, Step: d.Prompt, Agent: cfg.Role}

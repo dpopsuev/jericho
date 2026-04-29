@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 func mockActor(name string) *testkit.MockActor {
@@ -16,7 +16,7 @@ func mockActor(name string) *testkit.MockActor {
 
 func TestRace_ReturnsResponse(t *testing.T) {
 	r := Race{}
-	resp, err := r.Orchestrate(context.Background(), "hello", []troupe.Actor{mockActor("a"), mockActor("b")})
+	resp, err := r.Orchestrate(context.Background(), "hello", []troupe.Agent{mockActor("a"), mockActor("b")})
 	if err != nil {
 		t.Fatalf("Race: %v", err)
 	}
@@ -40,8 +40,8 @@ func TestRoundRobin_Rotates(t *testing.T) {
 	a := mockActor("a")
 	b := mockActor("b")
 
-	r1, _ := rr.Orchestrate(ctx, "go", []troupe.Actor{a, b})
-	r2, _ := rr.Orchestrate(ctx, "go", []troupe.Actor{a, b})
+	r1, _ := rr.Orchestrate(ctx, "go", []troupe.Agent{a, b})
+	r2, _ := rr.Orchestrate(ctx, "go", []troupe.Agent{a, b})
 
 	// MockActor echoes prompts — both return "go" but from different actors.
 	// We verify both calls succeed, rotation is internal.
@@ -60,7 +60,7 @@ func TestRoundRobin_NoAgents(t *testing.T) {
 // --- Scatter ---
 
 func TestScatter_CollectsAll(t *testing.T) {
-	resp, err := (&Scatter{}).Orchestrate(context.Background(), "go", []troupe.Actor{mockActor("a"), mockActor("b")})
+	resp, err := (&Scatter{}).Orchestrate(context.Background(), "go", []troupe.Agent{mockActor("a"), mockActor("b")})
 	if err != nil {
 		t.Fatalf("Scatter: %v", err)
 	}
@@ -80,8 +80,8 @@ func TestScatter_NoAgents(t *testing.T) {
 
 func TestScale_Up(t *testing.T) {
 	broker := testkit.NewMockBroker(5)
-	c := NewCollective(1, "team", Race{}, []troupe.Actor{mockActor("a")})
-	err := c.Scale(context.Background(), 3, troupe.ActorConfig{Role: "worker"}, broker)
+	c := NewCollective(1, "team", Race{}, []troupe.Agent{mockActor("a")})
+	err := c.Scale(context.Background(), 3, troupe.AgentConfig{Role: "worker"}, broker)
 	if err != nil {
 		t.Fatalf("Scale up: %v", err)
 	}
@@ -91,8 +91,8 @@ func TestScale_Up(t *testing.T) {
 }
 
 func TestScale_Down(t *testing.T) {
-	c := NewCollective(1, "team", Race{}, []troupe.Actor{mockActor("a"), mockActor("b"), mockActor("c")})
-	err := c.Scale(context.Background(), 1, troupe.ActorConfig{}, nil)
+	c := NewCollective(1, "team", Race{}, []troupe.Agent{mockActor("a"), mockActor("b"), mockActor("c")})
+	err := c.Scale(context.Background(), 1, troupe.AgentConfig{}, nil)
 	if err != nil {
 		t.Fatalf("Scale down: %v", err)
 	}
@@ -102,16 +102,16 @@ func TestScale_Down(t *testing.T) {
 }
 
 func TestScale_MaxSizeRejected(t *testing.T) {
-	c := NewCollective(1, "team", Race{}, []troupe.Actor{mockActor("a")}, WithMaxSize(2))
-	err := c.Scale(context.Background(), 5, troupe.ActorConfig{}, nil)
+	c := NewCollective(1, "team", Race{}, []troupe.Agent{mockActor("a")}, WithMaxSize(2))
+	err := c.Scale(context.Background(), 5, troupe.AgentConfig{}, nil)
 	if err == nil {
 		t.Fatal("should reject beyond maxSize")
 	}
 }
 
 func TestScale_DisruptionBudget(t *testing.T) {
-	c := NewCollective(1, "team", Race{}, []troupe.Actor{mockActor("a"), mockActor("b"), mockActor("c")}, WithMinAvailable(2))
-	err := c.Scale(context.Background(), 1, troupe.ActorConfig{}, nil)
+	c := NewCollective(1, "team", Race{}, []troupe.Agent{mockActor("a"), mockActor("b"), mockActor("c")}, WithMinAvailable(2))
+	err := c.Scale(context.Background(), 1, troupe.AgentConfig{}, nil)
 	if err == nil {
 		t.Fatal("should reject below minAvailable")
 	}

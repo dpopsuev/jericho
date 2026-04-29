@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/providers"
+	"github.com/dpopsuev/tangle/providers"
 )
 
 // Compile-time contract: stubWorkItem implements WorkItem.

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 func TestAlwaysPass(t *testing.T) {

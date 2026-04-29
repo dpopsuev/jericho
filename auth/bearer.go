@@ -7,7 +7,7 @@ import (
 	"os"
 
 	
-	"github.com/dpopsuev/troupe/resilience"
+	"github.com/dpopsuev/tangle/resilience"
 )
 
 // Sentinel errors.

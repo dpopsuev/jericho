@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/a2aproject/a2a-go/a2a"
-	"github.com/dpopsuev/troupe/auth"
+	"github.com/dpopsuev/tangle/auth"
 )
 
 // HTTPTransport is an HTTP-based A2A transport. Embeds baseTransport

@@ -8,10 +8,10 @@ import (
 
 	"github.com/a2aproject/a2a-go/a2a"
 
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/client"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/client"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/world"
 )
 
 func TestClientSDK_RegisterAndMessage(t *testing.T) {

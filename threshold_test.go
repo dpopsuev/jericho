@@ -3,7 +3,7 @@ package troupe_test
 import (
 	"testing"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 func TestIntThreshold_BelowLimit(t *testing.T) {

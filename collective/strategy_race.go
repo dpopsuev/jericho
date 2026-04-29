@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 // Race fans out to all agents concurrently. The first successful response
@@ -13,12 +13,12 @@ import (
 type Race struct{}
 
 // Select returns all agents — Race fans out to everyone.
-func (Race) Select(_ context.Context, agents []troupe.Actor) []troupe.Actor {
+func (Race) Select(_ context.Context, agents []troupe.Agent) []troupe.Agent {
 	return agents
 }
 
 // Execute sends the prompt to all agents in parallel, returns the first response.
-func (Race) Execute(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
+func (Race) Execute(ctx context.Context, prompt string, agents []troupe.Agent) (string, error) {
 	if len(agents) == 0 {
 		return "", ErrNoAgents
 	}
@@ -34,7 +34,7 @@ func (Race) Execute(ctx context.Context, prompt string, agents []troupe.Actor) (
 	ch := make(chan result, len(agents))
 
 	for _, a := range agents {
-		go func(ag troupe.Actor) {
+		go func(ag troupe.Agent) {
 			resp, err := ag.Perform(raceCtx, prompt)
 			ch <- result{resp, err}
 		}(a)
@@ -54,7 +54,7 @@ func (Race) Execute(ctx context.Context, prompt string, agents []troupe.Actor) (
 }
 
 // Orchestrate sends the prompt to all agents in parallel, returns the first response.
-func (r Race) Orchestrate(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
+func (r Race) Orchestrate(ctx context.Context, prompt string, agents []troupe.Agent) (string, error) {
 	selected := r.Select(ctx, agents)
 	return r.Execute(ctx, prompt, selected)
 }

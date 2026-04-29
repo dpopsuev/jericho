@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/internal/warden"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/internal/warden"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/world"
 )
 
 func TestNamespace_IsolatesAgentQueries(t *testing.T) {
@@ -27,10 +27,10 @@ func TestNamespace_IsolatesAgentQueries(t *testing.T) {
 	admin := broker.NewAdmin(w, p, lobby, buses.Control)
 	ctx := context.Background()
 
-	lobby.Admit(ctx, troupe.ActorConfig{Role: "worker", Namespace: "team-a"})   //nolint:errcheck // test
-	lobby.Admit(ctx, troupe.ActorConfig{Role: "worker", Namespace: "team-a"})   //nolint:errcheck // test
-	lobby.Admit(ctx, troupe.ActorConfig{Role: "worker", Namespace: "team-b"})   //nolint:errcheck // test
-	lobby.Admit(ctx, troupe.ActorConfig{Role: "reviewer", Namespace: "team-b"}) //nolint:errcheck // test
+	lobby.Admit(ctx, troupe.AgentConfig{Role: "worker", Namespace: "team-a"})   //nolint:errcheck // test
+	lobby.Admit(ctx, troupe.AgentConfig{Role: "worker", Namespace: "team-a"})   //nolint:errcheck // test
+	lobby.Admit(ctx, troupe.AgentConfig{Role: "worker", Namespace: "team-b"})   //nolint:errcheck // test
+	lobby.Admit(ctx, troupe.AgentConfig{Role: "reviewer", Namespace: "team-b"}) //nolint:errcheck // test
 
 	all := admin.Agents(ctx, troupe.AgentFilter{})
 	if len(all) != 4 {

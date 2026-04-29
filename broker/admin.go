@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	troupe "github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/internal/warden"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/world"
+	troupe "github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/internal/warden"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/world"
 )
 
 var _ troupe.Admin = (*DefaultAdmin)(nil)

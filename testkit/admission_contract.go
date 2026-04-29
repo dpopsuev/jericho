@@ -5,9 +5,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // AdmissionTestDeps provides the dependencies needed to run the Admission contract.
@@ -27,7 +27,7 @@ func RunAdmissionContract(t *testing.T, deps AdmissionTestDeps) {
 
 	t.Run("Admit_CreatesEntity", func(t *testing.T) {
 		before := deps.WorldCount()
-		id, err := deps.Admission.Admit(ctx, troupe.ActorConfig{Role: "contract-test"})
+		id, err := deps.Admission.Admit(ctx, troupe.AgentConfig{Role: "contract-test"})
 		if err != nil {
 			t.Fatalf("Admit: %v", err)
 		}
@@ -46,7 +46,7 @@ func RunAdmissionContract(t *testing.T, deps AdmissionTestDeps) {
 			t.Skip("no ControlLog provided")
 		}
 		before := deps.ControlLog.Len()
-		id, err := deps.Admission.Admit(ctx, troupe.ActorConfig{Role: "emit-test"})
+		id, err := deps.Admission.Admit(ctx, troupe.AgentConfig{Role: "emit-test"})
 		if err != nil {
 			t.Fatalf("Admit: %v", err)
 		}
@@ -65,7 +65,7 @@ func RunAdmissionContract(t *testing.T, deps AdmissionTestDeps) {
 	})
 
 	t.Run("Kick_RemovesEntity", func(t *testing.T) {
-		id, err := deps.Admission.Admit(ctx, troupe.ActorConfig{Role: "dismiss-test"})
+		id, err := deps.Admission.Admit(ctx, troupe.AgentConfig{Role: "dismiss-test"})
 		if err != nil {
 			t.Fatalf("Admit: %v", err)
 		}
@@ -89,7 +89,7 @@ func RunAdmissionContract(t *testing.T, deps AdmissionTestDeps) {
 		for range n {
 			go func() {
 				defer wg.Done()
-				id, err := deps.Admission.Admit(ctx, troupe.ActorConfig{Role: "race-test"})
+				id, err := deps.Admission.Admit(ctx, troupe.AgentConfig{Role: "race-test"})
 				if err != nil {
 					errs <- err
 					return

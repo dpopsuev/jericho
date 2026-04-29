@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/troupe/collective"
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle/collective"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 func TestSpawnCollective_WithMockBroker(t *testing.T) {

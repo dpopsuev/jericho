@@ -7,17 +7,17 @@ import (
 
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/billing"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/referee"
-	"github.com/dpopsuev/troupe/testkit"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/billing"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/referee"
+	"github.com/dpopsuev/tangle/testkit"
+	"github.com/dpopsuev/tangle/world"
 )
 
 type noopDriver struct{}
 
-func (noopDriver) Start(_ context.Context, _ world.EntityID, _ troupe.ActorConfig) error { return nil }
+func (noopDriver) Start(_ context.Context, _ world.EntityID, _ troupe.AgentConfig) error { return nil }
 func (noopDriver) Stop(_ context.Context, _ world.EntityID) error                        { return nil }
 
 func fullStackBroker(t *testing.T, stub *testkit.StubProvider, tracker *billing.InMemoryTracker, ref *referee.Referee) troupe.Broker {
@@ -107,7 +107,7 @@ func TestFullStack_BudgetEnforcement(t *testing.T) {
 	b := fullStackBroker(t, stub, tracker, nil)
 	ctx := context.Background()
 
-	actor, err := b.Spawn(ctx, troupe.ActorConfig{Model: "test", Provider: "test", Role: "spender"})
+	actor, err := b.Spawn(ctx, troupe.AgentConfig{Model: "test", Provider: "test", Role: "spender"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
@@ -130,7 +130,7 @@ func TestFullStack_SlowAgent_Timeout(t *testing.T) {
 
 	b := fullStackBroker(t, stub, nil, nil)
 
-	actor, err := b.Spawn(context.Background(), troupe.ActorConfig{Model: "test", Provider: "test", Role: "slow"})
+	actor, err := b.Spawn(context.Background(), troupe.AgentConfig{Model: "test", Provider: "test", Role: "slow"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
@@ -158,8 +158,8 @@ func TestFullStack_RefereeScoresSpawnAndPerform(t *testing.T) {
 	b := fullStackBroker(t, stub, nil, ref)
 	ctx := context.Background()
 
-	a1, _ := b.Spawn(ctx, troupe.ActorConfig{Model: "test", Provider: "test", Role: "a"})
-	a2, _ := b.Spawn(ctx, troupe.ActorConfig{Model: "test", Provider: "test", Role: "b"})
+	a1, _ := b.Spawn(ctx, troupe.AgentConfig{Model: "test", Provider: "test", Role: "a"})
+	a2, _ := b.Spawn(ctx, troupe.AgentConfig{Model: "test", Provider: "test", Role: "b"})
 
 	a1.Perform(ctx, "prompt1") //nolint:errcheck // test
 	a2.Perform(ctx, "prompt2") //nolint:errcheck // test

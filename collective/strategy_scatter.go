@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 // Scatter fans out to all agents and collects ALL responses.
@@ -16,12 +16,12 @@ type Scatter struct {
 }
 
 // Select returns all agents — Scatter fans out to everyone.
-func (*Scatter) Select(_ context.Context, agents []troupe.Actor) []troupe.Actor {
+func (*Scatter) Select(_ context.Context, agents []troupe.Agent) []troupe.Agent {
 	return agents
 }
 
 // Execute sends the prompt to all agents concurrently and joins responses.
-func (s *Scatter) Execute(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
+func (s *Scatter) Execute(ctx context.Context, prompt string, agents []troupe.Agent) (string, error) {
 	if len(agents) == 0 {
 		return "", ErrNoAgents
 	}
@@ -42,7 +42,7 @@ func (s *Scatter) Execute(ctx context.Context, prompt string, agents []troupe.Ac
 
 	for i, a := range agents {
 		wg.Add(1)
-		go func(idx int, ag troupe.Actor) {
+		go func(idx int, ag troupe.Agent) {
 			defer wg.Done()
 			resp, err := ag.Perform(ctx, prompt)
 			results[idx] = indexed{idx, resp, err}
@@ -65,7 +65,7 @@ func (s *Scatter) Execute(ctx context.Context, prompt string, agents []troupe.Ac
 }
 
 // Orchestrate sends the prompt to all agents concurrently and joins responses.
-func (s *Scatter) Orchestrate(ctx context.Context, prompt string, agents []troupe.Actor) (string, error) {
+func (s *Scatter) Orchestrate(ctx context.Context, prompt string, agents []troupe.Agent) (string, error) {
 	selected := s.Select(ctx, agents)
 	return s.Execute(ctx, prompt, selected)
 }

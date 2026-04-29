@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/testkit"
-	"github.com/dpopsuev/troupe/visual"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/testkit"
+	"github.com/dpopsuev/tangle/visual"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // Feature: 2 same-provider agents.

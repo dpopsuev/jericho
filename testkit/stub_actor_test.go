@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 func TestStubActorFunc_CyclesResponses(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // ErrNoDriver is returned when no driver is configured for a provider.
@@ -17,7 +17,7 @@ var ErrNoDriver = errors.New("no driver configured")
 // Consumers provide their own Driver implementations.
 type Driver interface {
 	// Start provisions an agent for the given entity.
-	Start(ctx context.Context, id world.EntityID, config ActorConfig) error
+	Start(ctx context.Context, id world.EntityID, config AgentConfig) error
 
 	// Stop deprovisions the agent for the given entity.
 	Stop(ctx context.Context, id world.EntityID) error

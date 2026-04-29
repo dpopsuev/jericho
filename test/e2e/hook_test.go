@@ -6,10 +6,10 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/world"
 )
 
 type testKickHook struct {
@@ -53,7 +53,7 @@ func TestHook_PreKick_BlocksRemoval(t *testing.T) {
 		Hooks:     []broker.Hook{hook},
 	})
 
-	id, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "protected"})
+	id, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "protected"})
 	if err != nil {
 		t.Fatalf("Admit: %v", err)
 	}
@@ -80,7 +80,7 @@ func TestHook_PreKick_AllowsRemoval(t *testing.T) {
 		Hooks:     []broker.Hook{hook},
 	})
 
-	id, _ := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "removable"})
+	id, _ := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "removable"})
 	lobby.Kick(context.Background(), id) //nolint:errcheck // test
 
 	if hook.postCalled.Load() != 1 {
@@ -102,7 +102,7 @@ func TestHook_PreBan_BlocksBan(t *testing.T) {
 		Hooks:     []broker.Hook{hook},
 	})
 
-	id, _ := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "vip"})
+	id, _ := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "vip"})
 
 	err := lobby.Ban(context.Background(), id, "suspicious")
 	if err == nil {
@@ -126,7 +126,7 @@ func TestHook_PostBan_Observes(t *testing.T) {
 		Hooks:     []broker.Hook{hook},
 	})
 
-	id, _ := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "suspect"})
+	id, _ := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "suspect"})
 	lobby.Ban(context.Background(), id, "testing") //nolint:errcheck // test
 
 	if hook.postCalled.Load() != 1 {

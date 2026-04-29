@@ -12,7 +12,7 @@ type Meter interface {
 
 // Usage records resource consumption for a single operation.
 type Usage struct {
-	Actor    string
+	Agent    string
 	Step     string
 	Duration time.Duration
 	Detail   UsageDetail

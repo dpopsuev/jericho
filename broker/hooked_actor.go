@@ -4,16 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	troupe "github.com/dpopsuev/troupe"
+	troupe "github.com/dpopsuev/tangle"
 )
 
 type hookedActor struct {
-	inner troupe.Actor
+	inner troupe.Agent
 	hooks []PerformHook
 	gate  troupe.Gate
 }
 
-func newHookedActor(inner troupe.Actor, hooks []PerformHook, gate troupe.Gate) *hookedActor {
+func newHookedActor(inner troupe.Agent, hooks []PerformHook, gate troupe.Gate) *hookedActor {
 	return &hookedActor{inner: inner, hooks: hooks, gate: gate}
 }
 
@@ -42,4 +42,4 @@ func (a *hookedActor) Perform(ctx context.Context, prompt string) (string, error
 func (a *hookedActor) Ready() bool                    { return a.inner.Ready() }
 func (a *hookedActor) Kill(ctx context.Context) error { return a.inner.Kill(ctx) }
 
-var _ troupe.Actor = (*hookedActor)(nil)
+var _ troupe.Agent = (*hookedActor)(nil)

@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe/billing"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/resilience"
+	"github.com/dpopsuev/tangle/billing"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/resilience"
 )
 
 // TestResilienceE2E_RetryRecoversFromTransientFailure proves retry

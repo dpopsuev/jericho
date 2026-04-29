@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 // Step is a named unit of work for mock Directors.

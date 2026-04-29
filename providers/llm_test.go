@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/dpopsuev/troupe/providers"
+	"github.com/dpopsuev/tangle/providers"
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 )
 

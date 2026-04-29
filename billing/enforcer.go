@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"sync"
 
-	troupe "github.com/dpopsuev/troupe"
+	troupe "github.com/dpopsuev/tangle"
 )
 
 // ErrBudgetExceeded is returned when an agent exceeds its cost limit.

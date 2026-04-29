@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	troupe "github.com/dpopsuev/troupe"
+	troupe "github.com/dpopsuev/tangle"
 )
 
 // AdmissionRequest is the HTTP body for POST /admission.
@@ -37,7 +37,7 @@ func AdmissionHandler(lobby *Lobby) http.HandlerFunc {
 			return
 		}
 
-		config := troupe.ActorConfig{
+		config := troupe.AgentConfig{
 			Role:        req.Role,
 			CallbackURL: req.CallbackURL,
 			Skills:      req.Skills,

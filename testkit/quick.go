@@ -3,9 +3,9 @@ package testkit
 import (
 	"fmt"
 
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/visual"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/visual"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // QuickWorld creates a World with n agents, each with ColorIdentity + Health.

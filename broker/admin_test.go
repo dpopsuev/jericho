@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/internal/warden"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/internal/warden"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/world"
 )
 
 type noopSupervisor struct{}
@@ -39,8 +39,8 @@ func TestAdmin_Agents_ListsAdmitted(t *testing.T) {
 	admin, lobby, _ := newTestAdmin(t)
 	ctx := context.Background()
 
-	lobby.Admit(ctx, troupe.ActorConfig{Role: "worker"})   //nolint:errcheck // test setup
-	lobby.Admit(ctx, troupe.ActorConfig{Role: "reviewer"}) //nolint:errcheck // test setup
+	lobby.Admit(ctx, troupe.AgentConfig{Role: "worker"})   //nolint:errcheck // test setup
+	lobby.Admit(ctx, troupe.AgentConfig{Role: "reviewer"}) //nolint:errcheck // test setup
 
 	agents := admin.Agents(ctx, troupe.AgentFilter{})
 	if len(agents) < 2 {
@@ -52,8 +52,8 @@ func TestAdmin_Agents_FilterByRole(t *testing.T) {
 	admin, lobby, _ := newTestAdmin(t)
 	ctx := context.Background()
 
-	lobby.Admit(ctx, troupe.ActorConfig{Role: "worker"})   //nolint:errcheck // test setup
-	lobby.Admit(ctx, troupe.ActorConfig{Role: "reviewer"}) //nolint:errcheck // test setup
+	lobby.Admit(ctx, troupe.AgentConfig{Role: "worker"})   //nolint:errcheck // test setup
+	lobby.Admit(ctx, troupe.AgentConfig{Role: "reviewer"}) //nolint:errcheck // test setup
 
 	agents := admin.Agents(ctx, troupe.AgentFilter{Role: "worker"})
 	for _, a := range agents {
@@ -67,7 +67,7 @@ func TestAdmin_Inspect(t *testing.T) {
 	admin, lobby, _ := newTestAdmin(t)
 	ctx := context.Background()
 
-	id, _ := lobby.Admit(ctx, troupe.ActorConfig{Role: "inspector"})
+	id, _ := lobby.Admit(ctx, troupe.AgentConfig{Role: "inspector"})
 	detail, err := admin.Inspect(ctx, id)
 	if err != nil {
 		t.Fatalf("Inspect: %v", err)
@@ -84,7 +84,7 @@ func TestAdmin_Drain_Undrain(t *testing.T) {
 	admin, lobby, w := newTestAdmin(t)
 	ctx := context.Background()
 
-	id, _ := lobby.Admit(ctx, troupe.ActorConfig{Role: "drainable"})
+	id, _ := lobby.Admit(ctx, troupe.AgentConfig{Role: "drainable"})
 
 	admin.Drain(ctx, id) //nolint:errcheck // test
 	ready, _ := world.TryGet[world.Ready](w, id)
@@ -118,7 +118,7 @@ func TestAdmin_Cordon_BlocksAdmission(t *testing.T) {
 		t.Fatal("should be cordoned")
 	}
 
-	_, err := lobbyWithGate.Admit(ctx, troupe.ActorConfig{Role: "blocked"})
+	_, err := lobbyWithGate.Admit(ctx, troupe.AgentConfig{Role: "blocked"})
 	if err == nil {
 		t.Fatal("admission should be rejected during cordon")
 	}
@@ -136,8 +136,8 @@ func TestAdmin_KillAll(t *testing.T) {
 	admin, lobby, _ := newTestAdmin(t)
 	ctx := context.Background()
 
-	lobby.Admit(ctx, troupe.ActorConfig{Role: "a"}) //nolint:errcheck // test setup
-	lobby.Admit(ctx, troupe.ActorConfig{Role: "b"}) //nolint:errcheck // test setup
+	lobby.Admit(ctx, troupe.AgentConfig{Role: "a"}) //nolint:errcheck // test setup
+	lobby.Admit(ctx, troupe.AgentConfig{Role: "b"}) //nolint:errcheck // test setup
 
 	admin.KillAll(ctx, "emergency") //nolint:errcheck // test
 }

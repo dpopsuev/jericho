@@ -11,9 +11,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // Sentinel errors for collective operations.
@@ -30,31 +30,31 @@ var (
 // Implementations should also implement Selector and Executor individually
 // so consumers can reuse selection logic without triggering execution.
 type CollectiveStrategy interface {
-	Orchestrate(ctx context.Context, prompt string, agents []troupe.Actor) (string, error)
+	Orchestrate(ctx context.Context, prompt string, agents []troupe.Agent) (string, error)
 }
 
 // Selector picks which agents handle a unit of work.
 // Pure decision — no side effects, no execution.
 type Selector interface {
-	Select(ctx context.Context, agents []troupe.Actor) []troupe.Actor
+	Select(ctx context.Context, agents []troupe.Agent) []troupe.Agent
 }
 
-// SelectorFrom wraps a Pick[Actor] as a Selector.
-func SelectorFrom(p troupe.Pick[troupe.Actor]) Selector {
+// SelectorFrom wraps a Pick[Agent] as a Selector.
+func SelectorFrom(p troupe.Pick[troupe.Agent]) Selector {
 	return &selectorAdapter{pick: p}
 }
 
 type selectorAdapter struct {
-	pick troupe.Pick[troupe.Actor]
+	pick troupe.Pick[troupe.Agent]
 }
 
-func (a *selectorAdapter) Select(ctx context.Context, agents []troupe.Actor) []troupe.Actor {
+func (a *selectorAdapter) Select(ctx context.Context, agents []troupe.Agent) []troupe.Agent {
 	return a.pick(ctx, agents)
 }
 
 // Executor coordinates selected agents to produce a response.
 type Executor interface {
-	Execute(ctx context.Context, prompt string, agents []troupe.Actor) (string, error)
+	Execute(ctx context.Context, prompt string, agents []troupe.Agent) (string, error)
 }
 
 // DebateRound records one debate round between agents.
@@ -79,7 +79,7 @@ const (
 type Collective struct {
 	id           world.EntityID
 	role         string
-	agents       []troupe.Actor
+	agents       []troupe.Agent
 	strategy     CollectiveStrategy
 	ingress      Gatekeeper // optional bouncer (nil = pass-through)
 	egress       Gatekeeper // optional reviewer (nil = pass-through)
@@ -167,7 +167,7 @@ func WithAgentIDs(ids []world.EntityID) CollectiveOption {
 }
 
 // NewCollective creates a collective from existing agent handles.
-func NewCollective(id world.EntityID, role string, strategy CollectiveStrategy, agents []troupe.Actor, opts ...CollectiveOption) *Collective {
+func NewCollective(id world.EntityID, role string, strategy CollectiveStrategy, agents []troupe.Agent, opts ...CollectiveOption) *Collective {
 	c := &Collective{
 		id:       id,
 		role:     role,
@@ -264,12 +264,12 @@ func (c *Collective) Ready() bool {
 }
 
 // Children returns the internal agents (visible in full view).
-func (c *Collective) Children() []troupe.Actor {
+func (c *Collective) Children() []troupe.Agent {
 	return c.agents
 }
 
 // Parent returns nil — collectives are collectives have no parent.
-func (c *Collective) Parent() troupe.Actor {
+func (c *Collective) Parent() troupe.Agent {
 	return nil
 }
 
@@ -289,7 +289,7 @@ func (c *Collective) SetProgress(_, _ int) {}
 // --- FacadeAgent ---
 
 // InternalAgents returns the agents hidden behind the agent.
-func (c *Collective) InternalAgents() []troupe.Actor {
+func (c *Collective) InternalAgents() []troupe.Agent {
 	return c.agents
 }
 
@@ -321,7 +321,7 @@ func (c *Collective) Phase() Phase {
 
 // Scale adjusts the number of agents to the target count.
 // Spawns new agents or kills excess agents as needed.
-func (c *Collective) Scale(ctx context.Context, target int, config troupe.ActorConfig, caster troupe.Caster) error {
+func (c *Collective) Scale(ctx context.Context, target int, config troupe.AgentConfig, caster troupe.Caster) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -340,7 +340,7 @@ func (c *Collective) Scale(ctx context.Context, target int, config troupe.ActorC
 	if target > current {
 		// Scale up — spawn new agents.
 		for range target - current {
-			a, err := caster.Spawn(ctx, troupe.ActorConfig{Model: config.Model, Role: config.Role})
+			a, err := caster.Spawn(ctx, troupe.AgentConfig{Model: config.Model, Role: config.Role})
 			if err != nil {
 				return fmt.Errorf("collective scale up: %w", err)
 			}
@@ -359,7 +359,7 @@ func (c *Collective) Scale(ctx context.Context, target int, config troupe.ActorC
 
 // Add appends an existing actor to the collective. The actor
 // participates in the strategy on the next Perform call.
-func (c *Collective) Add(actor troupe.Actor) error {
+func (c *Collective) Add(actor troupe.Agent) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -394,5 +394,5 @@ func (c *Collective) Size() int {
 	return len(c.agents)
 }
 
-// Compile-time check: Collective implements troupe.Actor.
-var _ troupe.Actor = (*Collective)(nil)
+// Compile-time check: Collective implements troupe.Agent.
+var _ troupe.Agent = (*Collective)(nil)

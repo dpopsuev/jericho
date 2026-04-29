@@ -5,16 +5,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/billing"
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/billing"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 var (
-	_ troupe.Actor = (*testkit.EchoAgent)(nil)
-	_ troupe.Actor = (*testkit.SlowAgent)(nil)
-	_ troupe.Actor = (*testkit.FailAgent)(nil)
-	_ troupe.Actor = (*testkit.BudgetAgent)(nil)
+	_ troupe.Agent = (*testkit.EchoAgent)(nil)
+	_ troupe.Agent = (*testkit.SlowAgent)(nil)
+	_ troupe.Agent = (*testkit.FailAgent)(nil)
+	_ troupe.Agent = (*testkit.BudgetAgent)(nil)
 )
 
 func TestEchoAgent(t *testing.T) {

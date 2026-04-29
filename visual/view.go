@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // EntitySnapshot is a point-in-time capture of an entity's components.

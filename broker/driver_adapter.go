@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync"
 
-	troupe "github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/internal/warden"
-	"github.com/dpopsuev/troupe/world"
+	troupe "github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/internal/warden"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // multiDriverAdapter wraps public Drivers as a warden.AgentSupervisor.
@@ -48,7 +48,7 @@ func (a *multiDriverAdapter) Start(ctx context.Context, id world.EntityID, confi
 		return fmt.Errorf("no driver for entity %d: %w", id, troupe.ErrNoDriver)
 	}
 	a.setProvider(id, config.Provider)
-	return drv.Start(ctx, id, troupe.ActorConfig{Model: config.Model, Role: config.Role, Provider: config.Provider})
+	return drv.Start(ctx, id, troupe.AgentConfig{Model: config.Model, Role: config.Role, Provider: config.Provider})
 }
 
 func (a *multiDriverAdapter) Stop(ctx context.Context, id world.EntityID) error {

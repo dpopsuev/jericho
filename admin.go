@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // Admin is the privileged control plane for operators managing the World.

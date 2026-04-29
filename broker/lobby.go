@@ -7,11 +7,11 @@ import (
 	"sync"
 	"time"
 
-	troupe "github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/visual"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/world"
+	troupe "github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/visual"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/world"
 )
 
 const (
@@ -41,7 +41,7 @@ type Lobby struct {
 }
 
 type lobbyEntry struct {
-	config   troupe.ActorConfig
+	config   troupe.AgentConfig
 	admitted time.Time
 	lastSeen time.Time
 }
@@ -53,7 +53,7 @@ type ProxyFactory func(callbackURL string) transport.MsgHandler
 // HandlerFactory builds a transport message handler for an internal agent.
 // Called during Admit when the agent is not external. If nil, a default
 // ack handler is registered.
-type HandlerFactory func(id world.EntityID, config troupe.ActorConfig) transport.MsgHandler
+type HandlerFactory func(id world.EntityID, config troupe.AgentConfig) transport.MsgHandler
 
 // LobbyConfig configures a Lobby.
 type LobbyConfig struct {
@@ -88,7 +88,7 @@ func NewLobby(cfg LobbyConfig) *Lobby {
 }
 
 // Admit registers an agent into the World.
-func (l *Lobby) Admit(ctx context.Context, config troupe.ActorConfig) (world.EntityID, error) {
+func (l *Lobby) Admit(ctx context.Context, config troupe.AgentConfig) (world.EntityID, error) {
 	if l.gate != nil {
 		allowed, reason, err := l.gate(ctx, config)
 		if err != nil {

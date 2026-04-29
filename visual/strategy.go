@@ -3,7 +3,7 @@ package visual
 import (
 	"time"
 
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // DefaultStrategy assigns random colors from the palette.

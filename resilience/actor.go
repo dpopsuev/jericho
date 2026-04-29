@@ -2,15 +2,15 @@ package resilience
 
 import "context"
 
-// ActorIface mirrors troupe.Actor to avoid an import cycle (resilience → troupe → acp → resilience).
-// Any type implementing Perform/Ready/Kill satisfies this — including troupe.Actor.
+// ActorIface mirrors troupe.Agent to avoid an import cycle (resilience → troupe → acp → resilience).
+// Any type implementing Perform/Ready/Kill satisfies this — including troupe.Agent.
 type ActorIface interface {
 	Perform(ctx context.Context, prompt string) (string, error)
 	Ready() bool
 	Kill(ctx context.Context) error
 }
 
-// RetryActor wraps an Actor with automatic retry on Perform failures.
+// RetryActor wraps an Agent with automatic retry on Perform failures.
 type RetryActor struct {
 	inner  ActorIface
 	config RetryConfig

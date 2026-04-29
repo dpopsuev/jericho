@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/dpopsuev/troupe/billing"
+	"github.com/dpopsuev/tangle/billing"
 )
 
 // EchoAgent returns the prompt as the response unchanged.

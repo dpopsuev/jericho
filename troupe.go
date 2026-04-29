@@ -5,7 +5,7 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/world"
 )
 
 var (
@@ -44,7 +44,7 @@ func New(opts ...TroupeOption) *Troupe {
 }
 
 // Admit registers an agent into the World via Admission.
-func (t *Troupe) Admit(ctx context.Context, config ActorConfig) (world.EntityID, error) {
+func (t *Troupe) Admit(ctx context.Context, config AgentConfig) (world.EntityID, error) {
 	if t.admission == nil {
 		return 0, ErrNoAdmission
 	}
@@ -88,7 +88,7 @@ func (t *Troupe) Unban(ctx context.Context, id world.EntityID) error {
 }
 
 // Pick returns actor configurations matching preferences via Arsenal.
-func (t *Troupe) Pick(ctx context.Context, prefs Preferences) ([]ActorConfig, error) {
+func (t *Troupe) Pick(ctx context.Context, prefs Preferences) ([]AgentConfig, error) {
 	if t.broker == nil {
 		return nil, ErrNoBroker
 	}
@@ -96,7 +96,7 @@ func (t *Troupe) Pick(ctx context.Context, prefs Preferences) ([]ActorConfig, er
 }
 
 // Spawn creates a running actor via Broker.
-func (t *Troupe) Spawn(ctx context.Context, config ActorConfig) (Actor, error) {
+func (t *Troupe) Spawn(ctx context.Context, config AgentConfig) (Agent, error) {
 	if t.broker == nil {
 		return nil, ErrNoBroker
 	}
@@ -112,7 +112,7 @@ func (t *Troupe) Discover(role string) []AgentCard {
 }
 
 // Perform sends a prompt to an actor and returns the response.
-func (t *Troupe) Perform(ctx context.Context, actor Actor, prompt string) (string, error) {
+func (t *Troupe) Perform(ctx context.Context, actor Agent, prompt string) (string, error) {
 	return actor.Perform(ctx, prompt)
 }
 

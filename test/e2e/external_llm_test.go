@@ -11,12 +11,12 @@ import (
 	"github.com/a2aproject/a2a-go/a2a"
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 
-	"github.com/dpopsuev/troupe/arsenal"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/client"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/providers"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle/arsenal"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/client"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/providers"
+	"github.com/dpopsuev/tangle/world"
 )
 
 func TestE2E_ExternalAgent_RealLLM_FullRoundTrip(t *testing.T) {

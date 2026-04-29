@@ -3,7 +3,7 @@ package troupe
 import "errors"
 
 // ErrNoEmbeddedBroker is returned when Embed is called without importing broker/.
-var ErrNoEmbeddedBroker = errors.New("troupe: embedded broker not available — import github.com/dpopsuev/troupe/broker")
+var ErrNoEmbeddedBroker = errors.New("troupe: embedded broker not available — import github.com/dpopsuev/tangle/broker")
 
 // EmbeddedBrokerFactory is set by the broker package at init time.
 // Avoids import cycle: troupe → broker → troupe.

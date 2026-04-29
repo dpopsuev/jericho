@@ -6,15 +6,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/billing"
-	"github.com/dpopsuev/troupe/collective"
-	"github.com/dpopsuev/troupe/resilience"
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/billing"
+	"github.com/dpopsuev/tangle/collective"
+	"github.com/dpopsuev/tangle/resilience"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 func TestToyAgent_EchoThroughCollectiveRace(t *testing.T) {
-	agents := []troupe.Actor{
+	agents := []troupe.Agent{
 		&testkit.EchoAgent{},
 		&testkit.EchoAgent{},
 		&testkit.EchoAgent{},
@@ -33,7 +33,7 @@ func TestToyAgent_EchoThroughCollectiveRace(t *testing.T) {
 }
 
 func TestToyAgent_SlowAgentTimesOutInRace(t *testing.T) {
-	agents := []troupe.Actor{
+	agents := []troupe.Agent{
 		&testkit.SlowAgent{Delay: 5 * time.Second},
 		&testkit.EchoAgent{},
 	}
@@ -104,7 +104,7 @@ func TestToyAgent_RoundRobinSkipsKilledAgent(t *testing.T) {
 	_ = a2.Kill(context.Background())
 
 	rr := &collective.RoundRobin{}
-	agents := []troupe.Actor{a1, a2, a3}
+	agents := []troupe.Agent{a1, a2, a3}
 	c := collective.NewCollective(1, "rr-skip", rr, agents)
 	ctx := context.Background()
 
@@ -149,12 +149,12 @@ func TestToyAgent_BudgetAgentExceedsLimit(t *testing.T) {
 
 func TestToyAgent_ScaleCollectiveWithEcho(t *testing.T) {
 	broker := testkit.NewMockBroker(5)
-	agents := []troupe.Actor{&testkit.EchoAgent{}}
+	agents := []troupe.Agent{&testkit.EchoAgent{}}
 
 	c := collective.NewCollective(1, "scalable", collective.Race{}, agents)
 	ctx := context.Background()
 
-	err := c.Scale(ctx, 3, troupe.ActorConfig{Role: "echo"}, broker)
+	err := c.Scale(ctx, 3, troupe.AgentConfig{Role: "echo"}, broker)
 	if err != nil {
 		t.Fatalf("Scale: %v", err)
 	}
@@ -165,7 +165,7 @@ func TestToyAgent_ScaleCollectiveWithEcho(t *testing.T) {
 }
 
 func TestToyAgent_KillStopsAllAgents(t *testing.T) {
-	agents := []troupe.Actor{
+	agents := []troupe.Agent{
 		&testkit.EchoAgent{},
 		&testkit.EchoAgent{},
 		&testkit.EchoAgent{},

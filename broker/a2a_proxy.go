@@ -9,7 +9,7 @@ import (
 	"github.com/a2aproject/a2a-go/a2a"
 	"github.com/a2aproject/a2a-go/a2aclient"
 
-	"github.com/dpopsuev/troupe/internal/transport"
+	"github.com/dpopsuev/tangle/internal/transport"
 )
 
 // A2AProxyFactory returns a ProxyFactory that builds transport handlers

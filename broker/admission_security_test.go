@@ -6,12 +6,12 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/testkit"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/testkit"
+	"github.com/dpopsuev/tangle/world"
 )
 
 func TestSecurity_GateRejection_LoggedToControlLog(t *testing.T) {
@@ -24,7 +24,7 @@ func TestSecurity_GateRejection_LoggedToControlLog(t *testing.T) {
 		Gates:      []troupe.Gate{troupe.AlwaysDeny},
 	})
 
-	_, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "intruder"})
+	_, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "intruder"})
 	if err == nil {
 		t.Fatal("gate should reject")
 	}
@@ -68,7 +68,7 @@ func TestSecurity_QuotaGate_PreventsFlooding(t *testing.T) {
 	for range attempts {
 		go func() {
 			defer wg.Done()
-			_, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "flood"})
+			_, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "flood"})
 			if err != nil {
 				atomic.AddInt32(&failures, 1)
 			} else {
@@ -108,7 +108,7 @@ func TestSecurity_GateRejection_NoEntityCreated(t *testing.T) {
 	})
 
 	before := w.Count()
-	_, _ = lobby.Admit(context.Background(), troupe.ActorConfig{Role: "rejected"})
+	_, _ = lobby.Admit(context.Background(), troupe.AgentConfig{Role: "rejected"})
 	after := w.Count()
 
 	if after != before {

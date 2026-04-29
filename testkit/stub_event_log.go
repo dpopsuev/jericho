@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/tangle/signal"
 )
 
 var _ signal.EventLog = (*StubEventLog)(nil)

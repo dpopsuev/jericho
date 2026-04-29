@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe"
-	brokerpkg "github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/resilience"
-	"github.com/dpopsuev/troupe/testkit"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	brokerpkg "github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/resilience"
+	"github.com/dpopsuev/tangle/testkit"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // echoDriver is a minimal driver that marks entities as started.
@@ -25,7 +25,7 @@ type echoDriver struct {
 
 func newEchoDriver() *echoDriver { return &echoDriver{started: make(map[world.EntityID]bool)} }
 
-func (d *echoDriver) Start(_ context.Context, id world.EntityID, _ troupe.ActorConfig) error {
+func (d *echoDriver) Start(_ context.Context, id world.EntityID, _ troupe.AgentConfig) error {
 	d.mu.Lock()
 	d.started[id] = true
 	d.mu.Unlock()
@@ -46,7 +46,7 @@ func TestE2E_LocalBroker_SpawnPerformMeter(t *testing.T) {
 		brokerpkg.WithHook(obs),
 	)
 
-	actor, err := broker.Spawn(ctx, troupe.ActorConfig{Role: "analyst", Model: "sonnet"})
+	actor, err := broker.Spawn(ctx, troupe.AgentConfig{Role: "analyst", Model: "sonnet"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
@@ -76,7 +76,7 @@ func TestE2E_HookPipeline(t *testing.T) {
 		brokerpkg.WithHook(perfObs),
 	)
 
-	actor, err := broker.Spawn(ctx, troupe.ActorConfig{Role: "test"})
+	actor, err := broker.Spawn(ctx, troupe.AgentConfig{Role: "test"})
 	if err != nil {
 		t.Fatalf("Spawn: %v", err)
 	}
@@ -114,8 +114,8 @@ func TestE2E_MultiDriver_RoutesCorrectly(t *testing.T) {
 		brokerpkg.WithDriverFor("provider-b", d2),
 	)
 
-	broker.Spawn(ctx, troupe.ActorConfig{Provider: "provider-a", Role: "test"}) //nolint:errcheck // best-effort cleanup
-	broker.Spawn(ctx, troupe.ActorConfig{Provider: "provider-b", Role: "test"}) //nolint:errcheck // best-effort cleanup
+	broker.Spawn(ctx, troupe.AgentConfig{Provider: "provider-a", Role: "test"}) //nolint:errcheck // best-effort cleanup
+	broker.Spawn(ctx, troupe.AgentConfig{Provider: "provider-b", Role: "test"}) //nolint:errcheck // best-effort cleanup
 
 	if len(d1.started) != 1 {
 		t.Errorf("driver-a: %d starts, want 1", len(d1.started))
@@ -169,7 +169,7 @@ func TestE2E_ConcurrentSpawnPerform(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			a, err := broker.Spawn(ctx, troupe.ActorConfig{Role: fmt.Sprintf("w-%d", i)})
+			a, err := broker.Spawn(ctx, troupe.AgentConfig{Role: fmt.Sprintf("w-%d", i)})
 			if err != nil {
 				errs <- err
 				return
@@ -194,7 +194,7 @@ func TestE2E_MalformedInput_NoPanic(t *testing.T) {
 	broker := testkit.NewMockBroker(1)
 
 	// Empty config should not panic.
-	_, err := broker.Spawn(context.Background(), troupe.ActorConfig{})
+	_, err := broker.Spawn(context.Background(), troupe.AgentConfig{})
 	if err != nil {
 		t.Logf("empty config spawn error (acceptable): %v", err)
 	}
@@ -215,10 +215,10 @@ type e2eSpawnHook struct {
 }
 
 func (h *e2eSpawnHook) Name() string { return "e2e-spawn" }
-func (h *e2eSpawnHook) PreSpawn(_ context.Context, _ troupe.ActorConfig) error {
+func (h *e2eSpawnHook) PreSpawn(_ context.Context, _ troupe.AgentConfig) error {
 	return nil
 }
-func (h *e2eSpawnHook) PostSpawn(_ context.Context, _ troupe.ActorConfig, _ troupe.Actor, _ error) {
+func (h *e2eSpawnHook) PostSpawn(_ context.Context, _ troupe.AgentConfig, _ troupe.Agent, _ error) {
 	h.mu.Lock()
 	h.count++
 	h.mu.Unlock()
@@ -238,7 +238,7 @@ func (h *e2ePerformHook) PostPerform(_ context.Context, _, _ string, _ error) {
 	h.mu.Unlock()
 	if h.meter != nil {
 		h.meter.Record(troupe.Usage{
-			Actor:    "analyst",
+			Agent:    "analyst",
 			Step:     "perform",
 			Duration: time.Millisecond,
 		})

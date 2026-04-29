@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/dpopsuev/troupe"
+	"github.com/dpopsuev/tangle"
 )
 
 // MockBroker is a test Broker that spawns MockActors.
@@ -28,7 +28,7 @@ func NewMockBroker(n int) *MockBroker {
 }
 
 // Pick returns configs for the pre-configured actors.
-func (b *MockBroker) Pick(_ context.Context, prefs troupe.Preferences) ([]troupe.ActorConfig, error) {
+func (b *MockBroker) Pick(_ context.Context, prefs troupe.Preferences) ([]troupe.AgentConfig, error) {
 	count := prefs.Count
 	if count <= 0 {
 		count = 1
@@ -37,7 +37,7 @@ func (b *MockBroker) Pick(_ context.Context, prefs troupe.Preferences) ([]troupe
 		count = len(b.Actors)
 	}
 
-	configs := make([]troupe.ActorConfig, count)
+	configs := make([]troupe.AgentConfig, count)
 	model := prefs.Model
 	if model == "" {
 		model = "mock"
@@ -48,7 +48,7 @@ func (b *MockBroker) Pick(_ context.Context, prefs troupe.Preferences) ([]troupe
 		if actorRole == "" {
 			actorRole = b.Actors[i].Name
 		}
-		configs[i] = troupe.ActorConfig{
+		configs[i] = troupe.AgentConfig{
 			Model: model,
 			Role:  actorRole,
 		}
@@ -79,7 +79,7 @@ func (c *mockCard) Role() string     { return c.role }
 func (c *mockCard) Skills() []string { return c.skills }
 
 // Spawn returns the next pre-configured MockActor.
-func (b *MockBroker) Spawn(_ context.Context, config troupe.ActorConfig) (troupe.Actor, error) {
+func (b *MockBroker) Spawn(_ context.Context, config troupe.AgentConfig) (troupe.Agent, error) {
 	idx := int(b.spawned.Add(1)) - 1
 	if idx >= len(b.Actors) {
 		return nil, fmt.Errorf("mock broker: no more actors (spawned %d, have %d)", idx+1, len(b.Actors))

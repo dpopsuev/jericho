@@ -9,7 +9,7 @@ package troupe
 //   - Liveness: is the agent process alive? Failed liveness → kill+restart.
 //   - Readiness: can the agent accept work? Failed readiness → stop sending work.
 //
-// Actor.Ready() is the readiness probe. Probe adds startup and liveness.
+// Agent.Ready() is the readiness probe. Probe adds startup and liveness.
 type Probe interface {
 	// Startup reports whether the agent has finished initializing.
 	// Called repeatedly until it returns true, then never called again.
@@ -22,7 +22,7 @@ type Probe interface {
 
 // ProbeOf extracts the Probe from an actor, or returns a default
 // that reports always-started and liveness=Ready.
-func ProbeOf(actor Actor) Probe {
+func ProbeOf(actor Agent) Probe {
 	if p, ok := actor.(Probe); ok {
 		return p
 	}
@@ -30,7 +30,7 @@ func ProbeOf(actor Actor) Probe {
 }
 
 type defaultProbe struct {
-	actor Actor
+	actor Agent
 }
 
 func (p *defaultProbe) Startup() bool  { return true }

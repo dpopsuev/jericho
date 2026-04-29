@@ -6,12 +6,12 @@ import (
 
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/billing"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/collective"
-	"github.com/dpopsuev/troupe/referee"
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/billing"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/collective"
+	"github.com/dpopsuev/tangle/referee"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 func TestCollective_WiredStack_Race(t *testing.T) {
@@ -122,7 +122,7 @@ func TestCollective_WiredStack_AddRemove(t *testing.T) {
 		t.Fatalf("size = %d, want 1", coll.Size())
 	}
 
-	extra, err := b.Spawn(context.Background(), troupe.ActorConfig{
+	extra, err := b.Spawn(context.Background(), troupe.AgentConfig{
 		Model: "test", Provider: "test", Role: "extra",
 	})
 	if err != nil {

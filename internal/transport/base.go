@@ -6,7 +6,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	troupe "github.com/dpopsuev/troupe"
+	troupe "github.com/dpopsuev/tangle"
 )
 
 type taskEntry struct {

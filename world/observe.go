@@ -5,7 +5,7 @@
 package world
 
 import (
-	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/tangle/signal"
 )
 
 // ComponentMutation is the typed payload for component change events.

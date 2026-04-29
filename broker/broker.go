@@ -6,19 +6,19 @@ import (
 
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 
-	troupe "github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/arsenal"
-	"github.com/dpopsuev/troupe/billing"
-	"github.com/dpopsuev/troupe/collective"
-	"github.com/dpopsuev/troupe/internal/agent"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/internal/warden"
-	"github.com/dpopsuev/troupe/providers"
-	"github.com/dpopsuev/troupe/referee"
-	"github.com/dpopsuev/troupe/resilience"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/visual"
-	"github.com/dpopsuev/troupe/world"
+	troupe "github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/arsenal"
+	"github.com/dpopsuev/tangle/billing"
+	"github.com/dpopsuev/tangle/collective"
+	"github.com/dpopsuev/tangle/internal/agent"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/internal/warden"
+	"github.com/dpopsuev/tangle/providers"
+	"github.com/dpopsuev/tangle/referee"
+	"github.com/dpopsuev/tangle/resilience"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/visual"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // DefaultBroker is the standard Broker implementation. Wires World, Warden,
@@ -82,7 +82,7 @@ func WithHook(h Hook) Option {
 }
 
 // WithDriverFor registers a driver for a specific provider.
-// Broker.Spawn routes to the matching driver based on ActorConfig.Provider.
+// Broker.Spawn routes to the matching driver based on AgentConfig.Provider.
 func WithDriverFor(provider string, d troupe.Driver) Option {
 	return func(c *config) {
 		if c.drivers == nil {
@@ -156,7 +156,7 @@ func WithSpawnGate(g troupe.Gate) Option {
 	return func(c *config) { c.spawnGates = append(c.spawnGates, g) }
 }
 
-// WithPerformGate adds a Gate that must pass before Actor.Perform proceeds.
+// WithPerformGate adds a Gate that must pass before Agent.Perform proceeds.
 // Multiple gates compose with short-circuit AND (first rejection stops).
 func WithPerformGate(g troupe.Gate) Option {
 	return func(c *config) { c.performGates = append(c.performGates, g) }
@@ -298,16 +298,16 @@ func newLocalBroker(opts ...Option) *DefaultBroker {
 // Pick returns actor configs matching preferences. When Arsenal is configured,
 // models are selected via trait-scored catalog. Otherwise falls back to
 // pass-through (consumer-supplied model/role used as-is).
-func (b *DefaultBroker) Pick(ctx context.Context, prefs troupe.Preferences) ([]troupe.ActorConfig, error) {
+func (b *DefaultBroker) Pick(ctx context.Context, prefs troupe.Preferences) ([]troupe.AgentConfig, error) {
 	count := prefs.Count
 	if count <= 0 {
 		count = 1
 	}
 
 	if b.arsenal == nil {
-		configs := make([]troupe.ActorConfig, count)
+		configs := make([]troupe.AgentConfig, count)
 		for i := range count {
-			configs[i] = troupe.ActorConfig{
+			configs[i] = troupe.AgentConfig{
 				Model: prefs.Model,
 				Role:  prefs.Role,
 			}
@@ -325,13 +325,13 @@ func (b *DefaultBroker) Pick(ctx context.Context, prefs troupe.Preferences) ([]t
 		return nil, fmt.Errorf("arsenal select: %w", err)
 	}
 
-	cfg := troupe.ActorConfig{
+	cfg := troupe.AgentConfig{
 		Model:    resolved.Model,
 		Provider: resolved.Provider,
 		Role:     prefs.Role,
 	}
 
-	configs := make([]troupe.ActorConfig, count)
+	configs := make([]troupe.AgentConfig, count)
 	for i := range count {
 		configs[i] = cfg
 	}
@@ -344,7 +344,7 @@ func (b *DefaultBroker) Pick(ctx context.Context, prefs troupe.Preferences) ([]t
 }
 
 // Spawn creates a running actor.
-func (b *DefaultBroker) Spawn(ctx context.Context, cfg troupe.ActorConfig) (troupe.Actor, error) {
+func (b *DefaultBroker) Spawn(ctx context.Context, cfg troupe.AgentConfig) (troupe.Agent, error) {
 	// Driver environment validation (optional interface).
 	drv := b.adapter.resolve(0) // check default driver
 	if cfg.Provider != "" && b.adapter.drivers != nil {
@@ -406,7 +406,7 @@ func (b *DefaultBroker) Spawn(ctx context.Context, cfg troupe.ActorConfig) (trou
 		}, 0)
 	}
 
-	var actor troupe.Actor
+	var actor troupe.Agent
 	if err == nil {
 		actor = agent.NewSolo(id, role, b.world, b.warden, b.transport)
 	}
@@ -504,8 +504,8 @@ func (b *DefaultBroker) PerformGate() troupe.Gate { return b.performGate }
 
 // SpawnCollective creates a multi-agent collective backed by the given
 // strategy. Spawns count agents via Pick+Spawn, wraps them in a Collective
-// that implements troupe.Actor. The caller sees one actor; internally N
+// that implements troupe.Agent. The caller sees one actor; internally N
 // agents collaborate via the strategy.
-func (b *DefaultBroker) SpawnCollective(ctx context.Context, count int, strategy collective.CollectiveStrategy) (troupe.Actor, error) {
+func (b *DefaultBroker) SpawnCollective(ctx context.Context, count int, strategy collective.CollectiveStrategy) (troupe.Agent, error) {
 	return collective.SpawnCollective(ctx, b, count, strategy)
 }

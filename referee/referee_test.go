@@ -3,8 +3,8 @@ package referee_test
 import (
 	"testing"
 
-	"github.com/dpopsuev/troupe/referee"
-	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/tangle/referee"
+	"github.com/dpopsuev/tangle/signal"
 )
 
 func TestParseScorecard_Valid(t *testing.T) {

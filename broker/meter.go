@@ -3,7 +3,7 @@ package broker
 import (
 	"sync"
 
-	troupe "github.com/dpopsuev/troupe"
+	troupe "github.com/dpopsuev/tangle"
 )
 
 // InMemoryMeter is a thread-safe in-memory Meter implementation.
@@ -30,7 +30,7 @@ func (m *InMemoryMeter) Query(actor string) []troupe.Usage {
 	defer m.mu.Unlock()
 	var result []troupe.Usage
 	for _, r := range m.records {
-		if r.Actor == actor {
+		if r.Agent == actor {
 			result = append(result, r)
 		}
 	}

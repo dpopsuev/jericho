@@ -8,10 +8,10 @@ import (
 
 	"github.com/a2aproject/a2a-go/a2a"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/world"
 )
 
 func TestA2AProxy_TwoServers_RoundTrip(t *testing.T) {
@@ -49,7 +49,7 @@ func TestA2AProxy_TwoServers_RoundTrip(t *testing.T) {
 	})
 
 	// 3. Admit the remote agent via its callback URL.
-	id, err := lobby.Admit(context.Background(), troupe.ActorConfig{
+	id, err := lobby.Admit(context.Background(), troupe.AgentConfig{
 		Role:        "reviewer",
 		CallbackURL: remoteServer.URL,
 	})

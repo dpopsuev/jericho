@@ -3,7 +3,7 @@ package testkit
 import (
 	"testing"
 
-	"github.com/dpopsuev/troupe/signal"
+	"github.com/dpopsuev/tangle/signal"
 )
 
 // NewTestBusSet creates a BusSet backed by StubEventLogs for testing.

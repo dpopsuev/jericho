@@ -10,13 +10,13 @@ import (
 
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/arsenal"
-	"github.com/dpopsuev/troupe/billing"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/providers"
-	"github.com/dpopsuev/troupe/referee"
-	"github.com/dpopsuev/troupe/resilience"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/arsenal"
+	"github.com/dpopsuev/tangle/billing"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/providers"
+	"github.com/dpopsuev/tangle/referee"
+	"github.com/dpopsuev/tangle/resilience"
 )
 
 func TestE2E_RealLLM_ConcurrentCalls_WithRetry(t *testing.T) {

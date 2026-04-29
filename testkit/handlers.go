@@ -3,7 +3,7 @@ package testkit
 import (
 	"context"
 
-	"github.com/dpopsuev/troupe/internal/transport"
+	"github.com/dpopsuev/tangle/internal/transport"
 )
 
 // EchoHandler returns a handler that echoes the message back.

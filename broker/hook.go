@@ -3,8 +3,8 @@ package broker
 import (
 	"context"
 
-	troupe "github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/world"
+	troupe "github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/world"
 )
 
 // Hook observes and optionally intercepts broker lifecycle events.
@@ -17,12 +17,12 @@ type Hook interface {
 type SpawnHook interface {
 	Hook
 	// PreSpawn is called before spawning. Return non-nil error to reject.
-	PreSpawn(ctx context.Context, config troupe.ActorConfig) error
+	PreSpawn(ctx context.Context, config troupe.AgentConfig) error
 	// PostSpawn is called after spawning (success or failure).
-	PostSpawn(ctx context.Context, config troupe.ActorConfig, actor troupe.Actor, err error)
+	PostSpawn(ctx context.Context, config troupe.AgentConfig, actor troupe.Agent, err error)
 }
 
-// PerformHook intercepts Actor.Perform calls.
+// PerformHook intercepts Agent.Perform calls.
 type PerformHook interface {
 	Hook
 	// PrePerform is called before performing. Return non-nil error to reject.

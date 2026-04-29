@@ -6,8 +6,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/dpopsuev/troupe/resilience"
-	"github.com/dpopsuev/troupe/testkit"
+	"github.com/dpopsuev/tangle/resilience"
+	"github.com/dpopsuev/tangle/testkit"
 )
 
 type failNActor struct {

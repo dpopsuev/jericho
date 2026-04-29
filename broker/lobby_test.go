@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dpopsuev/troupe"
-	"github.com/dpopsuev/troupe/broker"
-	"github.com/dpopsuev/troupe/internal/transport"
-	"github.com/dpopsuev/troupe/signal"
-	"github.com/dpopsuev/troupe/testkit"
-	"github.com/dpopsuev/troupe/world"
+	"github.com/dpopsuev/tangle"
+	"github.com/dpopsuev/tangle/broker"
+	"github.com/dpopsuev/tangle/internal/transport"
+	"github.com/dpopsuev/tangle/signal"
+	"github.com/dpopsuev/tangle/testkit"
+	"github.com/dpopsuev/tangle/world"
 )
 
 func TestLobby_AdmitInternal(t *testing.T) {
@@ -26,7 +26,7 @@ func TestLobby_AdmitInternal(t *testing.T) {
 		ControlLog: log,
 	})
 
-	id, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "worker"})
+	id, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "worker"})
 	if err != nil {
 		t.Fatalf("Admit: %v", err)
 	}
@@ -56,7 +56,7 @@ func TestLobby_AdmitExternal(t *testing.T) {
 		Transport: tr,
 	})
 
-	id, err := lobby.Admit(context.Background(), troupe.ActorConfig{
+	id, err := lobby.Admit(context.Background(), troupe.AgentConfig{
 		Role:        "remote-worker",
 		CallbackURL: "https://remote-agent.example.com",
 	})
@@ -84,7 +84,7 @@ func TestLobby_GateRejects(t *testing.T) {
 		Gates:      []troupe.Gate{troupe.AlwaysDeny},
 	})
 
-	_, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "worker"})
+	_, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "worker"})
 	if err == nil {
 		t.Fatal("gate should have rejected")
 	}
@@ -111,7 +111,7 @@ func TestLobby_Kick(t *testing.T) {
 		Transport: tr,
 	})
 
-	id, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "worker"})
+	id, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "worker"})
 	if err != nil {
 		t.Fatalf("Admit: %v", err)
 	}
@@ -143,12 +143,12 @@ func TestLobby_SamePathInternalAndExternal(t *testing.T) {
 		Gates:      []troupe.Gate{countingGate},
 	})
 
-	_, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "internal"})
+	_, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "internal"})
 	if err != nil {
 		t.Fatalf("Admit internal: %v", err)
 	}
 
-	_, err = lobby.Admit(context.Background(), troupe.ActorConfig{
+	_, err = lobby.Admit(context.Background(), troupe.AgentConfig{
 		Role:        "external",
 		CallbackURL: "https://remote.example.com",
 	})
@@ -184,7 +184,7 @@ func TestBroker_WithAdmission(t *testing.T) {
 		broker.WithAdmission(lobby),
 	)
 
-	_, err := b.Spawn(context.Background(), troupe.ActorConfig{Role: "worker"})
+	_, err := b.Spawn(context.Background(), troupe.AgentConfig{Role: "worker"})
 	if err != nil {
 		t.Fatalf("Spawn with Admission: %v", err)
 	}
@@ -212,7 +212,7 @@ func TestLobby_ProxyFactory_CalledForExternal(t *testing.T) {
 		},
 	})
 
-	_, err := lobby.Admit(context.Background(), troupe.ActorConfig{
+	_, err := lobby.Admit(context.Background(), troupe.AgentConfig{
 		Role:        "remote",
 		CallbackURL: "https://remote.example.com/a2a",
 	})
@@ -238,7 +238,7 @@ func TestLobby_ProxyFactory_NotCalledForInternal(t *testing.T) {
 		},
 	})
 
-	_, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "internal"})
+	_, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "internal"})
 	if err != nil {
 		t.Fatalf("Admit: %v", err)
 	}
@@ -258,7 +258,7 @@ func TestLobby_Heartbeat(t *testing.T) {
 		Transport: tr,
 	})
 
-	id, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "worker"})
+	id, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "worker"})
 	if err != nil {
 		t.Fatalf("Admit: %v", err)
 	}
@@ -288,7 +288,7 @@ func TestLobby_EvictStale(t *testing.T) {
 		Transport: tr,
 	})
 
-	_, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "stale-worker"})
+	_, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "stale-worker"})
 	if err != nil {
 		t.Fatalf("Admit: %v", err)
 	}
@@ -317,7 +317,7 @@ func TestLobby_ConcurrentAdmit_Race(t *testing.T) {
 	for i := range n {
 		go func(i int) {
 			defer wg.Done()
-			_, _ = lobby.Admit(context.Background(), troupe.ActorConfig{
+			_, _ = lobby.Admit(context.Background(), troupe.AgentConfig{
 				Role: fmt.Sprintf("worker-%d", i),
 			})
 		}(i)
@@ -341,7 +341,7 @@ func TestLobby_EvictStale_HeartbeatKeepsAlive(t *testing.T) {
 		Transport: tr,
 	})
 
-	id, err := lobby.Admit(context.Background(), troupe.ActorConfig{Role: "active-worker"})
+	id, err := lobby.Admit(context.Background(), troupe.AgentConfig{Role: "active-worker"})
 	if err != nil {
 		t.Fatalf("Admit: %v", err)
 	}

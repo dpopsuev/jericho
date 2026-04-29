@@ -1,4 +1,4 @@
-module github.com/dpopsuev/troupe
+module github.com/dpopsuev/tangle
 
 go 1.25.8
 

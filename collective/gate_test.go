@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	troupe "github.com/dpopsuev/troupe"
+	troupe "github.com/dpopsuev/tangle"
 )
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -148,7 +148,7 @@ func TestWithParentGates_IngressBlocks(t *testing.T) {
 	agent, _ := parts.spawn(ctx, "worker")
 	agent.Listen(func(_ string) string { return "response" })
 
-	c := NewCollective(1, "test", &echoStrategy{}, []troupe.Actor{agent},
+	c := NewCollective(1, "test", &echoStrategy{}, []troupe.Agent{agent},
 		WithParentGates(troupe.AlwaysDeny, nil),
 	)
 
@@ -174,7 +174,7 @@ func TestWithParentGates_ComposesWithOwnIngress(t *testing.T) {
 	gateAgent, _ := parts.spawn(ctx, "gate")
 	gateAgent.Listen(func(_ string) string { return "PASS: ok" })
 
-	c := NewCollective(1, "test", &echoStrategy{}, []troupe.Actor{agent},
+	c := NewCollective(1, "test", &echoStrategy{}, []troupe.Agent{agent},
 		WithIngress(&AgentGatekeeper{Agent: gateAgent}),
 		WithParentGates(countingGate, nil),
 	)
@@ -199,7 +199,7 @@ func TestWithParentGates_ParentRejectsBeforeChild(t *testing.T) {
 	childGate := &passGate{}
 	_ = childGate
 
-	c := NewCollective(1, "test", &echoStrategy{}, []troupe.Actor{agent},
+	c := NewCollective(1, "test", &echoStrategy{}, []troupe.Agent{agent},
 		WithIngress(NewGateKeeper(troupe.Gate(func(_ context.Context, _ any) (bool, string, error) {
 			childCalled = true
 			return true, "", nil
