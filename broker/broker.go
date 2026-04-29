@@ -247,7 +247,7 @@ func newLocalBroker(opts ...Option) *DefaultBroker {
 					})
 				}
 			}
-			actorFn := providers.LLMActorFunc(llmProvider, ac.Model, recorder)
+			actorFn := providers.NewCompleter(llmProvider, ac.Model, recorder)
 			return func(ctx context.Context, msg transport.Message) (transport.Message, error) {
 				resp, callErr := actorFn(ctx, msg.Content)
 				if callErr != nil {

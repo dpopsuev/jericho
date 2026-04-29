@@ -2,6 +2,7 @@ package providers
 
 import (
 	"context"
+	troupe "github.com/dpopsuev/tangle"
 	"fmt"
 
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
@@ -13,10 +14,10 @@ import (
 // The consumer wires this to billing.Tracker, Meter, or whatever.
 type UsageRecorder func(model string, usage *anyllm.Usage)
 
-// LLMActorFunc creates an ActorFunc that calls an any-llm-go Provider.
+// NewCompleter creates an troupe.CompleteFunc that calls an any-llm-go Provider.
 // The provider connection persists across calls — warm, not cold.
 // If a UsageRecorder is provided, it receives normalized usage after each call.
-func LLMActorFunc(provider anyllm.Provider, model string, recorder UsageRecorder) ActorFunc {
+func NewCompleter(provider anyllm.Provider, model string, recorder UsageRecorder) troupe.CompleteFunc {
 	return func(ctx context.Context, input string) (string, error) {
 		resp, err := provider.Completion(ctx, anyllm.CompletionParams{
 			Model: model,

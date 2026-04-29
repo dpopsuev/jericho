@@ -246,7 +246,7 @@ func TestVertexProvider_E2E_UsageTracking(t *testing.T) {
 		t.Logf("Usage: model=%s in=%d out=%d", model, usage.PromptTokens, usage.CompletionTokens)
 	}
 
-	actor := LLMActorFunc(p, "claude-sonnet-4", recorder)
+	actor := NewCompleter(p, "claude-sonnet-4", recorder)
 
 	result, err := actor(ctx, "Reply with exactly one word: hello")
 	if err != nil {

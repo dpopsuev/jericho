@@ -3,26 +3,26 @@ package providers
 import (
 	"context"
 	"log/slog"
+	troupe "github.com/dpopsuev/tangle"
 	"sync"
 	"time"
 )
 
-// ActorFunc is the work execution function. Takes input, returns output.
+// troupe.CompleteFunc is the work execution function. Takes input, returns output.
 // This is what each pooled actor calls for every work item.
-type ActorFunc func(ctx context.Context, input string) (string, error)
 
 // Pool manages N warm actors pulling work from a Queue.
 // Actors spawn once at Start(), stay alive pulling work, and drain
 // gracefully when the context is cancelled or Drain() is called.
 type Pool struct {
 	queue Queue
-	actor ActorFunc
+	actor troupe.CompleteFunc
 	size  int
 	wg    sync.WaitGroup
 }
 
 // NewPool creates an actor pool of the given size.
-func NewPool(queue Queue, actor ActorFunc, size int) *Pool {
+func NewPool(queue Queue, actor troupe.CompleteFunc, size int) *Pool {
 	return &Pool{queue: queue, actor: actor, size: size}
 }
 

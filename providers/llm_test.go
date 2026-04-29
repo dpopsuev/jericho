@@ -33,7 +33,7 @@ func (s *stubProvider) CompletionStream(_ context.Context, _ anyllm.CompletionPa
 
 func TestLLMActorFunc_ReturnsResponse(t *testing.T) {
 	provider := &stubProvider{response: "hello from LLM"}
-	actor := providers.LLMActorFunc(provider, "test-model", nil)
+	actor := providers.NewCompleter(provider, "test-model", nil)
 
 	result, err := actor(context.Background(), "test prompt")
 	if err != nil {
@@ -46,7 +46,7 @@ func TestLLMActorFunc_ReturnsResponse(t *testing.T) {
 
 func TestLLMActorFunc_ReusesConnection(t *testing.T) {
 	provider := &stubProvider{response: "warm"}
-	actor := providers.LLMActorFunc(provider, "test-model", nil)
+	actor := providers.NewCompleter(provider, "test-model", nil)
 
 	for i := range 3 {
 		result, err := actor(context.Background(), "prompt")
@@ -77,7 +77,7 @@ func TestLLMActorFunc_RecordsUsage(t *testing.T) {
 		recorded = append(recorded, *usage)
 	}
 
-	actor := providers.LLMActorFunc(provider, "test-model", recorder)
+	actor := providers.NewCompleter(provider, "test-model", recorder)
 
 	// Call twice
 	actor(context.Background(), "prompt 1") //nolint:errcheck
@@ -101,7 +101,7 @@ func TestLLMActorFunc_NilRecorder(t *testing.T) {
 	}
 
 	// nil recorder should not panic
-	actor := providers.LLMActorFunc(provider, "test-model", nil)
+	actor := providers.NewCompleter(provider, "test-model", nil)
 	result, err := actor(context.Background(), "prompt")
 	if err != nil {
 		t.Fatal(err)
