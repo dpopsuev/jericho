@@ -249,14 +249,14 @@ func newLocalBroker(opts ...Option) *DefaultBroker {
 			}
 			actorFn := providers.NewCompleter(llmProvider, ac.Model, recorder)
 			return func(ctx context.Context, msg transport.Message) (transport.Message, error) {
-				resp, callErr := actorFn(ctx, msg.Content)
+				completion, callErr := actorFn(ctx, troupe.CompletionParams{Prompt: msg.Content})
 				if callErr != nil {
 					return transport.Message{}, callErr
 				}
 				return transport.Message{
 					From:    transport.AgentID(fmt.Sprintf("agent-%d", id)),
 					Role:    transport.RoleAgent,
-					Content: resp,
+					Content: completion.Content,
 				}, nil
 			}
 		})

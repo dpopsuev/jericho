@@ -7,6 +7,7 @@ import (
 
 	"github.com/anthropics/anthropic-sdk-go"
 
+	troupe "github.com/dpopsuev/tangle"
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 )
 
@@ -248,11 +249,11 @@ func TestVertexProvider_E2E_UsageTracking(t *testing.T) {
 
 	actor := NewCompleter(p, "claude-sonnet-4", recorder)
 
-	result, err := actor(ctx, "Reply with exactly one word: hello")
+	result, err := actor(ctx, troupe.CompletionParams{Prompt: "Reply with exactly one word: hello"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result == "" {
+	if result.Content == "" {
 		t.Fatal("empty response")
 	}
 

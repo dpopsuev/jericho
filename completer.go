@@ -1,15 +1,45 @@
 package troupe
 
-import "context"
+import (
+	"context"
+	"encoding/json"
+)
 
-// Completer performs a single LLM completion. Prompt in, response out.
-type Completer interface {
-	Complete(ctx context.Context, prompt string) (string, error)
+type CompletionParams struct {
+	Prompt    string
+	Tools     []Tool
+	MaxTokens int
 }
 
-// CompleteFunc is a function that satisfies Completer.
-type CompleteFunc func(ctx context.Context, prompt string) (string, error)
+type Completion struct {
+	Content   string
+	ToolCalls []ToolCall
+	Tokens    TokenUsage
+}
 
-func (f CompleteFunc) Complete(ctx context.Context, prompt string) (string, error) {
-	return f(ctx, prompt)
+type Tool struct {
+	Name        string
+	Description string
+	InputSchema json.RawMessage
+}
+
+type ToolCall struct {
+	ID    string
+	Name  string
+	Input json.RawMessage
+}
+
+type TokenUsage struct {
+	Input  int
+	Output int
+}
+
+type Completer interface {
+	Complete(ctx context.Context, params CompletionParams) (*Completion, error)
+}
+
+type CompleteFunc func(ctx context.Context, params CompletionParams) (*Completion, error)
+
+func (f CompleteFunc) Complete(ctx context.Context, params CompletionParams) (*Completion, error) {
+	return f(ctx, params)
 }

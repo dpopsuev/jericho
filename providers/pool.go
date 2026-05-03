@@ -8,9 +8,6 @@ import (
 	"time"
 )
 
-// troupe.CompleteFunc is the work execution function. Takes input, returns output.
-// This is what each pooled actor calls for every work item.
-
 // Pool manages N warm actors pulling work from a Queue.
 // Actors spawn once at Start(), stay alive pulling work, and drain
 // gracefully when the context is cancelled or Drain() is called.
@@ -52,7 +49,7 @@ func (p *Pool) workerLoop(ctx context.Context, workerID int) {
 		}
 
 		start := time.Now()
-		result, execErr := p.actor(ctx, item.Input())
+		completion, execErr := p.actor(ctx, troupe.CompletionParams{Prompt: item.Input()})
 		elapsed := time.Since(start)
 
 		if execErr != nil {
@@ -69,6 +66,6 @@ func (p *Pool) workerLoop(ctx context.Context, workerID int) {
 			slog.Int(logKeyWorkerID, workerID),
 			slog.Uint64(logKeyItemID, item.ID()),
 			slog.Int64(logKeyElapsedMs, elapsed.Milliseconds()))
-		_ = p.queue.Submit(ctx, item.ID(), []byte(result))
+		_ = p.queue.Submit(ctx, item.ID(), []byte(completion.Content))
 	}
 }
