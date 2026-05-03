@@ -13,11 +13,32 @@ type UsageRecorder func(model string, usage *anyllm.Usage)
 
 func NewCompleter(provider anyllm.Provider, model string, recorder UsageRecorder) troupe.CompleteFunc {
 	return func(ctx context.Context, params troupe.CompletionParams) (*troupe.Completion, error) {
+		var msgs []anyllm.Message
+		if len(params.Messages) > 0 {
+			for _, m := range params.Messages {
+				msg := anyllm.Message{
+					Role:       m.Role,
+					Content:    m.Content,
+					ToolCallID: m.ToolCallID,
+				}
+				for _, tc := range m.ToolCalls {
+					msg.ToolCalls = append(msg.ToolCalls, anyllm.ToolCall{
+						ID:   tc.ID,
+						Type: "function",
+						Function: anyllm.FunctionCall{
+							Name:      tc.Name,
+							Arguments: string(tc.Input),
+						},
+					})
+				}
+				msgs = append(msgs, msg)
+			}
+		} else {
+			msgs = []anyllm.Message{{Role: "user", Content: params.Prompt}}
+		}
 		req := anyllm.CompletionParams{
-			Model: model,
-			Messages: []anyllm.Message{
-				{Role: "user", Content: params.Prompt},
-			},
+			Model:    model,
+			Messages: msgs,
 		}
 
 		if params.MaxTokens > 0 {

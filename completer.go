@@ -7,8 +7,16 @@ import (
 
 type CompletionParams struct {
 	Prompt    string
+	Messages  []Message
 	Tools     []Tool
 	MaxTokens int
+}
+
+type Message struct {
+	Role       string
+	Content    string
+	ToolCalls  []ToolCall
+	ToolCallID string
 }
 
 type Completion struct {
