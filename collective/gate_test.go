@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 )
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -128,7 +128,7 @@ func TestAgentGatekeeper_EmptyResponse(t *testing.T) {
 // ═══════════════════════════════════════════════════════════════════════
 
 func TestGateKeeper_FromGate(t *testing.T) {
-	gk := NewGateKeeper(troupe.AlwaysDeny)
+	gk := NewGateKeeper(tangle.AlwaysDeny)
 	ok, reason, err := gk.Pass(context.Background(), "test")
 	if err != nil {
 		t.Fatalf("err = %v", err)
@@ -148,8 +148,8 @@ func TestWithParentGates_IngressBlocks(t *testing.T) {
 	agent, _ := parts.spawn(ctx, "worker")
 	agent.Listen(func(_ string) string { return "response" })
 
-	c := NewCollective(1, "test", &echoStrategy{}, []troupe.Agent{agent},
-		WithParentGates(troupe.AlwaysDeny, nil),
+	c := NewCollective(1, "test", &echoStrategy{}, []tangle.Agent{agent},
+		WithParentGates(tangle.AlwaysDeny, nil),
 	)
 
 	_, err := c.Perform(ctx, "hello")
@@ -166,7 +166,7 @@ func TestWithParentGates_ComposesWithOwnIngress(t *testing.T) {
 	agent.Listen(func(_ string) string { return "PASS: ok" })
 
 	callCount := 0
-	countingGate := troupe.Gate(func(_ context.Context, _ any) (bool, string, error) {
+	countingGate := tangle.Gate(func(_ context.Context, _ any) (bool, string, error) {
 		callCount++
 		return true, "", nil
 	})
@@ -174,7 +174,7 @@ func TestWithParentGates_ComposesWithOwnIngress(t *testing.T) {
 	gateAgent, _ := parts.spawn(ctx, "gate")
 	gateAgent.Listen(func(_ string) string { return "PASS: ok" })
 
-	c := NewCollective(1, "test", &echoStrategy{}, []troupe.Agent{agent},
+	c := NewCollective(1, "test", &echoStrategy{}, []tangle.Agent{agent},
 		WithIngress(&AgentGatekeeper{Agent: gateAgent}),
 		WithParentGates(countingGate, nil),
 	)
@@ -199,12 +199,12 @@ func TestWithParentGates_ParentRejectsBeforeChild(t *testing.T) {
 	childGate := &passGate{}
 	_ = childGate
 
-	c := NewCollective(1, "test", &echoStrategy{}, []troupe.Agent{agent},
-		WithIngress(NewGateKeeper(troupe.Gate(func(_ context.Context, _ any) (bool, string, error) {
+	c := NewCollective(1, "test", &echoStrategy{}, []tangle.Agent{agent},
+		WithIngress(NewGateKeeper(tangle.Gate(func(_ context.Context, _ any) (bool, string, error) {
 			childCalled = true
 			return true, "", nil
 		}))),
-		WithParentGates(troupe.AlwaysDeny, nil),
+		WithParentGates(tangle.AlwaysDeny, nil),
 	)
 
 	_, err := c.Perform(ctx, "hello")

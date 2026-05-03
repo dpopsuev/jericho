@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 	"github.com/dpopsuev/tangle/providers"
 )
 
@@ -116,8 +116,8 @@ func TestPool_ProcessesAllItems(t *testing.T) {
 	q := newMemQueue()
 
 	// Echo actor: returns input prefixed with "echo:".
-	echoActor := troupe.CompleteFunc(func(_ context.Context, params troupe.CompletionParams) (*troupe.Completion, error) {
-		return &troupe.Completion{Content: "echo:" + params.Prompt}, nil
+	echoActor := tangle.CompleteFunc(func(_ context.Context, params tangle.CompletionParams) (*tangle.Completion, error) {
+		return &tangle.Completion{Content: "echo:" + params.Prompt}, nil
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -162,7 +162,7 @@ func TestPool_ProcessesAllItems(t *testing.T) {
 func TestPool_ErrorSubmission(t *testing.T) {
 	q := newMemQueue()
 
-	failActor := troupe.CompleteFunc(func(_ context.Context, _ troupe.CompletionParams) (*troupe.Completion, error) {
+	failActor := tangle.CompleteFunc(func(_ context.Context, _ tangle.CompletionParams) (*tangle.Completion, error) {
 		return nil, fmt.Errorf("boom")
 	})
 

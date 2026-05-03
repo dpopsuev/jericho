@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"sync"
 
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 )
 
 // ErrBudgetExceeded is returned when an agent exceeds its cost limit.
@@ -84,7 +84,7 @@ func (e *BudgetEnforcer) Check(agentID string) error {
 
 // AsGate returns a Gate that checks the budget for the given agent.
 // The Gate subject is ignored — the agentID is bound at creation time.
-func (e *BudgetEnforcer) AsGate(agentID string) troupe.Gate {
+func (e *BudgetEnforcer) AsGate(agentID string) tangle.Gate {
 	return func(_ context.Context, _ any) (bool, string, error) {
 		if err := e.Check(agentID); err != nil {
 			return false, err.Error(), nil

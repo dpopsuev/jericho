@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 )
 
 // CircuitState represents the current state of a circuit breaker.
@@ -38,7 +38,7 @@ type CircuitConfig struct {
 	Threshold      int              // consecutive failures before opening (default 5)
 	Cooldown       time.Duration    // wait before half-open probe (default 30s)
 	OnChange       func(from, to CircuitState)
-	OpenThreshold  troupe.Threshold // optional: replaces Threshold int when set
+	OpenThreshold  tangle.Threshold // optional: replaces Threshold int when set
 }
 
 // CircuitBreaker implements the circuit breaker pattern.
@@ -49,7 +49,7 @@ type CircuitBreaker struct {
 	threshold     int
 	cooldown      time.Duration
 	onChange      func(from, to CircuitState)
-	openThreshold troupe.Threshold
+	openThreshold tangle.Threshold
 
 	mu       sync.Mutex
 	state    CircuitState

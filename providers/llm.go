@@ -5,14 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 )
 
 type UsageRecorder func(model string, usage *anyllm.Usage)
 
-func NewCompleter(provider anyllm.Provider, model string, recorder UsageRecorder) troupe.CompleteFunc {
-	return func(ctx context.Context, params troupe.CompletionParams) (*troupe.Completion, error) {
+func NewCompleter(provider anyllm.Provider, model string, recorder UsageRecorder) tangle.CompleteFunc {
+	return func(ctx context.Context, params tangle.CompletionParams) (*tangle.Completion, error) {
 		var msgs []anyllm.Message
 		if len(params.Messages) > 0 {
 			for _, m := range params.Messages {
@@ -72,7 +72,7 @@ func NewCompleter(provider anyllm.Provider, model string, recorder UsageRecorder
 			recorder(resp.Model, resp.Usage)
 		}
 
-		completion := &troupe.Completion{}
+		completion := &tangle.Completion{}
 
 		if content, ok := resp.Choices[0].Message.Content.(string); ok {
 			completion.Content = content
@@ -80,7 +80,7 @@ func NewCompleter(provider anyllm.Provider, model string, recorder UsageRecorder
 
 		for _, tc := range resp.Choices[0].Message.ToolCalls {
 			input := json.RawMessage(tc.Function.Arguments)
-			completion.ToolCalls = append(completion.ToolCalls, troupe.ToolCall{
+			completion.ToolCalls = append(completion.ToolCalls, tangle.ToolCall{
 				ID:    tc.ID,
 				Name:  tc.Function.Name,
 				Input: input,
@@ -88,7 +88,7 @@ func NewCompleter(provider anyllm.Provider, model string, recorder UsageRecorder
 		}
 
 		if resp.Usage != nil {
-			completion.Tokens = troupe.TokenUsage{
+			completion.Tokens = tangle.TokenUsage{
 				Input:  resp.Usage.PromptTokens,
 				Output: resp.Usage.CompletionTokens,
 			}

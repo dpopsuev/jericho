@@ -6,7 +6,7 @@ import (
 
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 	"github.com/dpopsuev/tangle/arsenal"
 	"github.com/dpopsuev/tangle/billing"
 	"github.com/dpopsuev/tangle/collective"
@@ -38,20 +38,20 @@ type DefaultBroker struct {
 	enforcer         *billing.BudgetEnforcer
 	referee          *referee.Referee
 	retryConfig      *resilience.RetryConfig
-	driver           troupe.Driver // default driver (for optional interface checks)
+	driver           tangle.Driver // default driver (for optional interface checks)
 	adapter          *multiDriverAdapter
-	meter            troupe.Meter
-	spawnGate        troupe.Gate
-	performGate      troupe.Gate
-	admission        troupe.Admission
+	meter            tangle.Meter
+	spawnGate        tangle.Gate
+	performGate      tangle.Gate
+	admission        tangle.Admission
 }
 
 // Option configures a DefaultBroker.
 type Option func(*config)
 
 type config struct {
-	driver           troupe.Driver
-	drivers          map[string]troupe.Driver // provider → driver
+	driver           tangle.Driver
+	drivers          map[string]tangle.Driver // provider → driver
 	hooks            []Hook
 	pickStrategy     PickStrategy
 	arsenal          *arsenal.Arsenal
@@ -59,16 +59,16 @@ type config struct {
 	tracker          *billing.InMemoryTracker
 	referee          *referee.Referee
 	retryConfig      *resilience.RetryConfig
-	meter            troupe.Meter
+	meter            tangle.Meter
 	transport        transport.Transport
-	spawnGates       []troupe.Gate
-	performGates     []troupe.Gate
+	spawnGates       []tangle.Gate
+	performGates     []tangle.Gate
 	controlLog       signal.EventLog
-	admission        troupe.Admission
+	admission        tangle.Admission
 }
 
 // WithDriver sets the agent driver.
-func WithDriver(d troupe.Driver) Option {
+func WithDriver(d tangle.Driver) Option {
 	return func(c *config) { c.driver = d }
 }
 
@@ -83,10 +83,10 @@ func WithHook(h Hook) Option {
 
 // WithDriverFor registers a driver for a specific provider.
 // Broker.Spawn routes to the matching driver based on AgentConfig.Provider.
-func WithDriverFor(provider string, d troupe.Driver) Option {
+func WithDriverFor(provider string, d tangle.Driver) Option {
 	return func(c *config) {
 		if c.drivers == nil {
-			c.drivers = make(map[string]troupe.Driver)
+			c.drivers = make(map[string]tangle.Driver)
 		}
 		c.drivers[provider] = d
 	}
@@ -135,7 +135,7 @@ func WithTransport(t transport.Transport) Option {
 }
 
 // WithMeter sets the resource usage meter. Default: none.
-func WithMeter(m troupe.Meter) Option {
+func WithMeter(m tangle.Meter) Option {
 	return func(c *config) { c.meter = m }
 }
 
@@ -146,38 +146,38 @@ func WithControlLog(l signal.EventLog) Option {
 
 // WithAdmission sets the agent admission system. When set, Broker.Spawn
 // uses Admission.Admit for entity creation instead of Warden.Fork.
-func WithAdmission(a troupe.Admission) Option {
+func WithAdmission(a tangle.Admission) Option {
 	return func(c *config) { c.admission = a }
 }
 
 // WithSpawnGate adds a Gate that must pass before Broker.Spawn proceeds.
 // Multiple gates compose with short-circuit AND (first rejection stops).
-func WithSpawnGate(g troupe.Gate) Option {
+func WithSpawnGate(g tangle.Gate) Option {
 	return func(c *config) { c.spawnGates = append(c.spawnGates, g) }
 }
 
 // WithPerformGate adds a Gate that must pass before Agent.Perform proceeds.
 // Multiple gates compose with short-circuit AND (first rejection stops).
-func WithPerformGate(g troupe.Gate) Option {
+func WithPerformGate(g tangle.Gate) Option {
 	return func(c *config) { c.performGates = append(c.performGates, g) }
 }
 
 func init() {
-	troupe.EmbeddedBrokerFactory = func() (troupe.Broker, error) {
+	tangle.EmbeddedBrokerFactory = func() (tangle.Broker, error) {
 		return Default()
 	}
 }
 
 // New creates a bare Broker. No Arsenal, no billing, no resilience —
 // the consumer wires what they need via With* options.
-func New(endpoint string, opts ...Option) troupe.Broker {
+func New(endpoint string, opts ...Option) tangle.Broker {
 	return newLocalBroker(opts...)
 }
 
 // Default creates a batteries-included Broker with sane defaults:
 // Arsenal (latest snapshot), no billing limits, no auth.
 // Additional options override defaults.
-func Default(opts ...Option) (troupe.Broker, error) {
+func Default(opts ...Option) (tangle.Broker, error) {
 	a, err := NewArsenal("")
 	if err != nil {
 		return nil, fmt.Errorf("broker default: arsenal: %w", err)
@@ -249,7 +249,7 @@ func newLocalBroker(opts ...Option) *DefaultBroker {
 			}
 			actorFn := providers.NewCompleter(llmProvider, ac.Model, recorder)
 			return func(ctx context.Context, msg transport.Message) (transport.Message, error) {
-				completion, callErr := actorFn(ctx, troupe.CompletionParams{Prompt: msg.Content})
+				completion, callErr := actorFn(ctx, tangle.CompletionParams{Prompt: msg.Content})
 				if callErr != nil {
 					return transport.Message{}, callErr
 				}
@@ -262,13 +262,13 @@ func newLocalBroker(opts ...Option) *DefaultBroker {
 		})
 	}
 
-	var spawnGate troupe.Gate
+	var spawnGate tangle.Gate
 	if len(cfg.spawnGates) > 0 {
-		spawnGate = troupe.ComposeGates(cfg.spawnGates...)
+		spawnGate = tangle.ComposeGates(cfg.spawnGates...)
 	}
-	var performGate troupe.Gate
+	var performGate tangle.Gate
 	if len(cfg.performGates) > 0 {
-		performGate = troupe.ComposeGates(cfg.performGates...)
+		performGate = tangle.ComposeGates(cfg.performGates...)
 	}
 
 	return &DefaultBroker{
@@ -298,16 +298,16 @@ func newLocalBroker(opts ...Option) *DefaultBroker {
 // Pick returns actor configs matching preferences. When Arsenal is configured,
 // models are selected via trait-scored catalog. Otherwise falls back to
 // pass-through (consumer-supplied model/role used as-is).
-func (b *DefaultBroker) Pick(ctx context.Context, prefs troupe.Preferences) ([]troupe.AgentConfig, error) {
+func (b *DefaultBroker) Pick(ctx context.Context, prefs tangle.Preferences) ([]tangle.AgentConfig, error) {
 	count := prefs.Count
 	if count <= 0 {
 		count = 1
 	}
 
 	if b.arsenal == nil {
-		configs := make([]troupe.AgentConfig, count)
+		configs := make([]tangle.AgentConfig, count)
 		for i := range count {
-			configs[i] = troupe.AgentConfig{
+			configs[i] = tangle.AgentConfig{
 				Model: prefs.Model,
 				Role:  prefs.Role,
 			}
@@ -325,13 +325,13 @@ func (b *DefaultBroker) Pick(ctx context.Context, prefs troupe.Preferences) ([]t
 		return nil, fmt.Errorf("arsenal select: %w", err)
 	}
 
-	cfg := troupe.AgentConfig{
+	cfg := tangle.AgentConfig{
 		Model:    resolved.Model,
 		Provider: resolved.Provider,
 		Role:     prefs.Role,
 	}
 
-	configs := make([]troupe.AgentConfig, count)
+	configs := make([]tangle.AgentConfig, count)
 	for i := range count {
 		configs[i] = cfg
 	}
@@ -344,7 +344,7 @@ func (b *DefaultBroker) Pick(ctx context.Context, prefs troupe.Preferences) ([]t
 }
 
 // Spawn creates a running actor.
-func (b *DefaultBroker) Spawn(ctx context.Context, cfg troupe.AgentConfig) (troupe.Agent, error) {
+func (b *DefaultBroker) Spawn(ctx context.Context, cfg tangle.AgentConfig) (tangle.Agent, error) {
 	// Driver environment validation (optional interface).
 	drv := b.adapter.resolve(0) // check default driver
 	if cfg.Provider != "" && b.adapter.drivers != nil {
@@ -353,7 +353,7 @@ func (b *DefaultBroker) Spawn(ctx context.Context, cfg troupe.AgentConfig) (trou
 		}
 	}
 	if drv != nil {
-		if v, ok := drv.(troupe.DriverValidator); ok {
+		if v, ok := drv.(tangle.DriverValidator); ok {
 			if err := v.ValidateEnvironment(ctx); err != nil {
 				return nil, fmt.Errorf("driver validate: %w", err)
 			}
@@ -406,7 +406,7 @@ func (b *DefaultBroker) Spawn(ctx context.Context, cfg troupe.AgentConfig) (trou
 		}, 0)
 	}
 
-	var actor troupe.Agent
+	var actor tangle.Agent
 	if err == nil {
 		actor = agent.NewSolo(id, role, b.world, b.warden, b.transport)
 	}
@@ -461,9 +461,9 @@ func (b *DefaultBroker) emitControl(kind string, meta map[string]string) {
 }
 
 // Discover returns agent cards for live agents, optionally filtered by role.
-func (b *DefaultBroker) Discover(role string) []troupe.AgentCard {
+func (b *DefaultBroker) Discover(role string) []tangle.AgentCard {
 	ids := world.Query[visual.Color](b.world)
-	cards := make([]troupe.AgentCard, 0, len(ids))
+	cards := make([]tangle.AgentCard, 0, len(ids))
 	for _, id := range ids {
 		color, _ := world.TryGet[visual.Color](b.world, id)
 		if role != "" && color.Role != role {
@@ -488,7 +488,7 @@ func (c *simpleCard) Role() string     { return c.role }
 func (c *simpleCard) Skills() []string { return c.skills }
 
 // Meter returns the resource usage meter (nil if none configured).
-func (b *DefaultBroker) Meter() troupe.Meter { return b.meter }
+func (b *DefaultBroker) Meter() tangle.Meter { return b.meter }
 
 // Buses returns the three-bus set (Control, Work, Status).
 func (b *DefaultBroker) Buses() signal.BusSet { return b.buses }
@@ -497,15 +497,15 @@ func (b *DefaultBroker) Buses() signal.BusSet { return b.buses }
 func (b *DefaultBroker) World() *world.World { return b.world }
 
 // SpawnGate returns the composed spawn gate, or nil if none configured.
-func (b *DefaultBroker) SpawnGate() troupe.Gate { return b.spawnGate }
+func (b *DefaultBroker) SpawnGate() tangle.Gate { return b.spawnGate }
 
 // PerformGate returns the composed perform gate, or nil if none configured.
-func (b *DefaultBroker) PerformGate() troupe.Gate { return b.performGate }
+func (b *DefaultBroker) PerformGate() tangle.Gate { return b.performGate }
 
 // SpawnCollective creates a multi-agent collective backed by the given
 // strategy. Spawns count agents via Pick+Spawn, wraps them in a Collective
-// that implements troupe.Agent. The caller sees one actor; internally N
+// that implements tangle.Agent. The caller sees one actor; internally N
 // agents collaborate via the strategy.
-func (b *DefaultBroker) SpawnCollective(ctx context.Context, count int, strategy collective.CollectiveStrategy) (troupe.Agent, error) {
+func (b *DefaultBroker) SpawnCollective(ctx context.Context, count int, strategy collective.CollectiveStrategy) (tangle.Agent, error) {
 	return collective.SpawnCollective(ctx, b, count, strategy)
 }

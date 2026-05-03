@@ -6,13 +6,13 @@ import (
 	"sync"
 	"time"
 
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 	"github.com/dpopsuev/tangle/internal/warden"
 	"github.com/dpopsuev/tangle/signal"
 	"github.com/dpopsuev/tangle/world"
 )
 
-var _ troupe.Admin = (*DefaultAdmin)(nil)
+var _ tangle.Admin = (*DefaultAdmin)(nil)
 
 // DefaultAdmin implements the Admin control plane by wiring
 // World (queries), Warden (kill/tree), and Lobby (kick/ban/cordon).
@@ -37,9 +37,9 @@ func NewAdmin(w *world.World, p *warden.AgentWarden, l *Lobby, control signal.Ev
 	}
 }
 
-func (a *DefaultAdmin) Agents(_ context.Context, filter troupe.AgentFilter) []troupe.AgentDetail {
+func (a *DefaultAdmin) Agents(_ context.Context, filter tangle.AgentFilter) []tangle.AgentDetail {
 	ids := world.Query[world.Alive](a.world)
-	details := make([]troupe.AgentDetail, 0, len(ids))
+	details := make([]tangle.AgentDetail, 0, len(ids))
 
 	for _, id := range ids {
 		d := a.buildDetail(id)
@@ -72,14 +72,14 @@ func (a *DefaultAdmin) Agents(_ context.Context, filter troupe.AgentFilter) []tr
 	return details
 }
 
-func (a *DefaultAdmin) Inspect(_ context.Context, id world.EntityID) (troupe.AgentDetail, error) {
+func (a *DefaultAdmin) Inspect(_ context.Context, id world.EntityID) (tangle.AgentDetail, error) {
 	if !a.world.Alive(id) {
-		return troupe.AgentDetail{}, fmt.Errorf("admin inspect: %w: entity %d", troupe.ErrNotFound, id)
+		return tangle.AgentDetail{}, fmt.Errorf("admin inspect: %w: entity %d", tangle.ErrNotFound, id)
 	}
 	return a.buildDetail(id), nil
 }
 
-func (a *DefaultAdmin) Tree(_ context.Context) []troupe.TreeNode {
+func (a *DefaultAdmin) Tree(_ context.Context) []tangle.TreeNode {
 	ids := a.warden.Active()
 	roots := make(map[world.EntityID]bool)
 	for _, id := range ids {
@@ -89,7 +89,7 @@ func (a *DefaultAdmin) Tree(_ context.Context) []troupe.TreeNode {
 		}
 	}
 
-	nodes := make([]troupe.TreeNode, 0, len(roots))
+	nodes := make([]tangle.TreeNode, 0, len(roots))
 	for id := range roots {
 		wt := a.warden.Tree(id)
 		if wt != nil {
@@ -163,7 +163,7 @@ func (a *DefaultAdmin) IsCordoned() bool {
 }
 
 // CordonGate returns a Gate that rejects when cordoned.
-func (a *DefaultAdmin) CordonGate() troupe.Gate {
+func (a *DefaultAdmin) CordonGate() tangle.Gate {
 	return func(_ context.Context, _ any) (bool, string, error) {
 		if a.IsCordoned() {
 			a.mu.RLock()
@@ -200,14 +200,14 @@ func (a *DefaultAdmin) Annotations(_ context.Context, id world.EntityID) map[str
 	return out
 }
 
-func (a *DefaultAdmin) Watch(ctx context.Context) <-chan troupe.AgentEvent {
-	ch := make(chan troupe.AgentEvent, 64)
+func (a *DefaultAdmin) Watch(ctx context.Context) <-chan tangle.AgentEvent {
+	ch := make(chan tangle.AgentEvent, 64)
 	if a.control != nil {
 		a.control.OnEmit(func(e signal.Event) {
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- troupe.AgentEvent{
+			case ch <- tangle.AgentEvent{
 				Kind:   e.Kind,
 				Source: e.Source,
 			}:
@@ -228,8 +228,8 @@ func (a *DefaultAdmin) KillAll(ctx context.Context, reason string) error {
 	return nil
 }
 
-func (a *DefaultAdmin) buildDetail(id world.EntityID) troupe.AgentDetail {
-	d := troupe.AgentDetail{ID: id}
+func (a *DefaultAdmin) buildDetail(id world.EntityID) tangle.AgentDetail {
+	d := tangle.AgentDetail{ID: id}
 
 	if a.lobby != nil {
 		a.lobby.mu.RLock()
@@ -248,7 +248,7 @@ func (a *DefaultAdmin) buildDetail(id world.EntityID) troupe.AgentDetail {
 		d.Reason = string(ready.Reason)
 	}
 	if budget, ok := world.TryGet[world.Budget](a.world, id); ok {
-		d.Budget = troupe.BudgetView{
+		d.Budget = tangle.BudgetView{
 			TokensUsed: budget.TokensUsed,
 			Cost:       budget.Cost,
 			Ceiling:    budget.Ceiling,
@@ -282,8 +282,8 @@ func (a *DefaultAdmin) emitAudit(_ context.Context, action string, id world.Enti
 	})
 }
 
-func convertTree(wt *warden.TreeNode, w *world.World) troupe.TreeNode {
-	node := troupe.TreeNode{
+func convertTree(wt *warden.TreeNode, w *world.World) tangle.TreeNode {
+	node := tangle.TreeNode{
 		ID:   wt.ID,
 		Role: wt.Role,
 	}

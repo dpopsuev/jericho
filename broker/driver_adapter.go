@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 	"github.com/dpopsuev/tangle/internal/warden"
 	"github.com/dpopsuev/tangle/world"
 )
@@ -13,8 +13,8 @@ import (
 // multiDriverAdapter wraps public Drivers as a warden.AgentSupervisor.
 // Resolves the correct driver at Start() time based on a per-entity provider map.
 type multiDriverAdapter struct {
-	defaultDriver troupe.Driver
-	drivers       map[string]troupe.Driver
+	defaultDriver tangle.Driver
+	drivers       map[string]tangle.Driver
 	providers     map[world.EntityID]string // entity → provider, set before Fork
 	mu            sync.Mutex
 }
@@ -25,7 +25,7 @@ func (a *multiDriverAdapter) setProvider(id world.EntityID, provider string) {
 	a.mu.Unlock()
 }
 
-func (a *multiDriverAdapter) resolve(id world.EntityID) troupe.Driver {
+func (a *multiDriverAdapter) resolve(id world.EntityID) tangle.Driver {
 	a.mu.Lock()
 	provider := a.providers[id]
 	a.mu.Unlock()
@@ -45,10 +45,10 @@ func (a *multiDriverAdapter) Start(ctx context.Context, id world.EntityID, confi
 		}
 	}
 	if drv == nil {
-		return fmt.Errorf("no driver for entity %d: %w", id, troupe.ErrNoDriver)
+		return fmt.Errorf("no driver for entity %d: %w", id, tangle.ErrNoDriver)
 	}
 	a.setProvider(id, config.Provider)
-	return drv.Start(ctx, id, troupe.AgentConfig{Model: config.Model, Role: config.Role, Provider: config.Provider})
+	return drv.Start(ctx, id, tangle.AgentConfig{Model: config.Model, Role: config.Role, Provider: config.Provider})
 }
 
 func (a *multiDriverAdapter) Stop(ctx context.Context, id world.EntityID) error {

@@ -3,7 +3,7 @@ package broker
 import (
 	"context"
 
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 	"github.com/dpopsuev/tangle/world"
 )
 
@@ -17,9 +17,9 @@ type Hook interface {
 type SpawnHook interface {
 	Hook
 	// PreSpawn is called before spawning. Return non-nil error to reject.
-	PreSpawn(ctx context.Context, config troupe.AgentConfig) error
+	PreSpawn(ctx context.Context, config tangle.AgentConfig) error
 	// PostSpawn is called after spawning (success or failure).
-	PostSpawn(ctx context.Context, config troupe.AgentConfig, actor troupe.Agent, err error)
+	PostSpawn(ctx context.Context, config tangle.AgentConfig, actor tangle.Agent, err error)
 }
 
 // PerformHook intercepts Agent.Perform calls.

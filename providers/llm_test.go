@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 	"github.com/dpopsuev/tangle/providers"
 	anyllm "github.com/mozilla-ai/any-llm-go/providers"
 )
@@ -40,7 +40,7 @@ func TestLLMActorFunc_ReturnsResponse(t *testing.T) {
 	provider := &stubProvider{response: "hello from LLM"}
 	actor := providers.NewCompleter(provider, "test-model", nil)
 
-	result, err := actor(context.Background(), troupe.CompletionParams{Prompt: "test prompt"})
+	result, err := actor(context.Background(), tangle.CompletionParams{Prompt: "test prompt"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -54,7 +54,7 @@ func TestLLMActorFunc_ReusesConnection(t *testing.T) {
 	actor := providers.NewCompleter(provider, "test-model", nil)
 
 	for i := range 3 {
-		result, err := actor(context.Background(), troupe.CompletionParams{Prompt: "prompt"})
+		result, err := actor(context.Background(), tangle.CompletionParams{Prompt: "prompt"})
 		if err != nil {
 			t.Fatalf("call %d: %v", i, err)
 		}
@@ -84,8 +84,8 @@ func TestLLMActorFunc_RecordsUsage(t *testing.T) {
 
 	actor := providers.NewCompleter(provider, "test-model", recorder)
 
-	actor(context.Background(), troupe.CompletionParams{Prompt: "prompt 1"})
-	actor(context.Background(), troupe.CompletionParams{Prompt: "prompt 2"})
+	actor(context.Background(), tangle.CompletionParams{Prompt: "prompt 1"})
+	actor(context.Background(), tangle.CompletionParams{Prompt: "prompt 2"})
 
 	if len(recorded) != 2 {
 		t.Fatalf("recorded %d usage entries, want 2", len(recorded))
@@ -105,7 +105,7 @@ func TestLLMActorFunc_NilRecorder(t *testing.T) {
 	}
 
 	actor := providers.NewCompleter(provider, "test-model", nil)
-	result, err := actor(context.Background(), troupe.CompletionParams{Prompt: "prompt"})
+	result, err := actor(context.Background(), tangle.CompletionParams{Prompt: "prompt"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,7 +130,7 @@ func TestLLMActorFunc_ToolCalls(t *testing.T) {
 	}
 
 	actor := providers.NewCompleter(provider, "test-model", nil)
-	result, err := actor(context.Background(), troupe.CompletionParams{Prompt: "find food"})
+	result, err := actor(context.Background(), tangle.CompletionParams{Prompt: "find food"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,7 +155,7 @@ func TestLLMActorFunc_TokenUsage(t *testing.T) {
 	}
 
 	actor := providers.NewCompleter(provider, "test-model", nil)
-	result, _ := actor(context.Background(), troupe.CompletionParams{Prompt: "test"})
+	result, _ := actor(context.Background(), tangle.CompletionParams{Prompt: "test"})
 
 	if result.Tokens.Input != 42 {
 		t.Errorf("input tokens: got %d, want 42", result.Tokens.Input)

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 	"github.com/dpopsuev/tangle/visual"
 	"github.com/dpopsuev/tangle/internal/transport"
 	"github.com/dpopsuev/tangle/signal"
@@ -21,7 +21,7 @@ const (
 	logKeyReason     = "reason"
 )
 
-var _ troupe.Admission = (*Lobby)(nil)
+var _ tangle.Admission = (*Lobby)(nil)
 
 // Lobby is the universal admission system for all agents.
 // Both internal spawns and external registrations go through Admit.
@@ -30,7 +30,7 @@ type Lobby struct {
 	transport    transport.Transport
 	controlLog   signal.EventLog
 	registry     *visual.Registry
-	gate           troupe.Gate
+	gate           tangle.Gate
 	proxyFactory   ProxyFactory
 	handlerFactory HandlerFactory
 	hooks          []Hook
@@ -41,7 +41,7 @@ type Lobby struct {
 }
 
 type lobbyEntry struct {
-	config   troupe.AgentConfig
+	config   tangle.AgentConfig
 	admitted time.Time
 	lastSeen time.Time
 }
@@ -53,7 +53,7 @@ type ProxyFactory func(callbackURL string) transport.MsgHandler
 // HandlerFactory builds a transport message handler for an internal agent.
 // Called during Admit when the agent is not external. If nil, a default
 // ack handler is registered.
-type HandlerFactory func(id world.EntityID, config troupe.AgentConfig) transport.MsgHandler
+type HandlerFactory func(id world.EntityID, config tangle.AgentConfig) transport.MsgHandler
 
 // LobbyConfig configures a Lobby.
 type LobbyConfig struct {
@@ -61,7 +61,7 @@ type LobbyConfig struct {
 	Transport      transport.Transport
 	ControlLog     signal.EventLog
 	Registry       *visual.Registry
-	Gates          []troupe.Gate
+	Gates          []tangle.Gate
 	ProxyFactory   ProxyFactory
 	HandlerFactory HandlerFactory
 	Hooks          []Hook
@@ -69,9 +69,9 @@ type LobbyConfig struct {
 
 // NewLobby creates an Admission implementation.
 func NewLobby(cfg LobbyConfig) *Lobby {
-	var gate troupe.Gate
+	var gate tangle.Gate
 	if len(cfg.Gates) > 0 {
-		gate = troupe.ComposeGates(cfg.Gates...)
+		gate = tangle.ComposeGates(cfg.Gates...)
 	}
 	return &Lobby{
 		world:        cfg.World,
@@ -88,7 +88,7 @@ func NewLobby(cfg LobbyConfig) *Lobby {
 }
 
 // Admit registers an agent into the World.
-func (l *Lobby) Admit(ctx context.Context, config troupe.AgentConfig) (world.EntityID, error) {
+func (l *Lobby) Admit(ctx context.Context, config tangle.AgentConfig) (world.EntityID, error) {
 	if l.gate != nil {
 		allowed, reason, err := l.gate(ctx, config)
 		if err != nil {

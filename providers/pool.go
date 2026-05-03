@@ -3,7 +3,7 @@ package providers
 import (
 	"context"
 	"log/slog"
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 	"sync"
 	"time"
 )
@@ -13,13 +13,13 @@ import (
 // gracefully when the context is cancelled or Drain() is called.
 type Pool struct {
 	queue Queue
-	actor troupe.CompleteFunc
+	actor tangle.CompleteFunc
 	size  int
 	wg    sync.WaitGroup
 }
 
 // NewPool creates an actor pool of the given size.
-func NewPool(queue Queue, actor troupe.CompleteFunc, size int) *Pool {
+func NewPool(queue Queue, actor tangle.CompleteFunc, size int) *Pool {
 	return &Pool{queue: queue, actor: actor, size: size}
 }
 
@@ -49,7 +49,7 @@ func (p *Pool) workerLoop(ctx context.Context, workerID int) {
 		}
 
 		start := time.Now()
-		completion, execErr := p.actor(ctx, troupe.CompletionParams{Prompt: item.Input()})
+		completion, execErr := p.actor(ctx, tangle.CompletionParams{Prompt: item.Input()})
 		elapsed := time.Since(start)
 
 		if execErr != nil {

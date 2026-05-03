@@ -6,7 +6,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	troupe "github.com/dpopsuev/tangle"
+	tangle "github.com/dpopsuev/tangle"
 )
 
 type taskEntry struct {
@@ -55,7 +55,7 @@ func (b *baseTransport) SetRouteGuard(guard RouteGuard) {
 
 // SetRouteGate sets a Gate predicate as the route guard.
 // The Gate receives a [2]AgentID{from, to} as its subject.
-func (b *baseTransport) SetRouteGate(gate troupe.Gate) {
+func (b *baseTransport) SetRouteGate(gate tangle.Gate) {
 	b.SetRouteGuard(func(from, to AgentID) error {
 		allowed, reason, err := gate(context.Background(), [2]AgentID{from, to})
 		if err != nil {
